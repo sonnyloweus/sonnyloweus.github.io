@@ -1,0 +1,233 @@
+html{
+    background-color: black;
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    /* overflow: hidden; */
+}
+
+body{
+    margin: 0;
+    cursor: none;
+    /* overflow: hidden; */
+}
+
+::-webkit-scrollbar {
+    width: 11px;
+}
+
+::-webkit-scrollbar-track {
+    background-color: black;
+}
+
+::-webkit-scrollbar-thumb {
+    background: white;
+    border-radius: 10px;    
+}
+
+.circleText {
+    position: fixed;
+    margin: 0 auto;
+    font-size: 10px;
+    font-weight: bold;
+  }
+  .circleText span {
+    position: fixed;
+    top: 20px;
+    right: 5vw;
+    width: 27px;
+    height: 27px;
+    text-align: center;
+    transform-origin: bottom center;
+    color: white;
+  }
+  .circleText span:nth-of-type(7)  {transform: rotate(75deg);}
+  .circleText span:nth-of-type(6)  {transform: rotate(50deg);}
+  .circleText span:nth-of-type(5)  {transform: rotate(25deg);}
+  .circleText span:nth-of-type(4)  {transform: rotate(0deg);}
+  .circleText span:nth-of-type(3)  {transform: rotate(-25deg);}
+  .circleText span:nth-of-type(2)  {transform: rotate(-50deg);}
+  .circleText span:nth-of-type(1)  {transform: rotate(-75deg);}
+
+  .circle {
+    position: fixed;
+    top: 35px;
+    right: 4.925vw;
+    width: 27px;
+    height: 27px;
+    border: solid white 1px;
+    border-radius: 50%;
+  }
+
+.photos {
+    z-index: -5;
+    width: 100%;
+    padding-top: 66.66%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    animation-name: photolapse;
+    position: relative;
+    animation-duration: 100s;
+    background-image: url("images/background_black.png");
+    animation-iteration-count: infinite; 
+    background-attachment: fixed;
+}
+
+.cover{
+    width: 100%;
+    padding-top: 66.66%;
+    position: fixed;
+    top:0px;
+    background-color: black;
+    opacity: 0.4;
+    z-index: 0;
+}
+  
+@keyframes photolapse {
+    0%  { background-image: url("images/background_black.png") url("images/IMG_8575.JPG");}
+    6.25%  { background-image: url("images/IMG_8575.JPG"), url("images/IMG_7710.JPG");}
+    12.50%  {background-image: url("images/IMG_7710.JPG"), url("images/IMG_7728.JPG")}
+    18.75%  {background-image: url("images/IMG_7728.JPG"), url("images/IMG_7743.JPG")}
+    25%  {background-image: url("images/IMG_7743.JPG"), url("images/IMG_7755.JPG")}
+    31.25%  {background-image: url("images/IMG_7755.JPG"),url("images/bird.jpg")}
+    37.50%  {background-image: url("images/bird.jpg"),url("images/IMG_7814.JPG")}
+    43.75%  {background-image: url("images/IMG_7814.JPG"),url("images/IMG_7982.JPG")}
+    50%  {background-image: url("images/IMG_7982.JPG"),url("images/IMG_8014.JPG")}
+    56.25%  {background-image: url("images/IMG_8014.JPG"),url("images/IMG_8100.JPG")}
+    62.50%  {background-image: url("images/IMG_8100.JPG"),url("images/IMG_8163.JPG")}
+    68.75%  {background-image: url("images/IMG_8163.JPG"), url("images/IMG_8182.JPG")}
+    75%  {background-image: url("images/IMG_8182.JPG"),url("images/IMG_8237.JPG")}
+    81.25%  {background-image: url("images/IMG_8237.JPG"),url("images/IMG_8312.JPG")}
+    87.50%  {background-image: url("images/IMG_8312.JPG"),url("images/IMG_8391.JPG")}
+    93.75%  {background-image: url("images/IMG_8391.JPG"),url("images/IMG_7695.JPG")}
+    100%  {background-image: url("images/IMG_7695.JPG")}
+}
+
+.title {
+    position: absolute;
+    top: 20vw;
+    left: 60vw;
+    font-size: 4vw;
+    color: white;
+    font: playfairdisplay,Helvetica,Arial,sans-serif;
+}
+
+.cursor-dot,
+.cursor-dot-outline {
+    pointer-events: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.3s ease-in-out,
+                transform 0.3s ease-in-out;
+}
+
+.cursor-dot {
+    size: 8px;
+    width: 8px;
+    height: 8px;
+    background-color: rgb(251, 255, 0);
+}
+
+.cursor-dot-outline {
+    size: 40px;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(251, 255, 0,0.5);
+}
+
+.copyright {
+    position: absolute;
+    top: 54vw;
+    left: 2vw;
+    font-size: 6px;
+    color: white;
+    font: playfairdisplay,Helvetica,Arial,sans-serif;
+}
+
+@-moz-keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        -moz-transform: translateY(0);
+        transform: translateY(0);
+    }
+    40% {
+        -moz-transform: translateY(-30px);
+        transform: translateY(-30px);
+    }
+    60% {
+        -moz-transform: translateY(-15px);
+        transform: translateY(-15px);
+    }
+}
+@-webkit-keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        -webkit-transform: translateY(0);
+        transform: translateY(0);
+    }
+    40% {
+        -webkit-transform: translateY(-30px);
+        transform: translateY(-30px);
+    }
+    60% {
+        -webkit-transform: translateY(-15px);
+        transform: translateY(-15px);
+    }
+}
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        -moz-transform: translateY(0);
+        -ms-transform: translateY(0);
+        -webkit-transform: translateY(0);
+        transform: translateY(0);
+    }
+    40% {
+        -moz-transform: translateY(-30px);
+        -ms-transform: translateY(-30px);
+        -webkit-transform: translateY(-30px);
+        transform: translateY(-30px);
+    }
+    60% {
+        -moz-transform: translateY(-15px);
+        -ms-transform: translateY(-15px);
+        -webkit-transform: translateY(-15px);
+        transform: translateY(-15px);
+    }
+}
+
+span {
+    display: block;
+    color: #fff;
+}
+
+.arrow {
+    position: absolute;
+    top: 50vw;
+    left: 50%;
+    margin-left: -20px;
+    width: 33px;
+    height: 40px;
+}
+
+.bounce {
+    -moz-animation: bounce 2s infinite;
+    -webkit-animation: bounce 2s infinite;
+    animation: bounce 2s infinite;
+}
+
+#aboutMe{
+    text-align: center;
+    padding-top:10px;
+    padding-bottom: 10px;
+    color: white;
+    font-size: 60px;
+    font: playfairdisplay,Helvetica,Arial,sans-serif;
+}
+
+#aboutMeText{
+    color:white; 
+    text-align: center;
+    margin-left: 4vw;
+    margin-right: 4vw;
+}
