@@ -1,3 +1,24 @@
+:root {
+    --slide-1: url("https://storage.cloud.google.com/www.sonnylowe.us/images/background_black.png");
+    --slide-2: url("https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_8575.JPG");
+    --slide-3: url("https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_7710.JPG");
+    --slide-4: url("https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_7728.JPG");
+    --slide-5: url("https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_7743.JPG");
+    --slide-6: url("https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_7755.JPG");
+    --slide-7: url("https://storage.cloud.google.com/www.sonnylowe.us/images/bird.jpg");
+    --slide-8: url("https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_7814.JPG");
+    --slide-9: url("https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_7982.JPG");
+    --slide-10: url("https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_8014.JPG");
+    --slide-11: url("https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_8100.JPG");
+    --slide-12: url("https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_8163.JPG");
+    --slide-13: url("https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_8182.JPG");
+    --slide-14: url("https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_8237.JPG");
+    --slide-15: url("https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_8312.JPG");
+    --slide-16: url("https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_8391.JPG");
+    --slide-17: url("https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_7695.JPG");
+    --mePicture: url("/images/IMG_9642.JPG");
+}
+
 html{
     background-color: black;
     scroll-behavior: smooth;
@@ -12,11 +33,12 @@ body{
 }
 
 ::-webkit-scrollbar {
-    width: 11px;
+    width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-    background-color: black;
+    z-index: 10;
+    background-color: none;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -29,7 +51,7 @@ body{
     margin: 0 auto;
     font-size: 10px;
     font-weight: bold;
-  }
+}
   .circleText span {
     position: fixed;
     top: 20px;
@@ -39,16 +61,16 @@ body{
     text-align: center;
     transform-origin: bottom center;
     color: white;
-  }
-  .circleText span:nth-of-type(7)  {transform: rotate(75deg);}
-  .circleText span:nth-of-type(6)  {transform: rotate(50deg);}
-  .circleText span:nth-of-type(5)  {transform: rotate(25deg);}
-  .circleText span:nth-of-type(4)  {transform: rotate(0deg);}
-  .circleText span:nth-of-type(3)  {transform: rotate(-25deg);}
-  .circleText span:nth-of-type(2)  {transform: rotate(-50deg);}
-  .circleText span:nth-of-type(1)  {transform: rotate(-75deg);}
+}
+.circleText span:nth-of-type(7)  {transform: rotate(75deg);}
+.circleText span:nth-of-type(6)  {transform: rotate(50deg);}
+.circleText span:nth-of-type(5)  {transform: rotate(25deg);}
+.circleText span:nth-of-type(4)  {transform: rotate(0deg);}
+.circleText span:nth-of-type(3)  {transform: rotate(-25deg);}
+.circleText span:nth-of-type(2)  {transform: rotate(-50deg);}
+.circleText span:nth-of-type(1)  {transform: rotate(-75deg);}
 
-  .circle {
+.circle {
     position: fixed;
     top: 35px;
     right: 4.925vw;
@@ -56,23 +78,23 @@ body{
     height: 27px;
     border: solid white 1px;
     border-radius: 50%;
-  }
+}
 
 .photos {
     z-index: -5;
-    width: 100%;
-    padding-top: 66.66%;
+    height: 100vh;
+    /* padding-top: 66.66%; */
     background-repeat: no-repeat;
     background-size: cover;
     animation-name: photolapse;
     position: relative;
     animation-duration: 100s;
-    background-image: url("images/background_black.png");
+    background-image: var(--slide-1);
     animation-iteration-count: infinite; 
     background-attachment: fixed;
 }
 
-.cover{
+/* .cover{
     width: 100%;
     padding-top: 66.66%;
     position: fixed;
@@ -81,30 +103,30 @@ body{
     opacity: 0.4;
     z-index: 0;
 }
-  
+   */
 @keyframes photolapse {
-    0%  { background-image: url("images/background_black.png") url("images/IMG_8575.JPG");}
-    6.25%  { background-image: url("images/IMG_8575.JPG"), url("images/IMG_7710.JPG");}
-    12.50%  {background-image: url("images/IMG_7710.JPG"), url("images/IMG_7728.JPG")}
-    18.75%  {background-image: url("images/IMG_7728.JPG"), url("images/IMG_7743.JPG")}
-    25%  {background-image: url("images/IMG_7743.JPG"), url("images/IMG_7755.JPG")}
-    31.25%  {background-image: url("images/IMG_7755.JPG"),url("images/bird.jpg")}
-    37.50%  {background-image: url("images/bird.jpg"),url("images/IMG_7814.JPG")}
-    43.75%  {background-image: url("images/IMG_7814.JPG"),url("images/IMG_7982.JPG")}
-    50%  {background-image: url("images/IMG_7982.JPG"),url("images/IMG_8014.JPG")}
-    56.25%  {background-image: url("images/IMG_8014.JPG"),url("images/IMG_8100.JPG")}
-    62.50%  {background-image: url("images/IMG_8100.JPG"),url("images/IMG_8163.JPG")}
-    68.75%  {background-image: url("images/IMG_8163.JPG"), url("images/IMG_8182.JPG")}
-    75%  {background-image: url("images/IMG_8182.JPG"),url("images/IMG_8237.JPG")}
-    81.25%  {background-image: url("images/IMG_8237.JPG"),url("images/IMG_8312.JPG")}
-    87.50%  {background-image: url("images/IMG_8312.JPG"),url("images/IMG_8391.JPG")}
-    93.75%  {background-image: url("images/IMG_8391.JPG"),url("images/IMG_7695.JPG")}
-    100%  {background-image: url("images/IMG_7695.JPG")}
+    0%  { background-image: var(--slide-1), var(--slide-2);}
+    6.25%  { background-image: var(--slide-2), var(--slide-3);}
+    12.50%  {background-image: var(--slide-3), var(--slide-4);}
+    18.75%  {background-image: var(--slide-4), var(--slide-5);}
+    25%  {background-image: var(--slide-5), var(--slide-6);}
+    31.25%  {background-image: var(--slide-6), var(--slide-7);}
+    37.50%  {background-image: var(--slide-7), var(--slide-8);}
+    43.75%  {background-image: var(--slide-8), var(--slide-9);}
+    50%  {background-image: var(--slide-9), var(--slide-10);}
+    56.25%  {background-image: var(--slide-10), var(--slide-11);}
+    62.50%  {background-image: var(--slide-11), var(--slide-12);}
+    68.75%  {background-image: var(--slide-12), var(--slide-13);}
+    75%  {background-image: var(--slide-13), var(--slide-14);}
+    81.25%  {background-image: var(--slide-14), var(--slide-15);}
+    87.50%  {background-image: var(--slide-15), var(--slide-16);}
+    93.75%  {background-image: var(--slide-16), var(--slide-17);}
+    100%  {background-image: var(--slide-17)};
 }
 
 .title {
     position: absolute;
-    top: 20vw;
+    bottom: 20vh;
     left: 60vw;
     font-size: 4vw;
     color: white;
@@ -140,9 +162,9 @@ body{
 
 .copyright {
     position: absolute;
-    top: 54vw;
+    bottom: 9vh;
     left: 2vw;
-    font-size: 6px;
+    font-size: 10px;
     color: white;
     font: playfairdisplay,Helvetica,Arial,sans-serif;
 }
@@ -203,7 +225,7 @@ span {
 
 .arrow {
     position: absolute;
-    top: 50vw;
+    bottom: 10vh;
     left: 50%;
     margin-left: -20px;
     width: 33px;
@@ -228,6 +250,21 @@ span {
 #aboutMeText{
     color:white; 
     text-align: center;
-    margin-left: 4vw;
-    margin-right: 4vw;
+    margin-left: 15vw;
+    margin-right: 15vw;
+}
+
+#mePicture{
+    z-index: 5;
+    background-image: url(images/IMG_9642.jpg);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    height:90vw;
+    background-attachment: fixed;
+}
+
+#photography{
+    width: 100%;
+    height: auto;
 }
