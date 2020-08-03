@@ -1,144 +1,159 @@
-let root = document.documentElement;
-let i = 0;
-
-let bgImg1 = new Image();
-bgImg1.onload = function(){
-    root.style.setProperty('--slide-1', 'url(' + bgImg1.src + ')');
-    i++;
-    checkImages(i);
+let keys = {
+    37: 1,
+    38: 1,
+    39: 1,
+    40: 1
 };
-bgImg1.src = "https://storage.cloud.google.com/www.sonnylowe.us/images/background_black.png";
 
-let bgImg2 = new Image();
-bgImg2.onload = function(){
-    root.style.setProperty('--slide-2', 'url(' + bgImg2.src + ')');
-    i++;
-    checkImages(i);
-};
-bgImg2.src = "https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_8575.JPG";
+function preventDefault(e) {
+    e.preventDefault();
+}
 
-let bgImg3 = new Image();
-bgImg3.onload = function(){
-    root.style.setProperty('--slide-3', 'url(' + bgImg3.src + ')');
-    i++;
-    checkImages(i);
-};
-bgImg3.src = "https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_7710.JPG";
-
-let bgImg4 = new Image();
-bgImg4.onload = function(){
-    root.style.setProperty('--slide-4', 'url(' + bgImg4.src + ')');
-    i++;
-    checkImages(i);
-};
-bgImg4.src = "https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_7728.JPG";
-
-let bgImg5 = new Image();
-bgImg5.onload = function(){
-    root.style.setProperty('--slide-5', 'url(' + bgImg5.src + ')');
-    i++;
-    checkImages(i);
-};
-bgImg5.src = "https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_7743.JPG";
-
-let bgImg6 = new Image();
-bgImg6.onload = function(){
-    root.style.setProperty('--slide-6', 'url(' + bgImg6.src + ')');
-    i++;
-    checkImages(i);
-};
-bgImg6.src = "https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_7755.JPG";
-
-let bgImg7 = new Image();
-bgImg7.onload = function(){
-    root.style.setProperty('--slide-7', 'url(' + bgImg7.src + ')');
-    i++;
-    checkImages(i);
-};
-bgImg7.src = "https://storage.cloud.google.com/www.sonnylowe.us/images/bird.jpg";
-
-let bgImg8 = new Image();
-bgImg8.onload = function(){
-    root.style.setProperty('--slide-8', 'url(' + bgImg8.src + ')');
-    i++;
-    checkImages(i);
-};
-bgImg8.src = "https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_7814.JPG";
-
-let bgImg9 = new Image();
-bgImg9.onload = function(){
-    root.style.setProperty('--slide-9', 'url(' + bgImg9.src + ')');
-    i++;
-    checkImages(i);
-};
-bgImg9.src = "https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_7982.JPG";
-
-let bgImg10 = new Image();
-bgImg10.onload = function(){
-    root.style.setProperty('--slide-10', 'url(' + bgImg10.src + ')');
-    i++;
-    checkImages(i);
-};
-bgImg10.src = "https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_8014.JPG";
-
-let bgImg11 = new Image();
-bgImg11.onload = function(){
-    root.style.setProperty('--slide-11', 'url(' + bgImg11.src + ')');
-    i++;
-    checkImages(i);
-};
-bgImg11.src = "https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_8100.JPG";
-
-let bgImg12 = new Image();
-bgImg12.onload = function(){
-    root.style.setProperty('--slide-12', 'url(' + bgImg12.src + ')');
-    i++;
-    checkImages(i);
-};
-bgImg12.src = "https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_8163.JPG";
-
-let bgImg13 = new Image();
-bgImg13.onload = function(){
-    root.style.setProperty('--slide-13', 'url(' + bgImg13.src + ')');
-    i++;
-    checkImages(i);
-};
-bgImg13.src = "https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_8182.JPG";
-
-let bgImg14 = new Image();
-bgImg14.onload = function(){
-    root.style.setProperty('--slide-14', 'url(' + bgImg14.src + ')');
-    i++;
-    checkImages(i);
-};
-bgImg14.src = "https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_8237.JPG";
-
-let bgImg15 = new Image();
-bgImg15.onload = function(){
-    root.style.setProperty('--slide-15', 'url(' + bgImg15.src + ')');
-    i++;
-    checkImages(i);
-};
-bgImg15.src = "https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_8312.JPG";
-
-let bgImg16 = new Image();
-bgImg16.onload = function(){
-    root.style.setProperty('--slide-16', 'url(' + bgImg16.src + ')');
-    i++;
-    checkImages(i);
-};
-bgImg16.src = "https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_8391.JPG";
-
-let bgImg17 = new Image();
-bgImg17.onload = function(){
-    root.style.setProperty('--slide-17', 'url(' + bgImg17.src + ')');
-    i++;
-    checkImages(i);
-};
-bgImg17.src = "https://storage.cloud.google.com/www.sonnylowe.us/images/IMG_7695.JPG";
-
-function checkImages(i){
-    if(i == 17){
-        document.getElementsByTagName("head")[0].innerHTML += '<link href="https://storage.cloud.google.com/www.sonnylowe.us/index.css" rel="stylesheet" type="text/css">';
+function preventDefaultForScrollKeys(e) {
+    if (keys[e.keyCode]) {
+        preventDefault(e);
+        return false;
     }
+}
+
+let supportsPassive = false;
+try {
+    window.addEventListener("test", null, Object.defineProperty({}, 'passive', {
+        get: function () {
+            supportsPassive = true;
+        }
+    }));
+} catch (e) {}
+
+let wheelOpt = supportsPassive ? {
+    passive: false
+} : false;
+let wheelEvent = 'onwheel' in document.createElement('div') ? 'wheel' : 'mousewheel';
+
+
+// call this to Enable
+function enableScroll() {
+    window.removeEventListener('DOMMouseScroll', preventDefault, false);
+    window.removeEventListener(wheelEvent, preventDefault, wheelOpt);
+    window.removeEventListener('touchmove', preventDefault, wheelOpt);
+    window.removeEventListener('keydown', preventDefaultForScrollKeys, false);
+}
+// call this to Disable
+function disableScroll() {
+    window.addEventListener('DOMMouseScroll', preventDefault, false);
+    window.addEventListener(wheelEvent, preventDefault, wheelOpt);
+    window.addEventListener('touchmove', preventDefault, wheelOpt);
+    window.addEventListener('keydown', preventDefaultForScrollKeys, false);
+}
+
+$(window).scrollTop(0);
+disableScroll();
+
+
+
+
+let imageGallery = document.getElementById("myPhotos");
+
+let files = ["bird", "IMG_7695", "IMG_7706", "IMG_7710", "IMG_7728", "IMG_7743", "IMG_7755", "IMG_7795", "IMG_7814", "IMG_7982", "IMG_8014", "IMG_8100", "IMG_8163", "IMG_8182", "IMG_8237", "IMG_8312", "IMG_8391", "IMG_8575", "IMG_8694"];
+let numOfImages = files.length;
+let directory = "https://storage.cloud.google.com/www.sonnylowe.us/images/";
+
+for (let i = 0; i < numOfImages; i++) {
+    let fileName = files[i];
+    if (fileName == "bird") {
+        fileName += ".jpg";
+    } else {
+        fileName += ".JPG";
+    }
+    imageGallery.innerHTML = imageGallery.innerHTML + `
+
+    <div class="gallery">
+        <img data-enlargable width="100" style="cursor: zoom-in" src=" ` + directory + fileName + ` " alt="Mountains" width="600" height="400">
+        <div class="desc"> ID# ` + (i + 1) + ` </div>
+    </div>
+    
+    `;
+}
+
+
+
+
+
+$('img[data-enlargable]').addClass('img-enlargable').click(function () {
+    var src = $(this).attr('src');
+    var modal;
+
+    function removeModal() {
+        modal.remove();
+        $('body').off('keyup.modal-close');
+    }
+    modal = $('<div>').css({
+        background: 'RGBA(0,0,0,.5) url(' + src + ') no-repeat center',
+        backgroundSize: 'contain',
+        width: '100%',
+        height: '100%',
+        position: 'fixed',
+        zIndex: '10000',
+        top: '0',
+        left: '0',
+        cursor: 'zoom-out'
+    }).click(function () {
+        removeModal();
+    }).appendTo('body');
+    //handling ESC
+    $('body').on('keyup.modal-close', function (e) {
+        if (e.key === 'Escape') {
+            removeModal();
+        }
+    });
+});
+
+$("img").mousedown(function (e) {
+    e.preventDefault()
+});
+
+$("img").on("contextmenu", function (e) {
+    return false;
+});
+
+$(document).ready(function () {
+    let $elements = $('.animateBlock.notAnimated'); 
+
+    $(window).scroll(function (e) {
+        // $('.fadeIn').each(function (i) {
+        //     let top_of_object = $(this).position().top + 200;
+        //     let bottom_of_window = $(window).scrollTop() + $(window).height();
+        //     if (bottom_of_window > top_of_object) {
+        //         $(this).animate({
+        //             'opacity': '1'
+        //         }, 500);
+        //     }
+        // });
+
+        $elements.each(function(i, elem) { //loop through each element
+            if ($(this).hasClass('animated')){ // check if already animated
+              return;
+            }
+            animateMe($(this));
+        });
+    });
+});
+
+function animateMe(elem) {
+    console.log("animate called");
+    let winTop = $(window).scrollTop(); // calculate distance from top of window
+    let winBottom = winTop + $(window).height();
+
+    let elemTop = $(elem).position().top;
+    let elemBottom = elemTop + $(elem).height();
+
+    if((winBottom > elemTop + 300)){
+        console.log("adding animate class");
+        $(elem).removeClass('notAnimated').addClass('animated');
+    }
+
+    // if ((elemBottom <= winBottom) && (elemTop >= winTop)) {
+    //     // exchange classes if element visible
+    //     $(elem).removeClass('notAnimated').addClass('animated');
+    // }
 }

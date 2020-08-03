@@ -2,63 +2,193 @@
 <html>
 
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8"/>
+    <meta name="description" content="Portfolio for Sonny Lowe."/>
+    <meta name="keywords" content="sonny%20lowe,developer,photographer,coder,intern,internship"/>
+    <meta name="author" content="Sonny Lowe"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Sonny Lowe</title>
-    <!-- <link href="https://storage.cloud.google.com/www.sonnylowe.us/index.css" rel="stylesheet" type="text/css"> -->
-    <link  href="index.css" rel="stylesheet" type="text/css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+    <link href="https://storage.cloud.google.com/www.sonnylowe.us/index.css" rel="stylesheet" type="text/css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 </head>
 
 <body>
-    <div class="circleText">
-        <span>★</span>
-        <span>S</span>
-        <span>O</span>
-        <span>N</span>
-        <span>N</span>
-        <span>Y</span>
-        <span>★</span>
-    </div>
-    <div class="circle"></div>
-
-
-    <div class="photos"></div>
-    <div class="cover"></div>
-    <div class="title" id="title">
-        <h1><a>Sonny</a></h1>
-        <h1><a>Lowe</a></h1>
-    </div>
-
-
     <div class="cursor-dot-outline"></div>
     <div class="cursor-dot"></div>
-    <div class="arrow bounce"><span class="fa fa-sort-desc fa-3x" aria-hidden="true"></span></div>
-    <div class="copyright">
-        <h1>Copyright © </h1>
-        <a style="color: white" href="https://www.justice.gov/archives/jm/criminal-resource-manual-1852-copyright-infringement-penalties-17-usc-506a-and-18-usc-2319"> Copyright Punishment</a>
+
+    <div class="loader" id="loader">
+        <div class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+        <h2>Wait while sonnylowe.us loads. <br> May take up to 20 seconds. </h2>
+        <h4>Website works best on landscape large screens</h4>
     </div>
-
-
-    <div class="aboutMe">
-        <h1 id="aboutMe">ABOUT ME</h1>
-        <p id="aboutMeText">My name is Sonny Lowe and I live in the state of California. I am a photographer, developer
-            , athlete, artist, outdoor lover, and a speech and debater.
-        </p>
-    </div>
-
-    <br></br>
     
-    <div id="mePicture"></div>
+    <div id="page">
 
-    <div id="photography">
-        <div id="myPhotos">
+        <svg id="scrollLine">
+            <line id="scrollLineTemplate" x1="10" y1="10" x2="10" y2="10" stroke="white" stroke-width="3"></line>
+            <circle id="scrollCircleTemplate" cx="50" cy="50" r="6" stroke="white" stroke-width="2" fill="none" />
+        </svg>
+
+        <div class="circleText">
+            <span>★</span>
+            <span>S</span>
+            <span>O</span>
+            <span>N</span>
+            <span>N</span>
+            <span>Y</span>
+            <span>★</span>
+        </div>
+        <div class="circle"></div>
+
+        <div id="scrollbar">
+            <!-- <img src="images/goopSidebar3.png"> -->
+
+            <!-- <img src="images/goopSidebar2.png"> -->
+    
+            <!-- <img src="images/goopSidebar4.png"> -->
+
+            <ul id="scrollMenu">
+                <a id="aboutMeScroll" href="#aboutMe">About Me</a>
+                <a id="photographyScroll" href="#aboutPhotography">Photography</a>
+                <a id="developerScroll" href="#aboutDeveloping">Developer</a>
+            </ul>
+        </div>
+
+
+        <div class="photos"></div>
+        <div class="cover"></div>
+        <div class="title" id="title">
+            <h1><a>Sonny</a></h1>
+            <h1><a>Lowe</a></h1>
+        </div>
+
+        <!-- <svg class="path" >
+            <rect id="rectangle" style="fill:blue;stroke:white;stroke-width:5;opacity:0.5" />
+        </svg> -->
+
+        <div class="arrow bounce"><span class="fa fa-sort-desc fa-3x" aria-hidden="true"></span></div>
+        <div class="copyright">
+            <h1>Copyright © </h1>
+            <a target="_blank" style="color: white" href="https://www.justice.gov/archives/jm/criminal-resource-manual-1852-copyright-infringement-penalties-17-usc-506a-and-18-usc-2319"> Copyright Punishment</a>
+        </div>
+
+        <div class="spacer" id="transition1"><p>1</p></div>
+
+        <!-- ##################### -->
+        <!-- Beginning of Sections -->
+        <!-- ##################### -->
+
+        <!-- About Me -->
+        <div class="aboutMe fadeIn notAnimated animateBlock rightAlign right">
+            <h1 id="aboutMe">ABOUT ME</h1>
+
+            <ul id="aboutMeList">
+                <li>
+                    <img id="aboutMeImage" src="images/IMG_2582.png" alt="">
+                </li>
+                <li>
+                    <h1>Sonny Lowe</h1>
+                    <br>
+                    <h3>I live in <strong style="text-transform: uppercase;">Silicon Valley, California</strong>. I am an avid photographer, developer
+                        , athlete, artist, boy scout, and a speech and debater. In my free time, I love playing with my dog 
+                        named Indy and going into the outdoors to surround myself in nature.
+                    </h3>
+                </li>
+            </ul>
+
+        </div>
+        
+        <!-- <div id="portrait1" class="mePicture fadeIn"></div> -->
+
+
+        <!-- Photography -->
+        <div id="aboutPhotography" class="fadeIn notAnimated animateBlock rightAlign right">
+            <div class="spacer" id="transition2"></div>
+
+
+            <h1 style="padding-top: 20px; text-align: center; color: white;">Photography</h1>
+            <p id="aboutMeText">I travel the world - Asia, Europe, America - to capture beauty through a lens. 
+                My accomplishments include scholastic's gold and silver regional key as well as a national silver medal in photography.
+            </p>
+        </div>
+
+        <div class="photography fadeIn notAnimated animateBlock rightAlign right">
+            <h1 style="padding-top: 20px; text-align: center; color: white;">Photo Gallery</h1>
+            <h4 style="text-align: center; color: white;">All Images Copyrighted © </h4>
+            <div id="myPhotos">
+
+            </div>
+        </div>
+
+        <!-- <div id="portrait2" class="mePicture fadeIn"></div> -->
+
+        <!-- Developing -->
+        <div id="aboutDeveloping" class="fadeIn notAnimated animateBlock rightAlign right">
+            <div class="spacer" id="transition3"></div>
+
+            <h1 style="padding-top: 20px; text-align: center; color: white;">Developer</h1>
+            <p id="aboutMeText">I love coding... and as a result, I am a full stack developer who is fluent in 7 languages - Html, CSS, Javascript, PHP, python, jquery, and Java. 
+                My projects include chrome extensions with chrome APIs, Cloud computing and server storage using Google Cloud, and Machine Learning using Tensorflow. I also do USACO for fun! This website was also coded by me from scratch.
+            </p>
+        </div>
+
+        <div class="developer fadeIn notAnimated animateBlock rightAlign right">
+            <h1 style="padding-top: 20px; text-align: center; color: white;">Repositories and Project</h1>
+            <h4 style="text-align: center; color: white;">All Images Copyrighted © </h4>
+            <hr>
+            <ul id="contactDevelop">
+                <li><a target="_blank" href="https://github.com/sonnyloweus"><img width="20px" height="20px" src="images/GitHub-Mark-64px.png">  Github</a></li>
+                <li><a target="_blank" href="https://chrome.google.com/webstore/search/sonny%20lowe"><img width="26px" height="26px"  src="images/chrome.png">  Chrome Developer</a></li>
+                <li><a target="_blank" href="mailto:sonnylowe.develop@gmail.com"><img width="25px" height="25px"  src="images/email.png">   Contact</a></li>
+            </ul>
+            <hr>
+
+            <h2 style="text-align: center; color: white; margin-top: 20px;">Chrome Extensions</h2>
+            <ul id="extensions">
+                <li>
+                    <h3>SimDemic</h3>
+                    <img src="images/SimdemicIcon534.png" width="100px">
+                    <p>This simulator is for pandemics, such as the COVID-19. See the exponential curve of the disease, including recovery rate, death rate, and much more! Try out different social isolation maps and all traits of the disease are adjustable and customizable. Download it now for an amazing way to learn about these diseases.</p>
+                    <a target="_blank" href="https://chrome.google.com/webstore/detail/simdemic/flmddoejaifkenpbpihlenoccpapklbo">Download ↪</a>
+                </li>
+                <li>
+                    <h3>Nurture</h3>
+                    <img src="images/nurtureIcon128.png" width="100px">
+                    <p>Nurture is an extension that gamifies the experience of completing goals and tasks into growing a tree. Nurture gives you free reign to name and set deadlines to anything you want - holding you accountable for completing tasks. Each time you complete a task, you gain experience points and 'clovers' which you can use to buy items in the store. </p>
+                    <a target="_blank" href="https://chrome.google.com/webstore/detail/nurture/iflgkclbipjegdoolimmbphheceehcdg">Download ↪</a>
+                </li>
+                <li>
+                    <h3>OnlineOnTime</h3>
+                    <img src="images/OnlineOnTimeIcon534.png" width="100px">
+                    <p>Target: Bellarmine College Prep Students   This fully customizable extension creates a virtual calendar and bell for students, teachers, and anyone who wants to stay on top of their education. It allows you to create template weeks, make periods, set alarms, and so much more. Download it now and never miss another class period!!</p>
+                    <a target="_blank" href="https://chrome.google.com/webstore/detail/onlineontime/jafimgihjnecdnaimkhfeadhinoibfdh">Download ↪</a>
+                </li>
+            </ul>
 
         </div>
     </div>
 
 </body>
 
-<script src="https://storage.cloud.google.com/www.sonnylowe.us/index.js" type="text/javascript"></script>
+
+
+
+
+<!-- <script src="https://storage.cloud.google.com/www.sonnylowe.us/index.js" type="text/javascript"></script> -->
+
 <script src="imageOnload.js" type="text/javascript"></script>
+
+<script src="index.js" type="text/javascript"></script>
+
+<!-- <script src="https://storage.cloud.google.com/www.sonnylowe.us/imageOnload.js" type="text/javascript"></script> -->
+
+<!-- <link href="https://storage.cloud.google.com/www.sonnylowe.us/index.css" rel="stylesheet" type="text/css"> -->
+<link  href="index.css" rel="stylesheet" type="text/css">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
 
 </html>
