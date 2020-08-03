@@ -1,0 +1,120 @@
+@media screen and (orientation: portrait) {
+    #circle{
+        width: 55vh;
+        height: 55vh;
+    }
+    #circle:hover{
+        width: 57vh;
+        height: 57vh;
+    }
+    .notification{
+        width: 80vw;
+    }
+    #fullScreenNote{
+        top: 170px;
+        display: block;
+    }
+    #title{
+        bottom: 0vh;
+        font-size: 20vw;
+    }   
+    #title:hover{
+        bottom: 4vh;
+    }   
+    #AppPopout{
+        width: 60vw;
+    }
+    #CodePopout{
+        width: 50vw;
+    }
+    #DesktopBlue{
+        width: 75vw;
+    }
+}
+
+@media screen and (max-width: 772px) and (min-width: 573px) {
+    #title{
+        bottom: 0vh;
+        font-size: 17vw;
+        text-align: center;
+    }   
+}
+
+@media only screen and (min-width: 1300px) {
+    #circle{
+        width: 520px;
+        height: 520px;
+    }
+    #circle:hover{
+        width: 540px;
+        height: 540px;
+    }
+    
+    #AppPopout{
+        width: 494px;
+    }
+
+    #CodePopout{
+        width: 390px;
+    }
+
+    #DesktopBlue{
+        width: 585px;
+    }
+}
+
+@media only screen and (max-width: 900px) and (min-width: 450px) {
+    #aboutMeText{
+        display: block;
+        width: 100%;
+        text-align: center;
+    }
+    #portraitTile{
+        background: none !important;
+        box-shadow: none;
+        width: 100%;
+        margin-top: 50vh;
+        display: flex;
+        justify-content: center;
+    }
+    #aboutMeText{
+        padding-bottom: 100px;
+        margin-left: 0px;
+    }
+    #aboutMeText p{
+        padding-left: 0px;
+        text-align: center;
+    }
+}
+
+@media only screen and (max-width: 450px) {
+    #aboutMeText{
+        display: block;
+        width: 100%;
+        text-align: center;
+    }
+    #portraitTile{
+        background: none !important;
+        box-shadow: none;
+        width: 100%;
+        margin-top: 40vh;
+        display: flex;
+        justify-content: center;
+    }
+    #portraitTile img{
+        width: 100vw; 
+        height: 70vh;
+        margin-right: 0px;
+    }
+    #portraitTile img:hover{
+        height: calc(73vh); 
+    }    
+    #aboutMeText{
+        padding-bottom: 100px;
+        margin-left: 0px;
+    }
+    #aboutMeText p{
+        padding-left: 0px;
+        text-align: center;
+    }
+}

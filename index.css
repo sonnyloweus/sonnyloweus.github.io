@@ -2,11 +2,180 @@ html {
     scroll-behavior: smooth;
     overflow-x: hidden;
     margin: 0px;
-    /* overflow: hidden; */
+    background-color: #e9edf3 !important;
+    overflow-y: hidden;
 }
 
 body {
     margin: 0px;
-    cursor: none;
-    /* overflow: hidden; */
+    overflow: auto;
+    overflow: visible;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    z-index: 10;
+    background: transparent;
+    opacity: 0.8;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background: #56CCF2;
+
+}
+
+
+#circle{
+    position: absolute;
+    top: 48%;
+    left: 50%;
+    transform: translate(-50%, -55%);
+    width: 40vw;
+    height: 40vw;
+    border-radius: 50%;
+    background-image:
+    radial-gradient(
+      circle at bottom right,
+      #b5c5e4,
+      white
+    );
+    transition: 1s;
+}
+
+#circle:hover{
+    width: 42vw;
+    height: 42vw;
+}
+
+.notification{
+    width: 20vw;
+    position: absolute;
+    top: 80px;
+    right: 20px;
+    transition: 0.3s;
+}
+
+#fullScreenNote{
+    display: none;
+}
+
+.notification:hover{
+    box-shadow: -4px 4px 10px gray;
+    top: 74px;
+    right: 14px;
+}
+
+.delete:hover{
+    background-color: rgb(224, 63, 63)
+}
+
+#AppPopout{
+    position: absolute;
+    top: 36%;
+    left: 58%;
+    transform: translate(-42%, -64%);
+    width: 38vw;
+    transition: 0.5s;
+}
+
+#CodePopout{
+    position: absolute;
+    top: 43%;
+    left: 37%;
+    transform: translate(-63%, -57%);
+    width: 30vw;
+    transition: 0.5s;
+}
+
+#DesktopBlue{
+    position: absolute;
+    top: 53%;
+    left: 50%;
+    transform: translate(-50%, -47%);
+    width: 45vw;
+    transition: 0.5s;
+}
+
+
+#AppPopout:hover{
+    top: calc(36% - 20px);
+    left: calc(58% + 20px);
+}
+
+#CodePopout:hover{
+    top: calc( 43% - 30px);
+    left: calc(37% - 10px);
+}
+
+#DesktopBlue:hover{
+    top: calc(53% + 20px);
+    left: 50%;
+}
+
+#title{
+    font-family: Comfortaa;
+    position: absolute;
+    text-align: center;
+    bottom: -4vh;
+    padding: 0px;
+    margin: 0px;
+    font-size: 13.5vw;
+    font-weight: bold;
+    transform-origin:50% 100%;
+    transform:perspective(300px) rotateX(30deg);
+    z-index: -1;
+    color: white;
+    transition: 0.3s;
+}
+
+#title:hover{
+    bottom: 0vh;
+}
+
+#aboutBody{
+    display: none;
+    position: absolute;
+    top: 55%;
+    left: 50%;
+    transform: translate(-50%, -45%);
+    width: 90vw;
+    overflow: auto;
+}
+
+#portraitTile{
+    background: none !important;
+    box-shadow: none;
+    width: 50%;
+    display: inline-block;
+    float: left;
+}
+
+#portraitTile img{
+    /* border: 10px solid rgb(230, 190, 117); */
+    border-radius: 5px;
+    height: calc(100vh - 5vh); 
+    margin-right: 50px;
+    transition: 0.3s;
+}
+
+#portraitTile img:hover{
+    height: calc(100vh - 3vh); 
+}
+
+
+#aboutMeText{
+    display: inline-block;
+    width: 50%;
+    text-align: center;
+    margin-left: -8vw;
+}
+
+#aboutMeText p{
+    margin-top: 10%;
+    width: 100%;
+    text-align: center;
 }
