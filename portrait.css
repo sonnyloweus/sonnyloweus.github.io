@@ -40,6 +40,18 @@
     }   
 }
 
+@media only screen and (max-width: 1024px) {
+    .navbar-dropdown{
+        display:none;
+    }
+    #developerNav:hover #developDropdown{
+        display:block !important;
+    }
+    #designNav:hover #designDropdown{
+        display:block !important;
+    }
+}
+
 @media only screen and (min-width: 1300px) {
     #circle{
         width: 520px;

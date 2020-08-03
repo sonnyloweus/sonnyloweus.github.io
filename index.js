@@ -38,26 +38,25 @@ let aboutBody = document.getElementById("aboutBody");
 let homeNav = document.getElementById("homeNav");
 let aboutMeNav = document.getElementById("aboutMeNav");
 
-homeNav.onclick = function(){
-    homePage.style.display = "block";
+function changePage(){
+    homePage.style.display = "none";
     aboutBody.style.display = "none";
-    document.getElementsByTagName("html")[0].style.overflowY = "hidden";
-    
     const target = menuBurger.dataset.target;
     const $target = document.getElementById(target);
     menuBurger.classList.toggle('is-active');
     $target.classList.toggle('is-active');
-    jQuery('html,body').animate({scrollTop:0},500);
+    jQuery('html,body').animate({scrollTop:0},1000);
+}
+
+homeNav.onclick = function(){
+    changePage();
+    homePage.style.display = "block";
+    document.getElementsByTagName("html")[0].style.overflowY = "hidden";
 }
 
 
 aboutMeNav.onclick = function(){
-    homePage.style.display = "none";
+    changePage();
     aboutBody.style.display = "block";
     document.getElementsByTagName("html")[0].style.overflowY = "auto";
-
-    const target = menuBurger.dataset.target;
-    const $target = document.getElementById(target);
-    menuBurger.classList.toggle('is-active');
-    $target.classList.toggle('is-active');
 }
