@@ -85,7 +85,7 @@
         background: none !important;
         box-shadow: none;
         width: 100%;
-        margin-top: 50vh;
+        margin-top: 60vh;
         display: flex;
         justify-content: center;
     }
@@ -100,33 +100,42 @@
 }
 
 @media only screen and (max-width: 450px) {
+    #aboutBody{
+        height: 200vh;
+        width: 100%;
+    }
     #aboutMeText{
         display: block;
         width: 100%;
         text-align: center;
+        position: absolute;
+        top: 120vh;
+        padding-bottom: 100px;
+        margin-left: 0px;
     }
     #portraitTile{
+        position: absolute;
+        top: 45%;
+        transform: translate(0,-55%);
         background: none !important;
         box-shadow: none;
         width: 100%;
-        margin-top: 40vh;
         display: flex;
         justify-content: center;
     }
     #portraitTile img{
-        width: 100vw; 
         height: 70vh;
         margin-right: 0px;
     }
     #portraitTile img:hover{
         height: calc(73vh); 
     }    
-    #aboutMeText{
-        padding-bottom: 100px;
-        margin-left: 0px;
-    }
     #aboutMeText p{
         padding-left: 0px;
         text-align: center;
+    }
+    #fullScreenNote{
+        top: 200px;
+        display: block;
     }
 }

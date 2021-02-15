@@ -3,11 +3,13 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="description" content="Portfolio for Sonny Lowe." />
+    <meta name="description" content="Portfolio for Sonny Lowe" />
     <meta name="keywords" content="sonny%20lowe,developer,photographer,coder,intern,internship" />
+
     <meta name="author" content="Sonny Lowe" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sonny Lowe</title>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.0/css/bulma.min.css" />
     <script src="https://kit.fontawesome.com/98424b8b4f.js" crossorigin="anonymous"></script>
@@ -17,55 +19,73 @@
 
 <body>
 
+    <div class="cursor-dot-outline" id="cursorOutline"></div>
+    <div class="cursor-dot" id="cursorDot"></div>
+
     <!-- ############################################################################################## -->
     <!-- ########################################## HOME PAGE ######################################### -->
     <!-- ############################################################################################## -->
-    <div id="homeBody">
-        <div id="circle"></div>
-        <img id="DesktopBlue" src="images/DesktopBlue.png">
-        <img id="CodePopout" src="images/CodePopout.png">
-        <img id="AppPopout" src="images/AppPopout.png">
+    <div id="backgroundBlock"></div>
 
-        <h1 id="title">SONNY LOWE</h1>
+    <div id="homeBody">
+        <img id="TitleIsland" src="images/IslandOne.png">
+        <div id="ocean">
+            <div id="waveOne"></div>
+            <div id="waveTwo"></div>
+            <div id="waveThree"></div>
+        </div>
+
+        <div id="aboutMe">
+
+            <div class="aboutMeCard">
+                <h1 class="module" id="aboutMeTitle">About Me</h1>
+                <p class="module" id="aboutMeContent">Being a 15-year-old high schooler, I am seen as young,
+                     curious, and risk-taking... and I think that sums me up perfectly. What I don't know, 
+                     I learn. What I am passionate about, I pursue. And what I want, I strive to achieve. 
+                     As such, I have self-taught myself, starting at the age of 9, for developing: 
+                     client-side to server-side - fluent in 8 coding languages. In addition, I have a 
+                     passion to lead and help others - from leading a 9-day sailing expedition, creating a new
+                      club, or co-founding a startup - I have the drive to create change in my community. 
+                      I am an aspiring entrepreneur, developer, athlete, speech and debater, entrepreneur, 
+                      and award-winning photographer. I am currently attending Bellarmine College Prep in 
+                      San Jose and I have my sights set high on the future! </p>
+            </div>
+
+            <img id="HotAirBalloon" src="images/Balloon.png">
+
+        </div>
+
+        <div id="sky">
+            <div id="cloudOne"></div>
+            <div id="cloudTwo"></div>
+            <div id="cloudThree"></div>
+        </div>
+
+        <div id="Vision" class="Vision">
+            <img id="Diver" src="images/Diver.png">
+
+            <div class="visionCard">
+                <h1 class="module" id="visionTitle">Vision</h1>
+                <p class="module" id="visionContent">In the many fields I have pursed; computer science, 
+                    entrepreneurship, machine learning, geneology, and neuroscience; I have continued to build
+                    my curiosity for exploration and drive for learning. In my quest to understand, contribute, 
+                    and create, I believe computer science will eventually weave its way into every department. 
+                    Whether it be through artificial intelligence, data processing, or alogorithmic modeling, 
+                    software has proven to be more efficient, accurate, and reliable than human calculations. Currently,
+                    I am looking to pursue an intersection of science and entrepreneurship: being able to innovate
+                    and distrube for the benefit of society.</p>
+            </div>
+        </div>
+
+        <!-- <div class="Footer"></div> -->
     </div>
 
     <!-- ############################################################################################## -->
-    <!-- ####################################@### ABOUT ME PAGE ##############@######################## -->
+    <!-- ###################################### Coming Soon PAGE ###################################### -->
     <!-- ############################################################################################## -->
 
-    <div id="aboutBody">
-
-        <div id="portraitTile" class="aboutMeDiv">
-            <img src="images/Projection.png">
-        </div>
-
-        <div id="aboutMeText" class="aboutMeDiv">
-            <h1 class="is-size-1">Sonny Lowe</h1>
-            <div id="contactButtons" class="buttons has-addons is-centered">
-                <a target="_blank" href="https://github.com/sonnyloweus" class="button is-success">
-                    <span class="icon"><i class="fab fa-github"></i></span>
-                    <span>GitHub</span>
-                </a>
-                <a target="_blank" href="https://www.linkedin.com/in/sonny-lowe-us" class="button is-info">
-                    <span class="icon"><i class="fab fa-linkedin"></i></span>
-                    <span>LinkedIn</span>
-                </a>
-                <a target="_blank" href="mailto:contact@sonnylowe.us" class="button is-danger">
-                    <span class="icon"><i class="far fa-envelope"></i></span>
-                    <span>Gmail</span>
-                </a>
-            </div>
-            <p>Being a 14 year old high schooler, I am seen as young and naive... and I think that sums me up 
-                perfectly. What I don't know, I learn. What I am passionate about, I pursue. And what I want, 
-                I strive to achieve. As such, I have self-taught myself, starting at the age of 9, for 
-                developing: client-side to server-side. I have learned more than 7 languages to empower me 
-                with the skill set I need to create what I envision. I am an aspiring developer, athlete, 
-                speech and debater, entrepreneur, and an award-winning photographer. I am currently attending 
-                Bellarmine College Prep in San Jose and I have my sights set high on the future!</p>
-        </div>
-        <br>
-        <br>
-
+    <div id="ComingSoonBody">
+        <img src="images/ComingSoon.png">
     </div>
 
     <!-- ############################################################################################## -->
@@ -81,7 +101,15 @@
     <div id="fullScreenNote" class="notification is-success is-light">
         <button class="delete"></button>
         <span class="icon is-medium is-left"><i class="fas fa-desktop"></i></span>
-        Get the best website experience on a large screen
+        Works on all screen sizes!
+    </div>
+
+    <!-- ############################################################################################## -->
+    <!-- ######################################## DEVELOPEMENT ######################################## -->
+    <!-- ############################################################################################## -->
+
+    <div id="ClassAlly">
+        
     </div>
 
     <!-- ############################################################################################## -->
@@ -90,9 +118,6 @@
 
     <nav class="navbar" role="navigation" aria-label="main navigation">
         <div class="navbar-brand">
-            <!-- <a class="navbar-item" href="https://bulma.io">
-                <img src="https://bulma.io/images/bulma-logo.png" width="112" height="28">
-            </a> -->
             <a id="menuBurger" role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false"
                 data-target="navbarBasicExample">
                 <span aria-hidden="true"></span>
@@ -103,39 +128,43 @@
 
         <div id="navbarBasicExample" class="navbar-menu">
             <div class="navbar-start">
-                <a id="homeNav" class="navbar-item">
+                <a id="homeNav" href="#homeBody" class="navbar-item">
                     <span class="icon is-large is-left"><i class="fas fa-home"></i></span>
-                    Home</a>
+                    &nbsp Home</a>
 
-                <a id="aboutMeNav" class="navbar-item">
+                <a id="aboutMeNav" href="#aboutMe" class="navbar-item">
                     <span class="icon is-medium is-left"><i class="fas fa-address-card"></i></span>
-                    About Me</a>
+                    &nbsp About Me</a>
+
+                <a id="visionNav" href="#Vision" class="navbar-item">
+                    <span class="icon is-medium is-left"><i class="fas fa-eye"></i></span>
+                    &nbsp My Vision</a>
 
                 <div id="developerNav" class="navbar-item has-dropdown is-hoverable">
                     <a class="navbar-link" >
                         <span class="icon is-medium is-left"><i class="fas fa-code"></i></span>
-                        Developer Projects</a>
+                        &nbsp Developer Projects</a>
 
                     <div id="developDropdown" class="navbar-dropdown">
-                        <a class="navbar-item">ClassAlly</a>
-                        <a class="navbar-item">On The Grow</a>
-                        <a class="navbar-item">Nurture</a>
+                        <a id="ClassAllyNav" class="navbar-item">ClassAlly</a>
+                        <a id="OnTheGrowNav" class="navbar-item">On The Grow</a>
+                        <a id="NurtureNav" class="navbar-item">Nurture</a>
                         <hr class="navbar-divider">
-                        <a class="navbar-item">Tutorial</a>
+                        <a id="developTutorialNav" class="navbar-item">Tutorial</a>
                     </div>
                 </div>
 
                 <div id="designNav" class="navbar-item has-dropdown is-hoverable">
                     <a class="navbar-link">
                         <span class="icon is-medium is-left"><i class="fas fa-drafting-compass"></i></span>
-                        Designer</a>
+                        &nbsp Designer</a>
 
                     <div id="designDropdown" class="navbar-dropdown">
-                        <a class="navbar-item">Digital Design</a>
-                        <a class="navbar-item">Photography</a>
-                        <a class="navbar-item">Logo Creation</a>
+                        <a id="DigitalNav" class="navbar-item">Digital Design</a>
+                        <a id="PhotographyNav" class="navbar-item">Photography</a>
+                        <a id="LogoNav" class="navbar-item">Logo Creation</a>
                         <hr class="navbar-divider">
-                        <a class="navbar-item">Tutorial</a>
+                        <a id="DesignTutorialNav" class="navbar-item">Tutorial</a>
                     </div>
                 </div>
             </div>
