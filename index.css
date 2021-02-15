@@ -82,15 +82,11 @@ body {
         rgba(0, 0, 0, 0.514),
         rgba(255, 255, 255, 0) 95%
     ) !important;
-    font-size: 1.2em !important;
+    /* overflow: scroll; */
 }
 
 .navbar-item{
     margin-right: 10px;
-}
-
-.navbar-dropdown .navbar-item{
-    font-size: 1.2em !important;
 }
 
 .navbar-item, .navbar-link{
@@ -98,23 +94,32 @@ body {
     background-color: transparent !important;
 }
 
-.navbar-item:hover{
+.navbar-menu:not(.is-active) .navbar-item:hover{
     transition: all .4s ease-in-out;
     transform: scale(1.1);
     background-color: transparent !important;
-    cursor: none !important;
+    /* cursor: none !important; */
 }
 
 .navbar-link:hover{
-    cursor: none !important;
+    /* cursor: none !important; */
 }
 
 .button:hover, .delete:hover{
-    cursor: none !important;
+    /* cursor: none !important; */
 }
 
 .navbar-dropdown{
-    background-color: transparent !important;
+    background-color: rgba(0, 0, 0, 0.459) !important;
+}
+
+#menuBurger{
+    color: white !important;
+}
+
+.navbar-menu:not(.is-active) .dropdown-item:hover{
+    transform: scale(1) !important;
+    cursor: not-allowed !important;
 }
 
 .notification{
@@ -173,6 +178,7 @@ body {
     width: 100vw;
     height: 30vh;
     background-color: transparent;
+    z-index: 2;
 }
 
 #waveOne{
@@ -205,19 +211,8 @@ body {
     animation: slide 30s linear infinite;
 }
 
-@keyframes slide{
-    0%{
-        transform: translate3d(0, 0, 0);
-    }
-    50%{
-        transform: translate3d(-100vw, 0, 0);
-    }
-    100%{
-        transform: translate3d(0, 0, 0);
-    }
-}
-
 #aboutMe{
+    overflow: hidden;
     position: absolute;
     top: 105vh;
     left: 0;
@@ -230,7 +225,7 @@ body {
         white 95%,
         var(--gradColor5)
     ) !important;
-    z-index: -1;
+    z-index: 1;
 }
 
 #HotAirBalloon{
@@ -252,6 +247,7 @@ body {
     top: 52%;
     transform: translate(-65%, -48%);
     width: 25vw;
+    z-index: 1;
 }
 
 #aboutMeTitle{
@@ -272,6 +268,7 @@ body {
     width: 100vw;
     height: 40vh;
     background-color: transparent;
+    z-index: 2;
 }
 
 #cloudOne{
@@ -332,7 +329,8 @@ body {
         var(--gradColor5),
         var(--gradColor6)
     ) !important;
-    z-index: -1;
+    z-index: 1;
+    overflow: hidden;
 }
 
 #Diver{
@@ -373,9 +371,10 @@ body {
 .visionCard{
     position: absolute;
     left: 65%;
-    top: 52%;
-    transform: translate(-35%, -48%);
+    top: 50%;
+    transform: translate(-35%, -50%);
     width: 25vw;
+    z-index: 2;
 }
 
 #visionTitle{
@@ -387,4 +386,65 @@ body {
 #visionContent{
     font-size: 1vw;
     color: white;
+}
+
+#Contact{
+    overflow: hidden;
+    position: absolute;
+    top: 305vh;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image:
+    linear-gradient( 
+        var(--gradColor6),
+        white 10%,
+        white 95%,
+        rgba(0, 0, 0, 0.445)
+    ) !important;
+    z-index: 1;
+}
+
+.contactCard{
+    position: absolute;
+    left: 35%;
+    top: 52%;
+    transform: translate(-65%, -48%);
+    width: 25vw;
+    z-index: 1;
+}
+
+#contactTitle{
+    font-size: 4vw;
+    font-weight: bold;
+}
+
+#contactContent{
+    font-size: 1vw;
+}
+
+#ocean2{
+    position: absolute;
+    top: 290vh;
+    left: 50%;
+    /* margin-top: calc( (38vw * 1.5) /2); */
+    transform: translate(-50%);
+    overflow: hidden;
+    width: 100vw;
+    height: 30vh;
+    background-color: transparent;
+    z-index: 2;
+}
+
+#DartBoard{
+    position: absolute;
+    left: 65%;
+    top: 52%;
+    transform: translate(-35%, -48%);
+    width: 28vw;
+    transition: 0.5s;
+}
+
+#DartBoard:hover{
+    width: calc(28vw + 30px);
 }

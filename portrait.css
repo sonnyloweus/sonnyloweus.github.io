@@ -1,141 +1,176 @@
-@media screen and (orientation: portrait) {
-    #circle{
-        width: 55vh;
-        height: 55vh;
+@media only screen and (hover: none) {
+    .navbar{
+        max-height: 100vh;
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
     }
-    #circle:hover{
-        width: 57vh;
-        height: 57vh;
+    .is-active{
+        background-color: rgba(0, 0, 0, 0.63) !important;
     }
-    .notification{
-        width: 80vw;
-    }
-    #fullScreenNote{
-        top: 170px;
-        display: block;
-    }
-    #title{
-        bottom: 0vh;
-        font-size: 20vw;
-    }   
-    #title:hover{
-        bottom: 4vh;
-    }   
-    #AppPopout{
-        width: 60vw;
-    }
-    #CodePopout{
-        width: 50vw;
-    }
-    #DesktopBlue{
-        width: 75vw;
+    .navbar-dropdown{
+        background-color: rgba(0, 0, 0, 0) !important;
     }
 }
 
-@media screen and (max-width: 772px) and (min-width: 573px) {
-    #title{
-        bottom: 0vh;
-        font-size: 17vw;
-        text-align: center;
-    }   
+@media screen and (orientation: portrait) {
+    .navbar{
+        max-height: 100vh;
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
+    }
+    .is-active{
+        background-color: rgba(0, 0, 0, 0.63) !important;
+    }
+    .navbar-dropdown{
+        background-color: rgba(0, 0, 0, 0) !important;
+    }
+
+    .notification{
+        width: 90vw;
+    }
+
+    #ocean{
+        top: calc(102vh - 5vw);
+        width: 100vw;
+        height: 20vh;
+    }
+
+    #ocean2{
+        top: calc(302vh - 5vw);
+        width: 100vw;
+        height: 20vh;
+    }
+    
+    #waveOne{
+        background-size:100vw 10vw;
+        height: 10vw;
+    }
+    
+    #waveTwo{
+        background-size:100vw 10vw;
+        height: 10vw;
+    }
+    
+    #waveThree{
+        background-size:100vw 10vw;
+        height: 10vw;
+    }
+
+    #sky{
+        top: calc(200vh - 10vw);
+        width: 100vw;
+        height: 30vw;
+    }
+    
+    #cloudOne{
+        background-size:100vw 20vw;
+        height: 20vw;
+    }
+    
+    #cloudTwo{
+        background-size:100vw 20vw;
+        height: 20vw;
+    }
+    
+    #cloudThree{
+        background-size:100vw 20vw;
+        height: 20vw;
+    }
+
+    #TitleIsland{
+        top: 60%;
+        left: 45%;
+        transform: translate(-55%, -40%);
+        width: 95vw;
+    }
+
+    #TitleIsland:hover{
+        width: calc(90vw + 40px);
+    }
+
+    #HotAirBalloon{
+        left: 60%;
+        top: 40%;
+        transform: translate(-40%, -60%);
+        width: 65vw;
+    }
+    
+    #HotAirBalloon:hover{
+        width: calc(65vw + 30px);
+    }
+    
+    .aboutMeCard{
+        left: 40%;
+        top: 55%;
+        transform: translate(-60%, -45%);
+        width: 55vw;
+    }
+
+    #aboutMeTitle{
+        font-size: 8vw;
+    }
+    
+    #aboutMeContent{
+        font-size: 1.5vh;
+        font-weight: 500;
+    }
+
+    #Diver{
+        left: 40%;
+        top: 40%;
+        transform: translate(-60%, -60%);
+        width: 65vw;
+    }
+    
+    #Diver:hover{
+        width: calc(65vw + 30px);
+    }
+
+    .visionCard{
+        left: 60%;
+        top: 52%;
+        transform: translate(-40%, -48%);
+        width: 55vw;
+    }
+    
+    #visionTitle{
+        font-size: 8vw;
+    }
+    
+    #visionContent{
+        font-size: 1.5vh;
+        font-weight: 500;
+    }
+
+    .contactCard{
+        left: 50%;
+        top: 55%;
+        transform: translate(-50%, -45%);
+        width: 90vw;
+    }
+    
+    #contactTitle{
+        font-size: 8vw;
+    }
+    
+    #DartBoard{
+        left: 60%;
+        top: 40%;
+        transform: translate(-40%, -60%);
+        width: 65vw;
+    }
+    
+    #DartBoard:hover{
+        width: calc(65vw + 30px);
+    }
 }
+
 
 @media only screen and (max-width: 1024px) {
-    .navbar-dropdown{
-        display:none;
-    }
-    #developerNav:hover #developDropdown{
-        display:block !important;
-    }
-    #designNav:hover #designDropdown{
-        display:block !important;
-    }
+    
 }
 
 @media only screen and (min-width: 1300px) {
-    #circle{
-        width: 520px;
-        height: 520px;
-    }
-    #circle:hover{
-        width: 540px;
-        height: 540px;
-    }
     
-    #AppPopout{
-        width: 494px;
-    }
-
-    #CodePopout{
-        width: 390px;
-    }
-
-    #DesktopBlue{
-        width: 585px;
-    }
 }
 
-@media only screen and (max-width: 900px) and (min-width: 450px) {
-    #aboutMeText{
-        display: block;
-        width: 100%;
-        text-align: center;
-    }
-    #portraitTile{
-        background: none !important;
-        box-shadow: none;
-        width: 100%;
-        margin-top: 60vh;
-        display: flex;
-        justify-content: center;
-    }
-    #aboutMeText{
-        padding-bottom: 100px;
-        margin-left: 0px;
-    }
-    #aboutMeText p{
-        padding-left: 0px;
-        text-align: center;
-    }
-}
-
-@media only screen and (max-width: 450px) {
-    #aboutBody{
-        height: 200vh;
-        width: 100%;
-    }
-    #aboutMeText{
-        display: block;
-        width: 100%;
-        text-align: center;
-        position: absolute;
-        top: 120vh;
-        padding-bottom: 100px;
-        margin-left: 0px;
-    }
-    #portraitTile{
-        position: absolute;
-        top: 45%;
-        transform: translate(0,-55%);
-        background: none !important;
-        box-shadow: none;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-    }
-    #portraitTile img{
-        height: 70vh;
-        margin-right: 0px;
-    }
-    #portraitTile img:hover{
-        height: calc(73vh); 
-    }    
-    #aboutMeText p{
-        padding-left: 0px;
-        text-align: center;
-    }
-    #fullScreenNote{
-        top: 200px;
-        display: block;
-    }
-}

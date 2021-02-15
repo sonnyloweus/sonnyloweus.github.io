@@ -39,8 +39,8 @@
 
             <div class="aboutMeCard">
                 <h1 class="module" id="aboutMeTitle">About Me</h1>
-                <p class="module" id="aboutMeContent">Being a 15-year-old high schooler, I am seen as young,
-                     curious, and risk-taking... and I think that sums me up perfectly. What I don't know, 
+                <p class="module" id="aboutMeContent">Being a 15-year-old high schooler, I am seen as cheerful,
+                     inquisitive, and risk-taking... and I think that sums me up perfectly. What I don't know, 
                      I learn. What I am passionate about, I pursue. And what I want, I strive to achieve. 
                      As such, I have self-taught myself, starting at the age of 9, for developing: 
                      client-side to server-side - fluent in 8 coding languages. In addition, I have a 
@@ -67,7 +67,7 @@
             <div class="visionCard">
                 <h1 class="module" id="visionTitle">Vision</h1>
                 <p class="module" id="visionContent">In the many fields I have pursed; computer science, 
-                    entrepreneurship, machine learning, geneology, and neuroscience; I have continued to build
+                    entrepreneurship, machine learning, geneology, education, and neuroscience; I have continued to build
                     my curiosity for exploration and drive for learning. In my quest to understand, contribute, 
                     and create, I believe computer science will eventually weave its way into every department. 
                     Whether it be through artificial intelligence, data processing, or alogorithmic modeling, 
@@ -75,6 +75,52 @@
                     I am looking to pursue an intersection of science and entrepreneurship: being able to innovate
                     and distrube for the benefit of society.</p>
             </div>
+        </div>
+
+        <!-- <div id="OceanFloor">
+            <img id="floorOne" src="images/OceanFloor.png">
+        </div> -->
+        <div id="ocean2">
+            <div id="waveOne"></div>
+            <div id="waveTwo"></div>
+            <div id="waveThree"></div>
+        </div>
+
+        <div id="Contact">
+
+            <div class="contactCard">
+                <h1 class="module" id="contactTitle">Contact</h1>
+                <div class="module" id="contactContent">
+                    <div id="contactButtons" class="buttons has-addons">
+                        <a target="_blank" href="https://github.com/sonnyloweus" class="button is-success">
+                            <span class="icon"><i class="fab fa-github"></i></span>
+                            <span>GitHub</span>
+                        </a>
+                        <a target="_blank" href="https://www.linkedin.com/in/sonny-lowe-us" class="button is-info">
+                            <span class="icon"><i class="fab fa-linkedin"></i></span>
+                            <span>LinkedIn</span>
+                        </a>
+                        <a target="_blank" href="mailto:sonnylowe55@outlook.com" class="button is-danger">
+                            <span class="icon"><i class="far fa-envelope"></i></span>
+                            <span>Gmail</span>
+                        </a>
+                    </div>
+
+                    <div id="contactButtons" class="buttons has-addons">
+                        <a target="_blank" href="https://www.facebook.com/sonny.lowe.714/" class="button is-link">
+                            <span class="icon"><i class="fab fa-facebook-square"></i></span>
+                            <span>Facebook</span>
+                        </a>
+                        <a target="_blank" href="https://www.instagram.com/sonnygotlowe/" class="button is-warning">
+                            <span class="icon"><i class="fab fa-instagram"></i></span>
+                            <span>Instagram</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <img id="DartBoard" src="images/dartboard.png">
+
         </div>
 
         <!-- <div class="Footer"></div> -->
@@ -95,14 +141,14 @@
     <div id="clickHoverNote" class="notification is-success is-light">
         <button class="delete"></button>
         <span class="icon is-medium is-left"><i class="far fa-hand-point-up"></i></span>
-        Try Hovering or Clicking on images (Some Move!)
+        Try Hovering or Clicking on images (Some Move!) Best experience on desktop!
     </div>
 
-    <div id="fullScreenNote" class="notification is-success is-light">
+    <!-- <div id="fullScreenNote" class="notification is-success is-light">
         <button class="delete"></button>
         <span class="icon is-medium is-left"><i class="fas fa-desktop"></i></span>
-        Works on all screen sizes!
-    </div>
+        For best experience, access on desktop!
+    </div> -->
 
     <!-- ############################################################################################## -->
     <!-- ######################################## DEVELOPEMENT ######################################## -->
@@ -118,6 +164,9 @@
 
     <nav class="navbar" role="navigation" aria-label="main navigation">
         <div class="navbar-brand">
+            <a class="navbar-item" href="#homeBody">
+                &nbsp&nbsp Sonny Lowe
+            </a>
             <a id="menuBurger" role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false"
                 data-target="navbarBasicExample">
                 <span aria-hidden="true"></span>
@@ -146,11 +195,11 @@
                         &nbsp Developer Projects</a>
 
                     <div id="developDropdown" class="navbar-dropdown">
-                        <a id="ClassAllyNav" class="navbar-item">ClassAlly</a>
-                        <a id="OnTheGrowNav" class="navbar-item">On The Grow</a>
-                        <a id="NurtureNav" class="navbar-item">Nurture</a>
+                        <a id="ClassAllyNav" class="navbar-item dropdown-item">ClassAlly</a>
+                        <a id="OnTheGrowNav" class="navbar-item dropdown-item">On The Grow</a>
+                        <a id="NurtureNav" class="navbar-item dropdown-item">Nurture</a>
                         <hr class="navbar-divider">
-                        <a id="developTutorialNav" class="navbar-item">Tutorial</a>
+                        <a id="developTutorialNav" class="navbar-item dropdown-item">Tutorial</a>
                     </div>
                 </div>
 
@@ -160,11 +209,11 @@
                         &nbsp Designer</a>
 
                     <div id="designDropdown" class="navbar-dropdown">
-                        <a id="DigitalNav" class="navbar-item">Digital Design</a>
-                        <a id="PhotographyNav" class="navbar-item">Photography</a>
-                        <a id="LogoNav" class="navbar-item">Logo Creation</a>
+                        <a id="DigitalNav" class="navbar-item dropdown-item">Digital Design</a>
+                        <a id="PhotographyNav" class="navbar-item dropdown-item">Photography</a>
+                        <a id="LogoNav" class="navbar-item dropdown-item">Logo Creation</a>
                         <hr class="navbar-divider">
-                        <a id="DesignTutorialNav" class="navbar-item">Tutorial</a>
+                        <a id="DesignTutorialNav" class="navbar-item dropdown-item">Tutorial</a>
                     </div>
                 </div>
             </div>
@@ -175,7 +224,7 @@
                 </div>
                 <div class="navbar-item">
                     <div class="buttons">
-                        <a class="button is-primary">
+                        <a href="#Contact" class="button is-primary">
                             <span class="icon is-medium is-left"><i class="far fa-address-book"></i></span>
                             <strong>Contact</strong></a>
                         <!-- <a class="button is-light">Log in</a> -->

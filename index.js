@@ -1,21 +1,25 @@
 let clickHoverNote = document.getElementById('clickHoverNote');
-let fullScreenNote = document.getElementById("fullScreenNote");
+// let fullScreenNote = document.getElementById("fullScreenNote");
 
-fullScreenNote.addEventListener('click', () => {
-    fullScreenNote.remove();
-});
+// fullScreenNote.addEventListener('click', () => {
+//     fullScreenNote.remove();
+// });
 
 clickHoverNote.addEventListener('click', () => {
     clickHoverNote.remove();
 });
 
 const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+let $navbar = document.getElementById("navbarBasicExample");
 
 // Check if there are any navbar burgers
 if ($navbarBurgers.length > 0) {
+
     // Add a click event on each of them
     $navbarBurgers.forEach(el => {
         el.addEventListener('click', () => {
+
+
 
             // Get the target from the "data-target" attribute
             const target = el.dataset.target;
