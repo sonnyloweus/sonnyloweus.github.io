@@ -11,10 +11,11 @@ clickHoverNote.addEventListener('click', () => {
 
 const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
 let $navbar = document.getElementById("navbarBasicExample");
+let navbarMenu = document.getElementById("navbarBasicExample");
 
 // Check if there are any navbar burgers
 if ($navbarBurgers.length > 0) {
-
+    navbarMenu.style.backgroundColor = "rgba(0, 0, 0, 0.527) !important";
     // Add a click event on each of them
     $navbarBurgers.forEach(el => {
         el.addEventListener('click', () => {
