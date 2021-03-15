@@ -362,16 +362,67 @@ body {
     z-index: 0;
 }
 
-.come-in {
-    transform: translateY(30vh);
-    animation: come-in 2s ease forwards;
+.module{
+    opacity: 0 !important;
 }
-.come-in:nth-child(odd) {
+
+.come-in-upward {
+    opacity: 1 !important;
+    display: block !important;
+    transform: translateY(50vh);
+    animation: come-in-upward 2s ease forwards;
+}
+.come-in-upward:nth-child(odd) {
     animation-duration: 0.6s; /* So they look staggered */
 }
 
-@keyframes come-in {
+.come-out-upward {
+    opacity: 0 !important;
+    transition: 2s;
+    display: block !important;
+    transform: translateY(0vh);
+    animation: come-out-upward 2s ease forwards;
+}
+.come-out-upward:nth-child(odd) {
+    animation-duration: 0.6s; /* So they look staggered */
+}
+
+.come-out-downward {
+    opacity: 0 !important;
+    transition: 2s;
+    display: block !important;
+    transform: translateY(0vh);
+    animation: come-out-downward 2s ease forwards;
+}
+.come-out-downward:nth-child(even) {
+    animation-duration: 0.6s; /* So they look staggered */
+}
+
+.come-in-downward {
+    opacity: 1 !important;
+    transition: 2s;
+    display: block !important;
+    transform: translateY(-50vh);
+    animation: come-in-downward 2s ease forwards;
+}
+.come-in-downward:nth-child(even) {
+    animation-duration: 0.6s; /* So they look staggered */
+}
+
+@keyframes come-in-downward {
     to { transform: translateY(0); }
+}
+
+@keyframes come-out-downward {
+    to { transform: translateY(100vh); }
+}
+
+@keyframes come-in-upward {
+    to { transform: translateY(0); }
+}
+
+@keyframes come-out-upward {
+    to { transform: translateY(-100vh); }
 }
 
 .visionCard{
@@ -387,6 +438,7 @@ body {
     font-size: 4vw;
     font-weight: bold;
     color: white;
+    /* background-color: blue; */
 }
 
 #visionContent{

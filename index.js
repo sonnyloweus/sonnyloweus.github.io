@@ -184,7 +184,7 @@ cursor.init();
         var $t = $(this),
             $w = $(window),
             viewTop = $w.scrollTop(),
-            viewBottom = viewTop + $w.height(),
+            viewBottom = viewTop + $w.height() - $w.height()*0.25,
             _top = $t.offset().top,
             _bottom = _top + $t.height(),
             compareTop = partial === true ? _bottom : _top,
@@ -211,8 +211,107 @@ win.scroll(function (event) {
     allMods.each(function (i, el) {
         var el = $(el);
         if (el.visible(true)) {
-            el.addClass("come-in");
+            el.addClass("come-in-upward");
         }
     });
 
 });
+
+
+// (function ($) {
+
+//     $.fn.visible = function (partial) {
+
+//         var $t = $(this),
+//             $w = $(window),
+//             viewTop = $w.scrollTop(),
+//             viewBottom = (viewTop + $w.height()) - $w.height()*0.25,
+
+//             _top = $t.offset().top,
+//             _bottom = _top + $t.height(),
+//             compareTop = partial === true ? _bottom : _top,
+//             compareBottom = partial === true ? _top : _bottom;
+
+//         return ((compareBottom <= viewBottom ) && (compareTop >= viewTop));
+
+//     };
+
+//     $.fn.outofBounds = function (partial) {
+
+//         var $t = $(this),
+//             $w = $(window),
+//             viewTop = $w.scrollTop() + $w.height()*0.10,
+//             viewBottom = (viewTop + $w.height()) - $w.height()*0.25,
+
+//             _top = $t.offset().top,
+//             _bottom = _top + $t.height(),
+//             compareTop = partial === true ? _top : _bottom,
+//             compareBottom = partial === true ? _bottom : _top;
+
+//         return ((compareBottom <= viewBottom ) && (compareTop <= viewTop));
+
+//     };
+
+// })(jQuery);
+
+// var win = $(window);
+// var allMods = $(".module");
+
+// allMods.each(function (i, el) {
+//     var el = $(el);
+//     if (el.visible(true)) {
+//         el.addClass("already-visible");
+//     }
+// });
+
+// var lastScrollTop = 0;
+
+// win.scroll(function (event) {
+
+//     var st = $(this).scrollTop();
+//     if (st > lastScrollTop){
+//         // downscroll code
+//         allMods.each(function (i, el) {
+//             var el = $(el);
+//             if (((el.hasClass("come-out-upward") || el.hasClass("come-out-downward")) ||
+//                 (!el.hasClass("come-out-upward") && !el.hasClass("come-out-downward"))) &&
+//                  el.visible(true) ) {
+//                 el.removeClass("come-in-downward");
+//                 el.removeClass("come-out-downward");
+//                 // el.removeClass("come-out-upward");
+
+//                 el.addClass("come-in-upward");
+//             }
+            
+//             if ( (el.hasClass("come-in-upward") || el.hasClass("come-in-downward") ) && el.outofBounds(true)) {
+//                 el.removeClass("come-in-downward");
+//                 el.removeClass("come-out-downward");
+//                 // el.removeClass("come-in-upward");
+
+//                 el.addClass("come-out-upward");
+//             }
+//         });
+//     } else {
+//         // upwardscroll
+//         allMods.each(function (i, el) {
+//             var el = $(el);
+//             if ( (el.hasClass("come-in-upward") || el.hasClass("come-in-downward") ) && el.visible(true) ) {
+//                 // el.removeClass("come-in-downward");
+//                 el.removeClass("come-out-upward");
+//                 el.removeClass("come-in-upward");
+
+//                 el.addClass("come-out-downward");
+//             }
+            
+//             if ( (el.hasClass("come-out-upward") || el.hasClass("come-out-downward") ) && el.outofBounds(true)) {
+//                 // el.removeClass("come-out-downward");
+//                 el.removeClass("come-out-upward");
+//                 el.removeClass("come-in-upward");
+
+//                 el.addClass("come-in-downward");
+//             }
+//         });
+//     }
+//     lastScrollTop = st;
+
+// });
