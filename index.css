@@ -13,7 +13,6 @@
 html,
 body {
     height: 100%;
-    overflow: hidden;
     margin: 0;
     padding: 0;
     width: 100%;
@@ -100,6 +99,15 @@ button>span {
     overflow: hidden;
 }
 
+#footer {
+    position: fixed;
+    left: 0px;
+    bottom: 0px;
+    width: 100%;
+    height: 100px;
+    background: linear-gradient(to bottom, #00000000, #222633);
+}
+
 #paperStart {
     font-weight: bolder;
 }
@@ -159,6 +167,8 @@ button>span {
     }
     .centered {
         position: fixed;
+        height: 100vh;
+        overflow: scroll;
     }
 }
 
