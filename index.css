@@ -148,7 +148,10 @@ button>span {
 
 @media screen and (max-width: 830px) {
     .paper {
-        margin-bottom: 5em;
+        margin-top: 6.5em;
+    }
+    #instructions {
+        top: 16em;
     }
     .keyboard {
         margin-top: 9em;
