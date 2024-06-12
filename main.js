@@ -1,5 +1,4 @@
 // Keyboard Effect
-
 let paper = document.getElementById("text-input");
 let instructions = document.getElementById("instructions");
 let caps = false;
