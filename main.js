@@ -1,5 +1,6 @@
 // Keyboard Effect
 let paper = document.getElementById("text-input");
+let refresh = document.getElementById("refresh");
 let instructions = document.getElementById("instructions");
 let caps = false;
 let shifted = false;
@@ -11,18 +12,22 @@ document.addEventListener("DOMContentLoaded", function () {
         this.childNodes[0].classList.toggle("on");
     });
 
+    refresh.addEventListener("click", function () {
+        window.location.reload();
+    });
+
     document.getElementById("space").addEventListener("click", function () {
-        instructions.style.display = "none";
+        typed();
         paper.textContent += String.fromCharCode(160);
     });
 
     document.getElementById("delete").addEventListener("click", function () {
-        instructions.style.display = "none";
+        typed();
         paper.textContent = paper.innerText.substring(0, paper.innerText.length - 1);
     });
 
     document.getElementById("clear").addEventListener("click", function () {
-        instructions.style.display = "none";
+        typed();
         paper.textContent = "";
     });
 
@@ -57,18 +62,23 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function addTextKey(capitol, key) {
-    instructions.style.display = "none";
+    typed();
     if (!capitol)
         key = key.toLowerCase();
     paper.innerText += key;
 }
 
 function addDualKey(capitol, key) {
-    instructions.style.display = "none";
+    typed();
     console.log(key.charAt(2));
     if (!capitol) key = key.charAt(2);
     else key = key.charAt(0);
     paper.innerText += key;
+}
+
+function typed(){
+    instructions.style.display = "none";
+    refresh.style.display = "block";
 }
 
 
