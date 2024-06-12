@@ -10,9 +10,13 @@
     font-size: 16px;
 }
 
+html,
 body {
     height: 100%;
     overflow: hidden;
+    margin: 0;
+    padding: 0;
+    width: 100%;
 }
 
 
@@ -78,15 +82,22 @@ button>span {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
 }
 
 .paper {
     display: flex;
+    display: -webkit-flex;
     justify-content: center;
+    -webkit-justify-content: center;
+    align-items: center;
+    -webkit-align-items: center;
+
     margin-bottom: 4.5em;
     font-family: 'Times New Roman', Times, serif;
     font-size: 1.5em;
     color: #eee;
+    overflow: hidden;
 }
 
 #paperStart {
@@ -140,8 +151,11 @@ button>span {
         margin-bottom: 5em;
     }
     .keyboard {
-        margin-top: 300px;
-        rotate: 90deg;
+        margin-top: 9em;
+        transform: rotate(90deg);
+    }
+    .centered {
+        position: fixed;
     }
 }
 

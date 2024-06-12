@@ -101,8 +101,10 @@ function pageStart() {
     else j = 0;
 
     typer();
-    setTimeout(deleter, 4000);
-    setTimeout(pageStart, 7000);
+    setTimeout(function(){
+        deleter();
+        setTimeout(pageStart, 3000)
+    }, 4000);
 }
 
 pageStart();
