@@ -38,10 +38,10 @@ document.addEventListener("DOMContentLoaded", function () {
         paper.value += String.fromCharCode(160);
     });
 
-    document.getElementById("TAB").addEventListener("click", function () {
-        typed();
-        paper.value += String.fromCharCode(160) + String.fromCharCode(160) + String.fromCharCode(160);
-    });
+    // document.getElementById("TAB").addEventListener("click", function () {
+    //     typed();
+    //     paper.value += String.fromCharCode(160) + String.fromCharCode(160) + String.fromCharCode(160);
+    // });
 
     document.getElementById("BACKSPACE").addEventListener("click", function () {
         typed();
