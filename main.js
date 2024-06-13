@@ -6,6 +6,22 @@ let caps = false;
 let shifted = false;
 let typing = false;
 
+window.addEventListener( "pageshow", function ( event ) {
+    var historyTraversal = event.persisted || 
+                            ( typeof window.performance != "undefined" && 
+                                window.performance.navigation.type === 2 );
+    if ( historyTraversal ) {
+        window.location.reload();
+    }
+});
+
+document.addEventListener("visibilitychange", function() {
+    if (document.hidden){
+    } else {
+        window.location.reload();
+    }
+ });
+
 document.addEventListener("DOMContentLoaded", function () {
 
     document.getElementById("CAPSLOCK").addEventListener("click", function () {
@@ -99,7 +115,7 @@ function addDualKey(capitol, key) {
 function typed(){
     if (!typing) {
         typing = true;
-        paper.innerText = "";
+        paper.value = "";
     }
     instructions.style.display = "none";
     refresh.style.display = "block";
@@ -142,6 +158,12 @@ function deleter() {
         adjustWidth();
         simulateType("BACKSPACE");
         i--;
+        setTimeout(deleter, speed);
+    }else if(paper.value.length > 0 && !typing) {
+        paper.value = paper.value.substring(0, paper.value.length - 1);
+        adjustWidth();
+        simulateType("BACKSPACE");
+        i=0;
         setTimeout(deleter, speed);
     }
 }
