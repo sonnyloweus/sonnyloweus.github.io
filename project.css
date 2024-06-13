@@ -1,0 +1,19 @@
+.paper {
+    margin-top: 5em;
+}
+
+::-webkit-scrollbar {
+    display: none;
+}
+
+.projects {
+    margin-top: -2em;
+}
+
+.panel {
+    width: 20em;
+    height: 8em;
+    border: 1px solid #b4b4b4;
+    border-radius: 0.25em;
+    margin-bottom: 20px;
+}

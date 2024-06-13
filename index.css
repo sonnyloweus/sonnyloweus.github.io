@@ -16,13 +16,24 @@ body {
     margin: 0;
     padding: 0;
     width: 100%;
+    background-image: url(paper.jpeg);
+    background-size: contain;
+    background-position: center;
+    
 }
 
+#paperOverlay{
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background-color: #0c0e14e3;
+    top: 0px;
+    left: 0px;
+}
 
 body,
 button {
     font: 1em -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-    background-color: #222633;
 }
 
 button {
@@ -47,6 +58,12 @@ button {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+
+a {
+    font: 1em -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    color: white;
+    text-decoration: none;
 }
 
 button:not(:last-of-type) {
@@ -117,6 +134,21 @@ button>span {
     color: white;
 }
 
+#text-input {
+    background: none;
+    border: none;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 1em;
+    text-align: center;
+    color: #eee;
+    width: 20px;
+}
+
+#text-input:focus {
+    outline: none;
+    border: none;
+}
+
 #instructions {
     display: block;
     position: absolute;
@@ -179,6 +211,18 @@ button>span {
         position: fixed;
         height: 100vh;
         overflow: scroll;
+    }
+}
+
+@media screen and (max-height: 500px) {
+    .paper {
+        margin-top: 8em;
+    }
+    #instructions {
+        top: 20em;
+    }
+    .keyboard {
+        margin-top: 3em;
     }
 }
 
@@ -254,6 +298,30 @@ button>span {
 .btn10 {
     width: 1.125em;
     height: 2.875em;
+}
+
+.btn11 {
+    width: 2.6em;
+    height: 0.75em;
+    background-color: rgb(196, 24, 59);
+    color:white;
+    box-shadow:
+        -0.2em -0.125em 0.125em rgba(0, 0, 0, 0.25),
+        0 0 0 0.04em rgba(0, 0, 0, 0.3),
+        0.02em 0.02em 0.02em rgba(0, 0, 0, 0.4) inset,
+        -0.05em -0.05em 0.02em rgba(190, 16, 51, 0.8) inset;
+}
+
+.btn12 {
+    width: 1.8375em;
+    height: 1.375em;
+    background-color: rgb(24, 93, 196);
+    color:white;
+    box-shadow:
+        -0.2em -0.125em 0.125em rgba(0, 0, 0, 0.25),
+        0 0 0 0.04em rgba(0, 0, 0, 0.3),
+        0.02em 0.02em 0.02em rgba(0, 0, 0, 0.4) inset,
+        -0.05em -0.05em 0.02em rgba(15, 74, 161, 0.8) inset;
 }
 
 .btn-longest {

@@ -17,22 +17,23 @@
 </head>
 
 <body>
+    <div id="paperOverlay"></div>
     <div class="centered">
         <div class="paper">
             <button id="refresh">&#8634;</button>
-            <p id="text-input"><span id="typed"></span>&nbsp</p>
-            <p id="underscore">_</p>
-            <h6 id="instructions">stop the animation by typing</h6>
+            <input id="text-input" spellcheck="false" autofocus>
+            <!-- <p id="underscore">&nbsp_</p> -->
+            <h6 id="instructions">type on any keyboard</h6>
         </div>
 
         <div class="keyboard" ontouchstart="">
-            <div class="row normal"><button type="button" class="btn0"><span class="xs">esc</span>
+            <div class="row normal"><button type="button" class="btn11"><span class="xs"><a href="project.html">Projects</a></span>
                 </button><button type="button" class="btn0"><span class="xs noxscale"><span class="emoji">&#128261;</span></span><span class="lr xxxs">F1</span>
                 </button><button type="button" class="btn0"><span class="xs noxscale"><span class="emoji">&#128262;</span></span><span class="lr xxxs">F2</span>
                 </button><button type="button" class="btn0"><span class="xs noxscale"><span class="cascade"></span><span class="block"></span></span><span class="lr xxxs">F3</span>
                 </button><button type="button" class="btn0"><span class="xxxs noxscale"><span class="apps"></span></span><span class="lr xxxs">F4</span>
                 </button><button type="button" class="btn0"><span class="lr xxxs">F5</span>
-                </button><button type="button" class="btn0"><span class="lr xxxs">F6</span>
+                
                 </button><button type="button" class="btn0"><span class="sm"><span class="left"></span><span class="left"></span></span><span class="lr xxxs">F7</span>
                 </button><button type="button" class="btn0"><span class="sm"><span class="right"></span><span class="pause"></span></span><span class="lr xxxs">F8</span>
                 </button><button type="button" class="btn0"><span class="sm"><span class="right"></span><span class="right"></span></span><span class="lr xxxs">F9</span>
@@ -68,7 +69,7 @@
                 </button><button type="button" class="dual btn2"><span class="sm">)<br/>0</span>
                 </button><button type="button" class="dual btn2"><span class="sm">_<br/>-</span>
                 </button><button type="button" class="dual btn2"><span class="sm">+<br/>=</span>
-                </button><button id="delete" type="button" class="btn3"><span class="lr xs">delete</span>
+                </button><button id="BACKSPACE" type="button" class="btn3"><span class="lr xs">delete</span>
                 </button>
             </div>
             <div class="row extension"><button type="button" class="btn2"><span class="xs">fn</span>
@@ -76,23 +77,23 @@
                 </button><button type="button" class="btn2"><span class="xs">page up</span>
                 </button>
             </div>
-            <div class="row extension"><button type="button" id="clear" class="btn2"><span class="xs">clear</span>
+            <div class="row extension"><button type="button" id="CLEAR" class="btn2"><span class="xs">clear</span>
                 </button><button type="button" class="letters btn2"><span>=</span>
                 </button><button type="button" class="letters btn2"><span>/</span>
                 </button><button type="button" class="letters btn2"><span>*</span>
                 </button>
             </div>
-            <div class="row normal"><button id="tab" type="button" class="btn3"><span class="ll xs">tab</span>
-                </button><button type="button" class="letters btn2"><span>Q</span>
-                </button><button type="button" class="letters btn2"><span>W</span>
-                </button><button type="button" class="letters btn2"><span>E</span>
-                </button><button type="button" class="letters btn2"><span>R</span>
-                </button><button type="button" class="letters btn2"><span>T</span>
-                </button><button type="button" class="letters btn2"><span>Y</span>
-                </button><button type="button" class="letters btn2"><span>U</span>
-                </button><button type="button" class="letters btn2"><span>I</span>
-                </button><button type="button" class="letters btn2"><span>O</span>
-                </button><button type="button" class="letters btn2"><span>P</span>
+            <div class="row normal"><button id="TAB" type="button" class="btn3"><span class="ll xs">tab</span>
+                </button><button id="Q" type="button" class="letters btn2"><span>Q</span>
+                </button><button id="W" type="button" class="letters btn2"><span>W</span>
+                </button><button id="E" type="button" class="letters btn2"><span>E</span>
+                </button><button id="R" type="button" class="letters btn2"><span>R</span>
+                </button><button id="T" type="button" class="letters btn2"><span>T</span>
+                </button><button id="Y" type="button" class="letters btn2"><span>Y</span>
+                </button><button id="U" type="button" class="letters btn2"><span>U</span>
+                </button><button id="I" type="button" class="letters btn2"><span>I</span>
+                </button><button id="O" type="button" class="letters btn2"><span>O</span>
+                </button><button id="P" type="button" class="letters btn2"><span>P</span>
                 </button><button type="button" class="dual btn2"><span class="sm">{<br/>[</span>
                 </button><button type="button" class="dual btn2"><span class="sm">}<br/>]</span>
                 </button><button type="button" class="dual btn2"><span class="sm">|<br/>\</span>
@@ -109,19 +110,19 @@
                 </button><button type="button" class="letters btn2"><span>-</span>
                 </button>
             </div>
-            <div class="row normal"><button type="button" id="caps-lock" class="btn4"><span class="ul xs">•</span><span class="ll xs">caps lock</span>
-                </button><button type="button" class="letters btn2"><span>A</span>
-                </button><button type="button" class="letters btn2"><span>S</span>
-                </button><button type="button" class="letters btn2"><span>D</span>
-                </button><button type="button" class="letters btn2"><span>F</span><span class="bump"></span>
-                </button><button type="button" class="letters btn2"><span>G</span>
-                </button><button type="button" class="letters btn2"><span>H</span>
-                </button><button type="button" class="letters btn2"><span>J</span><span class="bump"></span>
-                </button><button type="button" class="letters btn2"><span>K</span>
-                </button><button type="button" class="letters btn2"><span>L</span>
+            <div class="row normal"><button type="button" id="CAPSLOCK" class="btn4"><span class="ul xs">•</span><span class="ll xs">caps lock</span>
+                </button><button id="A" type="button" class="letters btn2"><span>A</span>
+                </button><button id="S" type="button" class="letters btn2"><span>S</span>
+                </button><button id="D" type="button" class="letters btn2"><span>D</span>
+                </button><button id="F" type="button" class="letters btn2"><span>F</span><span class="bump"></span>
+                </button><button id="G" type="button" class="letters btn2"><span>G</span>
+                </button><button id="H" type="button" class="letters btn2"><span>H</span>
+                </button><button id="J" type="button" class="letters btn2"><span>J</span><span class="bump"></span>
+                </button><button id="K" type="button" class="letters btn2"><span>K</span>
+                </button><button id="L" type="button" class="letters btn2"><span>L</span>
                 </button><button type="button" class="dual btn2"><span class="sm">:<br/>;</span>
                 </button><button type="button" class="dual btn2"><span class="sm">&quot;<br/>'</span>
-                </button><button id="return" type="button" class="btn4"><span class="lr xs">return</span>
+                </button><button id="RETURN" type="button" class="btn4"><span class="lr xs">return</span>
                 </button>
             </div>
             <div class="row extension"></div>
@@ -131,18 +132,18 @@
                 </button><button type="button" class="letters btn2"><span>+</span>
                 </button>
             </div>
-            <div class="row normal"><button type="button" id="shift1" class="btn5"><span class="ll xs">shift</span>
-                </button><button type="button" class="letters btn2"><span>Z</span>
-                </button><button type="button" class="letters btn2"><span>X</span>
-                </button><button type="button" class="letters btn2"><span>C</span>
-                </button><button type="button" class="letters btn2"><span>V</span>
-                </button><button type="button" class="letters btn2"><span>B</span>
-                </button><button type="button" class="letters btn2"><span>N</span>
-                </button><button type="button" class="letters btn2"><span>M</span>
+            <div class="row normal"><button type="button" id="SHIFT" class="btn5"><span class="ll xs">shift</span>
+                </button><button id="Z" type="button" class="letters btn2"><span>Z</span>
+                </button><button id="X" type="button" class="letters btn2"><span>X</span>
+                </button><button id="C" type="button" class="letters btn2"><span>C</span>
+                </button><button id="V" type="button" class="letters btn2"><span>V</span>
+                </button><button id="B" type="button" class="letters btn2"><span>B</span>
+                </button><button id="N" type="button" class="letters btn2"><span>N</span>
+                </button><button id="M" type="button" class="letters btn2"><span>M</span>
                 </button><button type="button" class="dual btn2"><span class="sm">&lt;<br/>,</span>
                 </button><button type="button" class="dual btn2"><span class="sm">&gt;<br/>.</span>
                 </button><button type="button" class="dual btn2"><span class="sm">?<br/>/</span>
-                </button><button type="button" id="shift2" class="btn5"><span class="lr xs">shift</span>
+                </button><button type="button" id="SHIFT1" class="btn5"><span class="lr xs">shift</span>
                 </button>
             </div>
             <div class="row extension"><button type="button" class="btn2"><span><span class="up"></span></span></button>
@@ -150,13 +151,13 @@
             <div class="row extension"><button type="button" class="letters btn2"><span>1</span>
                 </button><button type="button" class="letters btn2"><span>2</span>
                 </button><button type="button" class="letters btn2"><span>3</span>
-                </button><button type="button" id="enter" class="btn10"><span class="lr xs">enter</span>
+                </button><button type="button" id="ENTER" class="btn10"><span class="lr xs">enter</span>
                 </button>
             </div>
-            <div class="row normal"><button type="button" class="btn7"><span class="ll xs">control</span>
+            <div class="row normal"><button type="button" class="btn12"><span class="ll xs">Resume</span>
                 </button><button type="button" class="btn6"><span class="ul xxs">alt</span><span class="ll xs">option</span>
                 </button><button type="button" class="btn7"><span class="ll xs">command</span><span class="lr xs noxscale">⌘</span>
-                </button><button id="space" type="button" class="btn-longest"><span></span>
+                </button><button id="SPACE" type="button" class="btn-longest"><span></span>
                 </button><button type="button" class="btn7"><span class="ll xs noxscale">⌘</span><span class="lr xs">command</span>
                 </button><button type="button" class="btn6"><span class="ur xxs">alt</span><span class="lr xs">option</span>
                 </button><button type="button" class="btn7"><span class="lr xs">control</span>
@@ -171,10 +172,9 @@
         </div>
     </div>
 
-    <div id="footer"></div>
+    <!-- <div id="footer"></div> -->
 
     <!-- Template Main JS File -->
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
     <script src="main.js" type="text/javascript"></script>
 
 </body>

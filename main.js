@@ -4,10 +4,11 @@ let refresh = document.getElementById("refresh");
 let instructions = document.getElementById("instructions");
 let caps = false;
 let shifted = false;
+let typing = false;
 
 document.addEventListener("DOMContentLoaded", function () {
 
-    document.getElementById("caps-lock").addEventListener("click", function () {
+    document.getElementById("CAPSLOCK").addEventListener("click", function () {
         caps = !caps;
         this.childNodes[0].classList.toggle("on");
     });
@@ -16,17 +17,22 @@ document.addEventListener("DOMContentLoaded", function () {
         window.location.reload();
     });
 
-    document.getElementById("space").addEventListener("click", function () {
+    document.getElementById("SPACE").addEventListener("click", function () {
         typed();
-        paper.textContent += String.fromCharCode(160);
+        paper.value += String.fromCharCode(160);
     });
 
-    document.getElementById("delete").addEventListener("click", function () {
+    document.getElementById("TAB").addEventListener("click", function () {
         typed();
-        paper.textContent = paper.innerText.substring(0, paper.innerText.length - 1);
+        paper.value += String.fromCharCode(160) + String.fromCharCode(160) + String.fromCharCode(160);
     });
 
-    document.getElementById("clear").addEventListener("click", function () {
+    document.getElementById("BACKSPACE").addEventListener("click", function () {
+        typed();
+        paper.value = paper.value.substring(0, paper.value.length - 1);
+    });
+
+    document.getElementById("CLEAR").addEventListener("click", function () {
         typed();
         paper.textContent = "";
     });
@@ -34,11 +40,11 @@ document.addEventListener("DOMContentLoaded", function () {
     let textKeys = document.getElementsByClassName("letters");
     let dualKeys = document.getElementsByClassName("dual");
 
-    document.getElementById("shift1").addEventListener("click", function () {
+    document.getElementById("SHIFT").addEventListener("click", function () {
         shifted = !shifted;
     });
 
-    document.getElementById("shift2").addEventListener("click", function () {
+    document.getElementById("SHIFT1").addEventListener("click", function () {
         shifted = !shifted;
     });
 
@@ -59,13 +65,26 @@ document.addEventListener("DOMContentLoaded", function () {
             } else addDualKey(caps, this.innerText);
         });
     }
+
+    document.onkeydown = function(e) {
+        typed();
+        console.log(e.key);
+        simulateType(e.key);
+    }
 });
+
+function adjustWidth() {
+    let value = paper.value;
+    let width = (value.length) * 13; // 8px per character
+    paper.style.width = width + "px";
+ }
 
 function addTextKey(capitol, key) {
     typed();
     if (!capitol)
         key = key.toLowerCase();
-    paper.innerText += key;
+    paper.value += key;
+    simulateType(key);
 }
 
 function addDualKey(capitol, key) {
@@ -73,12 +92,29 @@ function addDualKey(capitol, key) {
     console.log(key.charAt(2));
     if (!capitol) key = key.charAt(2);
     else key = key.charAt(0);
-    paper.innerText += key;
+    paper.value += key;
+    simulateType(key);
 }
 
 function typed(){
+    if (!typing) {
+        typing = true;
+        paper.innerText = "";
+    }
     instructions.style.display = "none";
     refresh.style.display = "block";
+    paper.focus();
+    adjustWidth();
+}
+
+function simulateType(key) {
+    let simKey = document.getElementById(key.toUpperCase());
+    if(simKey != null) {
+        simKey.style.backgroundColor = "#aaa";
+        setTimeout(function(){
+            simKey.style.backgroundColor = "#eee";
+        }, 150);
+    }
 }
 
 
@@ -91,16 +127,20 @@ let speed = 75;
 let inputSpace = document.getElementById("typed");
 
 function typer() {
-    if (i < contents[j].length) {
-        inputSpace.innerHTML += contents[j].charAt(i);
+    if (i < contents[j].length && !typing) {
+        paper.value += contents[j].charAt(i);
+        adjustWidth();
+        simulateType(contents[j].charAt(i));
         i++;
         setTimeout(typer, speed);
     }
 }
 
 function deleter() {
-    if (i > 0) {
-        inputSpace.innerHTML = inputSpace.innerText.substring(0, inputSpace.innerText.length - 1);
+    if (i > 0 && !typing) {
+        paper.value = paper.value.substring(0, paper.value.length - 1);
+        adjustWidth();
+        simulateType("BACKSPACE");
         i--;
         setTimeout(deleter, speed);
     }
