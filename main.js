@@ -60,10 +60,6 @@ document.addEventListener("DOMContentLoaded", function () {
         shifted = !shifted;
     });
 
-    document.getElementById("SHIFT1").addEventListener("click", function () {
-        shifted = !shifted;
-    });
-
     for (let i = 0; i < textKeys.length; i++) {
         textKeys[i].addEventListener("click", function () {
             if (shifted) {
@@ -91,6 +87,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function adjustWidth() {
     let value = paper.value;
+    if (value.length < 5) value = "_____";
+    else if (value.length > 30) value = "______________________________";
     let width = (value.length) * 13; // 8px per character
     paper.style.width = width + "px";
  }
@@ -115,7 +113,7 @@ function addDualKey(capitol, key) {
 function typed(){
     if (!typing) {
         typing = true;
-        paper.value = "";
+        paper.value = " ";
     }
     instructions.style.display = "none";
     refresh.style.display = "block";
@@ -138,7 +136,12 @@ function simulateType(key) {
 
 let i = 0;
 let j = 0;
-let contents = ["Photographer", "Sonny Lowe", "Researcher", "Programmer", "GPT, LLM, CNN"];
+let contents = ["Photographer", 
+    "Sonny Lowe", 
+    "Researcher", 
+    "Programmer", 
+    "Developer",
+    "GPT, LLM, CNN"];
 let speed = 75;
 let inputSpace = document.getElementById("typed");
 
