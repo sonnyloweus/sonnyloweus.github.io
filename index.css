@@ -192,6 +192,7 @@ button>span {
     width: 33.25em;
     height: 9em;
     overflow: hidden;
+    transition: 1s linear;
 }
 
 @media screen and (max-width: 1300px) {

@@ -2,6 +2,8 @@
 let paper = document.getElementById("text-input");
 let refresh = document.getElementById("refresh");
 let instructions = document.getElementById("instructions");
+let keyboard = document.getElementById("keyboard");
+
 let caps = false;
 let shifted = false;
 let typing = false;
@@ -27,6 +29,11 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("CAPSLOCK").addEventListener("click", function () {
         caps = !caps;
         this.childNodes[0].classList.toggle("on");
+    });
+
+    document.getElementById("projects").addEventListener("click", function () {
+        keyboard.style.width = "0px";
+        keyboard.style.padding = "0px";
     });
 
     refresh.addEventListener("click", function () {
