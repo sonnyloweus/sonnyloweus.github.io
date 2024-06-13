@@ -1,19 +1,100 @@
-.paper {
-    margin-top: 5em;
-}
-
-::-webkit-scrollbar {
+#projectSection {
     display: none;
+    grid-template-columns: repeat( auto-fill, minmax(16em, 1fr) );
+    grid-gap: 5em;
+    padding:5em;
+    border: 2px solid white;
+    width: 80vw;
 }
 
-.projects {
-    margin-top: -2em;
+.card {
+    --background:#18191d;
+    --text:white;
+    background-color:transparent;
+    color:black;
+    position: relative;
+    height:12em;
+    box-shadow:0 0 2em -1em rgba(0,0,0,.05);
 }
 
-.panel {
-    width: 20em;
-    height: 8em;
-    border: 1px solid #b4b4b4;
-    border-radius: 0.25em;
-    margin-bottom: 20px;
+.multi-button {
+    z-index:0;
+    position: absolute;
+    top:1.25em;
+    left:1.25em;
+    border-radius:100%;
+    width:0em;
+    height:0em;
+    transform: translate(-50%, -50%);
+    transition: .25s cubic-bezier(0.25, 0, 0, 1);
 }
+
+.multi-button button {
+    display: grid;
+    place-items: center;
+    position: absolute;
+    width:2em;
+    height:2em;
+    border:none;
+    border-radius:100%;
+    background-color:var(--background);
+    color:var(--text);
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    transition: .25s cubic-bezier(0.25, 0, 0, 1);
+    box-shadow:0 0 0em -.25em var(--background);
+}
+
+.multi-button button:hover {
+    background:var(--text);
+    color:var(--background);
+    box-shadow:0 0 1em -.25em var(--background);
+}
+
+.multi-button button:first-child:nth-last-child(1) { 
+    left:30%;
+    top:30%;
+}
+
+.multi-button button:first-child:nth-last-child(2),
+.multi-button button:first-child:nth-last-child(2) ~ * { 
+    &:nth-child(1) {
+        left:42.5%;
+        top:23.75%;
+    }
+    &:nth-child(2) {
+        left:23.75%;
+        top:42.5%;
+    }
+}
+
+.multi-button button:first-child:nth-last-child(3),
+.multi-button button:first-child:nth-last-child(3) ~ * {
+    &:nth-child(1) {
+        left:50%;
+        top:15.625%;
+    }
+    &:nth-child(2) {
+        left:25%;
+        top:25%;
+    }
+    &:nth-child(3) {
+        left:15.625%;
+        top:50%;
+    }
+}
+
+.container {
+    position: absolute;
+    width:100%;
+    height:100%;
+    border-radius:1em;
+    background:var(--background);
+    color:var(--text);
+}
+
+.card:hover .multi-button, .multi-button:focus-within {
+    width:10em;
+    height:10em;
+}
+

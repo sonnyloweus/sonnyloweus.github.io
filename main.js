@@ -3,6 +3,8 @@ let paper = document.getElementById("text-input");
 let refresh = document.getElementById("refresh");
 let instructions = document.getElementById("instructions");
 let keyboard = document.getElementById("keyboard");
+let projectSection = document.getElementById("projectSection");
+let typingEffect;
 
 let caps = false;
 let shifted = false;
@@ -34,6 +36,13 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("projects").addEventListener("click", function () {
         keyboard.style.width = "0px";
         keyboard.style.padding = "0px";
+        instructions.style.display = "none";
+        clearTimeout(typingEffect);
+        paper.value = "Projects";
+        setTimeout(function(){
+            keyboard.style.display = "none";
+            projectSection.style.display = "grid";
+        }, 1500);
     });
 
     refresh.addEventListener("click", function () {
@@ -183,7 +192,7 @@ function pageStart() {
     else j = 0;
 
     typer();
-    setTimeout(function(){
+    typingEffect = setTimeout(function(){
         deleter();
         setTimeout(pageStart, 3000)
     }, 4000);
