@@ -34,18 +34,20 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     document.getElementById("projects").addEventListener("click", function () {
-        keyboard.style.width = "0px";
-        keyboard.style.padding = "0px";
+        keyboard.style.opacity = "0";
         instructions.style.display = "none";
         clearTimeout(typingEffect);
         paper.value = "Projects";
+        refresh.style.display = "block";
+        refresh.innerHTML = "&lArr;";
         setTimeout(function(){
             keyboard.style.display = "none";
-            projectSection.style.display = "grid";
-        }, 1500);
+            projectSection.style.display = "flex";
+        }, 1000);
     });
 
     refresh.addEventListener("click", function () {
+        refresh.innerHTML = "&#8634;";
         window.location.reload();
     });
 
@@ -103,9 +105,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function adjustWidth() {
     let value = paper.value;
-    if (value.length < 5) value = "_____";
+    if (value.length < 5) value = "____";
     else if (value.length > 30) value = "______________________________";
-    let width = (value.length) * 13; // 8px per character
+    let width = (value.length) * 12.5; // 8px per character
     paper.style.width = width + "px";
  }
 

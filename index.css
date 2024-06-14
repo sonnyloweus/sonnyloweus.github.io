@@ -192,7 +192,7 @@ button>span {
     width: 33.25em;
     height: 9em;
     overflow: hidden;
-    transition: 1s linear;
+    transition: 0.7s linear;
 }
 
 @media screen and (max-width: 1300px) {
@@ -203,10 +203,10 @@ button>span {
 
 @media screen and (max-width: 830px) {
     .paper {
-        margin-top: 6.5em;
+        margin-top: 4.5em;
     }
     #instructions {
-        top: 16em;
+        top: 12em;
     }
     .keyboard {
         margin-top: 9em;

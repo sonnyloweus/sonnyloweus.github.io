@@ -1,100 +1,136 @@
+:root {
+    font-size: 16px;
+}
+
 #projectSection {
-    display: none;
-    grid-template-columns: repeat( auto-fill, minmax(16em, 1fr) );
-    grid-gap: 5em;
-    padding:5em;
-    border: 2px solid white;
-    width: 80vw;
+	display: none;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 2.5rem;
+	width: 100vw;
+	max-width: 1000px;
+	margin: 5vh auto;
 }
 
 .card {
-    --background:#18191d;
-    --text:white;
-    background-color:transparent;
+
+    background-image: linear-gradient(90deg, #bbb, #ddd);
+    box-shadow: -1em -1em 1.5em rgba(0, 0, 0, 0.6), 0 0 0 1px #aaa inset;
+
+    /* background-color:#ddd; */
+	border-radius: 0.35em;
+    /* box-shadow: 0 0 1em rgba(0, 0, 0, 0.6); */
+	max-width: 300px;
+}
+
+.information {
+	padding: 1em;
+}
+
+.tag {
+    display: inline-block;
+    background-color: white;
+    font-weight: 300;
+    font-size: 0.75rem;
+    padding: 0.4em 0.65em;
+    line-height: 1;
+    border-radius: 6px;
+    & + * {
+        margin-top: 0.5em;
+    }
+}
+
+.libs {
+    display: inline-block;
+    font-weight: 400;
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    padding: 0.2em 0.45em;
+    line-height: 1;
+    & + * {
+        margin-top: 1em;
+    }
+}
+
+.python i{
+    color:indigo;
+}
+
+.jupyter i{
+    color:orange;
+}
+
+.firebase i{
+    color:rgb(255, 81, 0);
+}
+
+.htmlCSS i{
     color:black;
-    position: relative;
-    height:12em;
-    box-shadow:0 0 2em -1em rgba(0,0,0,.05);
 }
 
-.multi-button {
-    z-index:0;
-    position: absolute;
-    top:1.25em;
-    left:1.25em;
-    border-radius:100%;
-    width:0em;
-    height:0em;
-    transform: translate(-50%, -50%);
-    transition: .25s cubic-bezier(0.25, 0, 0, 1);
+.nodeJS i{
+    color:rgb(0, 133, 115);
 }
 
-.multi-button button {
-    display: grid;
-    place-items: center;
-    position: absolute;
-    width:2em;
-    height:2em;
-    border:none;
-    border-radius:100%;
-    background-color:var(--background);
-    color:var(--text);
-    transform: translate(-50%, -50%);
-    cursor: pointer;
-    transition: .25s cubic-bezier(0.25, 0, 0, 1);
-    box-shadow:0 0 0em -.25em var(--background);
-}
 
-.multi-button button:hover {
-    background:var(--text);
-    color:var(--background);
-    box-shadow:0 0 1em -.25em var(--background);
-}
-
-.multi-button button:first-child:nth-last-child(1) { 
-    left:30%;
-    top:30%;
-}
-
-.multi-button button:first-child:nth-last-child(2),
-.multi-button button:first-child:nth-last-child(2) ~ * { 
-    &:nth-child(1) {
-        left:42.5%;
-        top:23.75%;
-    }
-    &:nth-child(2) {
-        left:23.75%;
-        top:42.5%;
+.title {
+    margin-top: 0.75em;
+    font-size: 1em;
+    line-height: 1;
+    & + * {
+        margin-top: 0.75em;
     }
 }
 
-.multi-button button:first-child:nth-last-child(3),
-.multi-button button:first-child:nth-last-child(3) ~ * {
-    &:nth-child(1) {
-        left:50%;
-        top:15.625%;
-    }
-    &:nth-child(2) {
-        left:25%;
-        top:25%;
-    }
-    &:nth-child(3) {
-        left:15.625%;
-        top:50%;
+.title a {
+    color:#388dfc !important;
+    font-weight: bold;
+}
+
+.title a:hover {
+    text-decoration: underline;
+}
+
+.info {
+    color: #111;
+    font-size: 0.75em;
+    & + * {
+        margin-top: 1rem;
     }
 }
 
-.container {
-    position: absolute;
-    width:100%;
-    height:100%;
-    border-radius:1em;
-    background:var(--background);
-    color:var(--text);
+.linker {
+    background-color: #eee;
+    border: 0;
+    border-radius: 0.3em;
+    box-shadow:
+        -0.2em -0.125em 0.125em rgba(0, 0, 0, 0.25),
+        0 0 0 0.04em rgba(0, 0, 0, 0.3),
+        0.02em 0.02em 0.02em rgba(0, 0, 0, 0.4) inset,
+        -0.05em -0.05em 0.02em rgba(255, 255, 255, 0.8) inset;
+
+    width: 6rem !important;
+    height: 2.2rem !important;
+
+    padding: 0.7em 1em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    transition: 0.2s linear;
+
+    &:hover {
+        background-color: #111;
+        a {
+            color: white;
+        }
+    }
 }
 
-.card:hover .multi-button, .multi-button:focus-within {
-    width:10em;
-    height:10em;
+.linker a {
+    font-weight: 500;
+    color: #111;
+    font-size: 1.5em;
 }
-
