@@ -1,7 +1,3 @@
-:root {
-    font-size: 16px;
-}
-
 #projectSection {
 	display: none;
 	flex-wrap: wrap;
@@ -15,30 +11,29 @@
 }
 
 .card {
-
     background-image: linear-gradient(90deg, #bbb, #ddd);
-    box-shadow: -1em -1em 1.5em rgba(0, 0, 0, 0.6), 0 0 0 1px #aaa inset;
-
+    box-shadow: -1rem -1rem 1.5rem rgba(0, 0, 0, 0.6), 0 0 0 1px #aaa inset;
+    font-size: 36px;
     /* background-color:#ddd; */
-	border-radius: 0.35em;
+	border-radius: 0.35rem;
     /* box-shadow: 0 0 1em rgba(0, 0, 0, 0.6); */
 	max-width: 300px;
 }
 
 .information {
-	padding: 1em;
+	padding: 0 1rem 1rem 1rem;
 }
 
 .tag {
     display: inline-block;
-    background-color: white;
+    background-color: #eee;
     font-weight: 300;
     font-size: 0.75rem;
-    padding: 0.4em 0.65em;
+    padding: 0.4rem 0.65rem;
     line-height: 1;
     border-radius: 6px;
     & + * {
-        margin-top: 0.5em;
+        margin-top: 0.1rem;
     }
 }
 
@@ -47,10 +42,9 @@
     font-weight: 400;
     font-size: 0.7rem;
     letter-spacing: 1px;
-    padding: 0.2em 0.45em;
-    line-height: 1;
+    padding-left: 10px;
     & + * {
-        margin-top: 1em;
+        margin-top: 0.2rem;
     }
 }
 
@@ -76,17 +70,19 @@
 
 
 .title {
-    margin-top: 0.75em;
-    font-size: 1em;
-    line-height: 1;
-    & + * {
-        margin-top: 0.75em;
-    }
+    margin-top: 0.8rem;
+    font-size: 1.25rem;
+    line-height: 1.25rem;
+    text-shadow: 0px 1px 0px rgba(255,255,255,.3), 0px -1px 0px rgba(26, 26, 26, 0.7);
 }
 
 .title a {
-    color:#388dfc !important;
+    color:rgb(110, 110, 110) !important;
     font-weight: bold;
+}
+
+.title i {
+    font-size: 1rem !important;
 }
 
 .title a:hover {
@@ -95,7 +91,7 @@
 
 .info {
     color: #111;
-    font-size: 0.75em;
+    font-size: 0.75rem;
     & + * {
         margin-top: 1rem;
     }
@@ -104,21 +100,17 @@
 .linker {
     background-color: #eee;
     border: 0;
-    border-radius: 0.3em;
+    border-radius: 0.125em;
     box-shadow:
         -0.2em -0.125em 0.125em rgba(0, 0, 0, 0.25),
-        0 0 0 0.04em rgba(0, 0, 0, 0.3),
+        0 0 0 0.04rem rgba(0, 0, 0, 0.3),
         0.02em 0.02em 0.02em rgba(0, 0, 0, 0.4) inset,
-        -0.05em -0.05em 0.02em rgba(255, 255, 255, 0.8) inset;
+        -0.05em -0.05em 0.02em rgba(255, 255, 255, 0.8) inset !important;
 
     width: 6rem !important;
     height: 2.2rem !important;
-
-    padding: 0.7em 1em;
-    display: inline-flex;
+    margin-top: 1.2rem;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
     transition: 0.2s linear;
 
     &:hover {
@@ -130,7 +122,8 @@
 }
 
 .linker a {
-    font-weight: 500;
-    color: #111;
-    font-size: 1.5em;
+    color: #555;
+    font-size: 0.9rem;
+    line-height: 6rem;
+    transform: scaleX(0.875);
 }
