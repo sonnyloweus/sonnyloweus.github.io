@@ -315,6 +315,30 @@ button>span {
     height: 1.375em;
 }
 
+.btn13 {
+    margin-left: 1px;
+    margin-top: 0.625em;
+    width: 1.125em;
+    height: 0.5em;
+}
+
+.btn13 span {
+    font-size: 0.7em;
+    margin-bottom: 2px;
+}
+
+.btn14 {
+    margin-top: 1.5em;
+    width: 1.125em;
+    height: 0.5em;
+}
+
+.btn14 span {
+    font-size: 0.7em;
+    margin-bottom: 2.5px;
+}
+
+
 .darkKey {
     background-color: rgb(30, 39, 53) !important;
     color:white;

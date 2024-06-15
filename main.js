@@ -110,7 +110,7 @@ function adjustWidth() {
     let value = paper.value;
     if (value.length < 5) value = "____";
     else if (value.length > 30) value = "______________________________";
-    let width = (value.length) * 12.5; // 8px per character
+    let width = (value.length) * 13 + 5; // 8px per character
     paper.style.width = width + "px";
  }
 
