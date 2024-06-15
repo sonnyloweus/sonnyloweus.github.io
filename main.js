@@ -43,8 +43,10 @@ document.addEventListener("DOMContentLoaded", function () {
         setTimeout(function(){
             keyboard.style.display = "none";
             projectSection.style.display = "flex";
-            paper.value = "Projects";
-        }, 1000);
+            setTimeout(function(){
+                projectSection.style.opacity = "1";
+            }, 200);
+        }, 800);
     });
 
     refresh.addEventListener("click", function () {
