@@ -37,9 +37,11 @@ document.addEventListener("DOMContentLoaded", function () {
         keyboard.style.opacity = "0";
         instructions.style.display = "none";
         clearTimeout(typingEffect);
-        paper.value = "Projects";
+        typing = true;
         refresh.style.display = "block";
         refresh.innerHTML = "&lArr;";
+        paper.value = "Projects";
+        adjustWidth();
         setTimeout(function(){
             keyboard.style.display = "none";
             projectSection.style.display = "flex";
@@ -58,11 +60,6 @@ document.addEventListener("DOMContentLoaded", function () {
         typed();
         paper.value += String.fromCharCode(160);
     });
-
-    // document.getElementById("TAB").addEventListener("click", function () {
-    //     typed();
-    //     paper.value += String.fromCharCode(160) + String.fromCharCode(160) + String.fromCharCode(160);
-    // });
 
     document.getElementById("BACKSPACE").addEventListener("click", function () {
         typed();
