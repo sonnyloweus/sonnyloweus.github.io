@@ -159,7 +159,7 @@ let contents = ["Photographer",
     "Researcher", 
     "Programmer", 
     "Developer",
-    "GPT, LLM, CNN"];
+    "Applied Mathematics"];
 let speed = 75;
 let inputSpace = document.getElementById("typed");
 
