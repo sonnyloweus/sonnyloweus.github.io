@@ -149,7 +149,6 @@ function simulateType(key) {
     }
 }
 
-
 // Typing Effect
 
 let i = 0;
