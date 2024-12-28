@@ -39,7 +39,8 @@ document.addEventListener("DOMContentLoaded", function () {
         clearTimeout(typingEffect);
         typing = true;
         refresh.style.display = "block";
-        refresh.innerHTML = "&lArr;";
+        // refresh.innerHTML = "&lArr;";
+        refresh.innerHTML = "";
         paper.value = "Projects";
         adjustWidth();
         setTimeout(function(){
