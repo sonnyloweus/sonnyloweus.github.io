@@ -41,7 +41,8 @@ document.addEventListener("DOMContentLoaded", function () {
         refresh.style.display = "block";
         // refresh.innerHTML = "&lArr;";
         refresh.innerHTML = "";
-        paper.value = "Projects";
+        // paper.value = "Projects";
+        paper.value = "";
         adjustWidth();
         setTimeout(function(){
             keyboard.style.display = "none";
