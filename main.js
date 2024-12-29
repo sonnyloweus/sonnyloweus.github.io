@@ -4,31 +4,27 @@ let refresh = document.getElementById("refresh");
 let instructions = document.getElementById("instructions");
 let keyboard = document.getElementById("keyboard");
 let projectSection = document.getElementById("projectSection");
+
 let typingEffect;
 
 let caps = false;
 let shifted = false;
 let typing = false;
+let deleting = false;
 
 window.addEventListener( "pageshow", function ( event ) {
     var historyTraversal = event.persisted || 
                             ( typeof window.performance != "undefined" && 
                                 window.performance.navigation.type === 2 );
-    if ( historyTraversal ) {
-        // window.location.reload();
-        clearTimeout(typingEffect);
-        paper.value = "";
-        pageStart();
+    if ( historyTraversal && keyboard.style.opacity != "0") {
+        window.location.reload();
     }
 });
 
 document.addEventListener("visibilitychange", function() {
     if (document.hidden){
-    } else {
-        // window.location.reload();
-        clearTimeout();
-        paper.value = "";
-        pageStart();
+    } else if (keyboard.style.opacity != "0"){
+        window.location.reload();
     }
  });
 
@@ -44,11 +40,13 @@ document.addEventListener("DOMContentLoaded", function () {
         instructions.style.display = "none";
         clearTimeout(typingEffect);
         typing = true;
+
         refresh.style.display = "block";
         // refresh.innerHTML = "&lArr;";
         refresh.innerHTML = "";
         // paper.value = "Projects";
         paper.value = "";
+        
         adjustWidth();
         setTimeout(function(){
             keyboard.style.display = "none";
@@ -173,7 +171,7 @@ let speed = 75;
 let inputSpace = document.getElementById("typed");
 
 function typer() {
-    if (i < contents[j].length && !typing) {
+    if (i < contents[j].length && !typing && !deleting) {
         paper.value += contents[j].charAt(i);
         adjustWidth();
         simulateType(contents[j].charAt(i));
@@ -184,17 +182,14 @@ function typer() {
 
 function deleter() {
     if (i > 0 && !typing) {
+        deleting = true;
         paper.value = paper.value.substring(0, paper.value.length - 1);
         adjustWidth();
         simulateType("BACKSPACE");
         i--;
         setTimeout(deleter, speed);
-    }else if(paper.value.length > 0 && !typing) {
-        paper.value = paper.value.substring(0, paper.value.length - 1);
-        adjustWidth();
-        simulateType("BACKSPACE");
-        i=0;
-        setTimeout(deleter, speed);
+    } else if (i == 0 && !typing) {
+        deleting = false;
     }
 }
 
