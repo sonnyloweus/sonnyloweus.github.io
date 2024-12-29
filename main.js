@@ -10,21 +10,27 @@ let caps = false;
 let shifted = false;
 let typing = false;
 
-// window.addEventListener( "pageshow", function ( event ) {
-//     var historyTraversal = event.persisted || 
-//                             ( typeof window.performance != "undefined" && 
-//                                 window.performance.navigation.type === 2 );
-//     if ( historyTraversal ) {
-//         window.location.reload();
-//     }
-// });
+window.addEventListener( "pageshow", function ( event ) {
+    var historyTraversal = event.persisted || 
+                            ( typeof window.performance != "undefined" && 
+                                window.performance.navigation.type === 2 );
+    if ( historyTraversal ) {
+        // window.location.reload();
+        clearTimeout(typingEffect);
+        paper.value = "";
+        pageStart();
+    }
+});
 
-// document.addEventListener("visibilitychange", function() {
-//     if (document.hidden){
-//     } else {
-//         window.location.reload();
-//     }
-//  });
+document.addEventListener("visibilitychange", function() {
+    if (document.hidden){
+    } else {
+        // window.location.reload();
+        clearTimeout();
+        paper.value = "";
+        pageStart();
+    }
+ });
 
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -151,7 +157,9 @@ function simulateType(key) {
     }
 }
 
-// Typing Effect
+/////////////////////////////////////////////////
+///////////       Typing Effect       ///////////
+/////////////////////////////////////////////////
 
 let i = 0;
 let j = 0;
