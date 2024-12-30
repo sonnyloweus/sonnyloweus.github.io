@@ -198,3 +198,28 @@
 .studio-button:hover {
     cursor: pointer;
 }
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    padding-top: 8px;
+    padding-left: 8px;
+}
+
+.tag {
+    width: auto;
+    height: auto;
+    font-size: 10px;
+    border-radius: 5px;
+    margin: 3px 3px;
+    padding: 5px 12px;
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.tag i {
+    font-size: 1.25em;
+    padding-right: 7px;
+}
