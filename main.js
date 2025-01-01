@@ -4,6 +4,7 @@ let refresh = document.getElementById("refresh");
 let instructions = document.getElementById("instructions");
 let keyboard = document.getElementById("keyboard");
 let projectSection = document.getElementById("projectSection");
+let backButton = document.getElementById("backButton");
 
 let typingEffect;
 
@@ -41,10 +42,6 @@ document.addEventListener("DOMContentLoaded", function () {
         clearTimeout(typingEffect);
         typing = true;
 
-        refresh.style.display = "block";
-        // refresh.innerHTML = "&lArr;";
-        refresh.innerHTML = "";
-        // paper.value = "Projects";
         paper.value = "";
         
         adjustWidth();
@@ -55,6 +52,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 projectSection.style.opacity = "1";
             }, 200);
         }, 800);
+    });
+
+    backButton.addEventListener("click", function () {
+        window.location.reload();
     });
 
     refresh.addEventListener("click", function () {
