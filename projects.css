@@ -1,21 +1,38 @@
-#backButton {
-    position: fixed;
-    top: -40px;
-    height: 25px;
-    width: 50px;
-    border-radius: 5px;
-    background-color: white;
-    margin-right: 10px;
-    color: black;
-    font-size: 14px;
-    box-shadow: 0 0px 15px rgba(0, 0, 0, 0.635);
+*,
+*:before,
+*:after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
-#backButton:hover{
-    background-color: black;
+:root {
+    font-size: 16px;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    /* background-image: url(paper.jpeg); */
+    background-size: contain;
+    background-position: center;
+}
+
+a {
     color: white;
-    transition: 0.2s ease-in;
-    cursor: pointer;
+    text-decoration: none;
+}
+
+#paperOverlay{
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background-color: #e8e8e8;
+    top: 0px;
+    left: 0px;
 }
 
 #projectSection {
@@ -23,14 +40,10 @@
     top: 100px;
     left: 50%;
     transform: translate(-50%);
-
-    display: none;
     width: 80vw;
     max-width: 1000px;
-    opacity: 0;
     transition: 0.7s linear;
     z-index: 3;
-
     padding-bottom: 100px;
 }
 
@@ -93,7 +106,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    opacity: 0.4;
+    opacity: 0.2;
 }
 
 .not-used {
@@ -242,6 +255,7 @@
     display: flex;
     flex-wrap: wrap;
     padding-left: 8px;
+    padding-right: 30px;
     z-index: 2;
 }
 

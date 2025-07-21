@@ -3,7 +3,6 @@ let paper = document.getElementById("text-input");
 let refresh = document.getElementById("refresh");
 let instructions = document.getElementById("instructions");
 let keyboard = document.getElementById("keyboard");
-let projectSection = document.getElementById("projectSection");
 let backButton = document.getElementById("backButton");
 
 let typingEffect;
@@ -34,24 +33,6 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("CAPSLOCK").addEventListener("click", function () {
         caps = !caps;
         this.childNodes[0].classList.toggle("on");
-    });
-
-    document.getElementById("projects").addEventListener("click", function () {
-        keyboard.style.opacity = "0";
-        instructions.style.display = "none";
-        clearTimeout(typingEffect);
-        typing = true;
-
-        paper.value = "";
-        
-        adjustWidth();
-        setTimeout(function(){
-            keyboard.style.display = "none";
-            projectSection.style.display = "flex";
-            setTimeout(function(){
-                projectSection.style.opacity = "1";
-            }, 200);
-        }, 800);
     });
 
     backButton.addEventListener("click", function () {
@@ -114,7 +95,7 @@ function adjustWidth() {
     let value = paper.value;
     if (value.length < 5) value = "____";
     else if (value.length > 30) value = "______________________________";
-    let width = (value.length) * 13 + 5; // 8px per character
+    let width = (value.length) * 12 + 5; // 8px per character
     paper.style.width = width + "px";
  }
 
@@ -149,10 +130,10 @@ function typed(){
 function simulateType(key) {
     let simKey = document.getElementById(key.toUpperCase());
     if(simKey != null) {
-        simKey.style.backgroundColor = "#aaa";
+        simKey.style.backgroundColor = "#cdcdcd";
         setTimeout(function(){
             simKey.style.backgroundColor = "#eee";
-        }, 150);
+        }, 100);
     }
 }
 
@@ -162,13 +143,15 @@ function simulateType(key) {
 
 let i = 0;
 let j = 0;
-let contents = ["Photographer", 
+let contents = ["Film Photographer", 
     "Sonny Lowe", 
-    "Researcher", 
+    "Quantum Researcher", 
+    "Applied Physics",
     "Programmer", 
-    "Developer",
-    "Applied Mathematics"];
-let speed = 75;
+    "Mathematics",
+    "Casual Runner",
+];
+let speed = 80;
 let inputSpace = document.getElementById("typed");
 
 function typer() {
