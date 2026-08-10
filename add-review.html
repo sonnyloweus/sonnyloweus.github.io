@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add a review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAFAF8;
+    --ink:#151210;
+    --dim:#8C8579;
+    --accent:#3B2A1E;
+    --line:rgba(21,18,16,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    max-width:440px;
+    margin:0 auto;
+    padding:40px 20px 80px;
+  }
+  h1{ font-size:18px; font-weight:600; margin:0 0 4px; }
+  .sub{ font-size:13px; color:var(--dim); margin:0 0 24px; line-height:1.5; }
+  .section-label{
+    font-size:11px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    color:var(--dim);
+    margin:26px 0 4px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+  }
+  label{
+    display:block;
+    font-size:12px;
+    color:var(--dim);
+    margin:14px 0 6px;
+  }
+  input, textarea{
+    width:100%;
+    font-family:inherit;
+    font-size:14px;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fff;
+    color:var(--ink);
+  }
+  textarea{ resize:vertical; min-height:60px; }
+  .row2{ display:flex; gap:10px; }
+  .row2 > div{ flex:1; }
+  .row3{ display:flex; gap:8px; }
+  .row3 > div{ flex:1; }
+  .file-row{
+    margin-top:8px;
+    padding:12px;
+    border:1px dashed var(--line);
+    border-radius:10px;
+    font-size:11.5px;
+    color:var(--dim);
+    line-height:1.5;
+  }
+  .cat-inputs{ display:flex; gap:8px; }
+  .cat-inputs > div{ flex:1; }
+  .cat-inputs label{ font-size:11px; margin:0 0 5px; }
+  button{
+    width:100%;
+    margin-top:28px;
+    padding:13px;
+    font-size:14px;
+    font-weight:500;
+    font-family:inherit;
+    color:#fff;
+    background:var(--accent);
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  button:active{ opacity:0.85; }
+  button.secondary{
+    margin-top:10px;
+    color:var(--accent);
+    background:transparent;
+    border:1px solid var(--line);
+  }
+  #status{ margin-top:14px; font-size:12px; color:var(--dim); text-align:center; }
+  #preview{
+    margin-top:20px;
+    font-size:11px;
+    color:var(--dim);
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:12px;
+    white-space:pre-wrap;
+    word-break:break-word;
+    max-height:180px;
+    overflow:auto;
+    display:none;
+  }
+</style>
+</head>
+<body>
+
+<h1>Add a review</h1>
+<p class="sub">Runs entirely in your browser — nothing is uploaded anywhere. Fill this in, download the updated JSON, and replace the file on your site.</p>
+
+<label>Existing data file (optional — skip to start fresh)</label>
+<input type="file" id="existing" accept="application/json">
+
+<div class="section-label">Quick fill from Google Maps</div>
+<input id="maps-link" placeholder="Paste a Google Maps link here">
+<div class="file-row" id="maps-link-hint">
+  Use the <b>full</b> address-bar URL (starts with google.com/maps/place/...), not a share/short link. If you have a maps.app.goo.gl link, open it once in your browser first, then copy the full URL from the address bar and paste that instead.
+</div>
+<button type="button" id="parse-maps-link" class="secondary">Fill in name &amp; coordinates</button>
+<div id="maps-link-status" style="font-size:11px; color:var(--dim); margin-top:6px;"></div>
+
+<div class="section-label">Basics</div>
+
+<div class="row2">
+  <div>
+    <label>Category</label>
+    <input id="type" placeholder="coffee" value="coffee">
+  </div>
+  <div>
+    <label>Name</label>
+    <input id="name" placeholder="Devoción">
+  </div>
+</div>
+
+<label>Neighborhood</label>
+<input id="area" placeholder="Williamsburg">
+
+<label>Country</label>
+<input id="country" placeholder="USA">
+
+<div class="row2">
+  <div>
+    <label>Latitude</label>
+    <input id="lat" placeholder="40.7145">
+  </div>
+  <div>
+    <label>Longitude</label>
+    <input id="lng" placeholder="-73.9575">
+  </div>
+</div>
+<div class="file-row">
+  Open the spot in Google Maps → long-press the pin → tap the coordinates to copy them.
+</div>
+
+<label>Photo (URL, or a filename if you're hosting your own photos alongside the site)</label>
+<input id="photo" placeholder="images/devocion.jpg">
+
+<div class="row2">
+  <div>
+    <label>Price</label>
+    <input id="price" placeholder="$$">
+  </div>
+  <div>
+    <label>Date(s) tried (semicolon separated)</label>
+    <input id="visited" placeholder="Jan 5, 2026; Mar 12, 2026">
+  </div>
+</div>
+
+<div class="section-label">Ratings</div>
+<p class="sub" style="margin:0 0 4px;">Overall is what shows on the map pin. Category labels are up to you — for a different category later (boba, ramen, etc.) just change these labels to whatever fits.</p>
+
+<label>Overall (0–5)</label>
+<input id="overall" placeholder="4.6">
+
+<div class="cat-inputs">
+  <div>
+    <label id="cat1-label">Richness</label>
+    <input id="cat1-val" placeholder="4.5">
+  </div>
+  <div>
+    <label id="cat2-label">Value</label>
+    <input id="cat2-val" placeholder="3.5">
+  </div>
+  <div>
+    <label id="cat3-label">Sweetness</label>
+    <input id="cat3-val" placeholder="3.0">
+  </div>
+</div>
+<div class="row3" style="margin-top:6px;">
+  <div><input id="cat1-key" placeholder="label" value="richness"></div>
+  <div><input id="cat2-key" placeholder="label" value="value"></div>
+  <div><input id="cat3-key" placeholder="label" value="sweetness"></div>
+</div>
+
+<div class="section-label">Notes</div>
+
+<label>Notes</label>
+<textarea id="note" placeholder="What made it good or not"></textarea>
+
+<label>Tags (comma separated)</label>
+<input id="tags" placeholder="pourover, quiet">
+
+<button id="add">Add and download JSON</button>
+<div id="status"></div>
+<div id="preview"></div>
+
+<script>
+let existingData = [];
+
+function parseGoogleMapsLink(url){
+  if(/goo\.gl/.test(url)){
+    return {error: "That's a short link — open it once in your browser, then paste the full URL from the address bar instead."};
+  }
+
+  let name = null;
+  const nameMatch = url.match(/\/place\/([^\/@]+)/);
+  if(nameMatch) name = decodeURIComponent(nameMatch[1].replace(/\+/g, ' '));
+
+  let lat = null, lng = null;
+  const preciseMatch = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+  if(preciseMatch){
+    lat = parseFloat(preciseMatch[1]);
+    lng = parseFloat(preciseMatch[2]);
+  }else{
+    const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if(atMatch){ lat = parseFloat(atMatch[1]); lng = parseFloat(atMatch[2]); }
+  }
+
+  if(lat === null || lng === null){
+    return {error: "Couldn't find coordinates in that link. Make sure it's the full google.com/maps/place/... URL."};
+  }
+  return {name, lat, lng};
+}
+
+document.getElementById('parse-maps-link').onclick = () => {
+  const url = document.getElementById('maps-link').value.trim();
+  const statusEl = document.getElementById('maps-link-status');
+  if(!url){ statusEl.textContent = 'Paste a link first.'; return; }
+
+  const result = parseGoogleMapsLink(url);
+  if(result.error){
+    statusEl.textContent = result.error;
+    return;
+  }
+  if(result.name) document.getElementById('name').value = result.name;
+  document.getElementById('lat').value = result.lat;
+  document.getElementById('lng').value = result.lng;
+  statusEl.textContent = result.name
+    ? `Filled in "${result.name}" — double check the neighborhood, country, and everything else below.`
+    : 'Filled in the coordinates — name wasn\'t in the link, so add it manually.';
+};
+
+
+document.getElementById('existing').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const text = await file.text();
+    existingData = JSON.parse(text);
+    document.getElementById('status').textContent = 'Loaded ' + existingData.length + ' existing entries.';
+  }catch(err){
+    document.getElementById('status').textContent = 'Could not read that file — check it is valid JSON.';
+  }
+});
+
+document.getElementById('add').onclick = () => {
+  const type = document.getElementById('type').value.trim() || 'coffee';
+  const name = document.getElementById('name').value.trim();
+  const area = document.getElementById('area').value.trim();
+  const country = document.getElementById('country').value.trim();
+  const lat = parseFloat(document.getElementById('lat').value);
+  const lng = parseFloat(document.getElementById('lng').value);
+  const overall = parseFloat(document.getElementById('overall').value);
+  const photo = document.getElementById('photo').value.trim();
+  const price = document.getElementById('price').value.trim();
+  const visited = document.getElementById('visited').value.split(';').map(d=>d.trim()).filter(Boolean);
+  const note = document.getElementById('note').value.trim();
+  const tags = document.getElementById('tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+
+  if(!name || isNaN(lat) || isNaN(lng) || isNaN(overall)){
+    document.getElementById('status').textContent = 'Name, latitude, longitude, and overall rating are required.';
+    return;
+  }
+
+  const ratings = {};
+  for(let i=1; i<=3; i++){
+    const key = document.getElementById('cat'+i+'-key').value.trim();
+    const val = parseFloat(document.getElementById('cat'+i+'-val').value);
+    if(key && !isNaN(val)) ratings[key] = val;
+  }
+
+  const entry = {name, area, country, type, lat, lng, overall, ratings, note, tags};
+  if(photo) entry.photo = photo;
+  if(price) entry.price = price;
+  if(visited.length) entry.visited = visited;
+
+  existingData.push(entry);
+
+  const json = JSON.stringify(existingData, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'coffee.json';
+  a.click();
+
+  document.getElementById('status').textContent = 'Downloaded with ' + existingData.length + ' entries. Replace the old file on your site.';
+  const preview = document.getElementById('preview');
+  preview.style.display = 'block';
+  preview.textContent = json;
+};
+</script>
+</body>
+</html>
