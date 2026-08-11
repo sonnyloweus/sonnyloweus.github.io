@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Add a review</title>
+<meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -65,9 +66,16 @@
     color:var(--dim);
     line-height:1.5;
   }
-  .cat-inputs{ display:flex; gap:8px; }
-  .cat-inputs > div{ flex:1; }
+  .cat-inputs{ display:flex; gap:8px; flex-wrap:wrap; }
+  .cat-inputs > div{ flex:1 1 26%; min-width:78px; }
   .cat-inputs label{ font-size:11px; margin:0 0 5px; }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+  .tag-chip{
+    font-size:11px; padding:5px 10px; border-radius:999px;
+    border:1px solid var(--line); background:#fff; color:var(--dim);
+    cursor:pointer; user-select:none;
+  }
+  .tag-chip.active{ background:var(--accent); border-color:var(--accent); color:#fff; }
   button{
     width:100%;
     margin-top:28px;
@@ -154,6 +162,12 @@
   Open the spot in Google Maps → long-press the pin → tap the coordinates to copy them.
 </div>
 
+<label>Google Maps link (optional, but recommended)</label>
+<input id="mapsUrl" placeholder="https://www.google.com/maps/place/...">
+<div class="file-row">
+  This is what the map icon in the panel actually opens. If you used the "Quick fill" box above, this gets filled in automatically — otherwise paste the full place link here.
+</div>
+
 <label>Photo (URL, or a filename if you're hosting your own photos alongside the site)</label>
 <input id="photo" placeholder="images/devocion.jpg">
 
@@ -169,29 +183,32 @@
 </div>
 
 <div class="section-label">Ratings</div>
-<p class="sub" style="margin:0 0 4px;">Overall is what shows on the map pin. Category labels are up to you — for a different category later (boba, ramen, etc.) just change these labels to whatever fits.</p>
+<p class="sub" style="margin:0 0 4px;">Overall is what shows on the map pin. The five categories below are fixed to match the site.</p>
 
 <label>Overall (0–5)</label>
 <input id="overall" placeholder="4.6">
 
 <div class="cat-inputs">
   <div>
-    <label id="cat1-label">Richness</label>
-    <input id="cat1-val" placeholder="4.5">
+    <label>Depth</label>
+    <input id="cat-depth" placeholder="4.2">
   </div>
   <div>
-    <label id="cat2-label">Value</label>
-    <input id="cat2-val" placeholder="3.5">
+    <label>Craft</label>
+    <input id="cat-craft" placeholder="4.5">
   </div>
   <div>
-    <label id="cat3-label">Sweetness</label>
-    <input id="cat3-val" placeholder="3.0">
+    <label>Ambiance</label>
+    <input id="cat-ambiance" placeholder="4.0">
   </div>
-</div>
-<div class="row3" style="margin-top:6px;">
-  <div><input id="cat1-key" placeholder="label" value="richness"></div>
-  <div><input id="cat2-key" placeholder="label" value="value"></div>
-  <div><input id="cat3-key" placeholder="label" value="sweetness"></div>
+  <div>
+    <label>Character</label>
+    <input id="cat-character" placeholder="3.8">
+  </div>
+  <div>
+    <label>Value</label>
+    <input id="cat-value" placeholder="3.5">
+  </div>
 </div>
 
 <div class="section-label">Notes</div>
@@ -199,8 +216,12 @@
 <label>Notes</label>
 <textarea id="note" placeholder="What made it good or not"></textarea>
 
-<label>Tags (comma separated)</label>
-<input id="tags" placeholder="pourover, quiet">
+<label>Personal story (optional)</label>
+<textarea id="story" placeholder="One memorable detail — shown separately, styled differently from the regular notes"></textarea>
+
+<label>Tags</label>
+<div class="chip-row" id="tag-chip-row"></div>
+<input id="tags" placeholder="Click above, or type your own — comma separated">
 
 <button id="add">Add and download JSON</button>
 <div id="status"></div>
@@ -208,6 +229,41 @@
 
 <script>
 let existingData = [];
+
+const PRESET_TAGS = [
+  'cozy','modern','minimal','lively','quiet','unique','laptop-friendly','study',
+  'experimental','crowded','expensive','hidden-gem','pastries','outdoor',
+  'specialty-coffee','no-seating','scenic'
+];
+
+function getTagsArray(){
+  return document.getElementById('tags').value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+}
+function setTagsArray(arr){
+  document.getElementById('tags').value = arr.join(', ');
+}
+function syncTagChips(){
+  const current = new Set(getTagsArray());
+  document.querySelectorAll('.tag-chip').forEach(chip => {
+    chip.classList.toggle('active', current.has(chip.dataset.tag));
+  });
+}
+
+const tagChipRow = document.getElementById('tag-chip-row');
+PRESET_TAGS.forEach(tag => {
+  const chip = document.createElement('div');
+  chip.className = 'tag-chip';
+  chip.textContent = tag;
+  chip.dataset.tag = tag;
+  chip.onclick = () => {
+    let current = getTagsArray();
+    current = current.includes(tag) ? current.filter(t => t !== tag) : [...current, tag];
+    setTagsArray(current);
+    syncTagChips();
+  };
+  tagChipRow.appendChild(chip);
+});
+document.getElementById('tags').addEventListener('input', syncTagChips);
 
 function parseGoogleMapsLink(url){
   if(/goo\.gl/.test(url)){
@@ -247,6 +303,7 @@ document.getElementById('parse-maps-link').onclick = () => {
   if(result.name) document.getElementById('name').value = result.name;
   document.getElementById('lat').value = result.lat;
   document.getElementById('lng').value = result.lng;
+  document.getElementById('mapsUrl').value = url;
   statusEl.textContent = result.name
     ? `Filled in "${result.name}" — double check the neighborhood, country, and everything else below.`
     : 'Filled in the coordinates — name wasn\'t in the link, so add it manually.';
@@ -275,8 +332,10 @@ document.getElementById('add').onclick = () => {
   const overall = parseFloat(document.getElementById('overall').value);
   const photo = document.getElementById('photo').value.trim();
   const price = document.getElementById('price').value.trim();
+  const mapsUrl = document.getElementById('mapsUrl').value.trim();
   const visited = document.getElementById('visited').value.split(';').map(d=>d.trim()).filter(Boolean);
   const note = document.getElementById('note').value.trim();
+  const story = document.getElementById('story').value.trim();
   const tags = document.getElementById('tags').value.split(',').map(t=>t.trim()).filter(Boolean);
 
   if(!name || isNaN(lat) || isNaN(lng) || isNaN(overall)){
@@ -285,18 +344,45 @@ document.getElementById('add').onclick = () => {
   }
 
   const ratings = {};
-  for(let i=1; i<=3; i++){
-    const key = document.getElementById('cat'+i+'-key').value.trim();
-    const val = parseFloat(document.getElementById('cat'+i+'-val').value);
-    if(key && !isNaN(val)) ratings[key] = val;
-  }
+  [['depth','cat-depth'],['craft','cat-craft'],['ambiance','cat-ambiance'],['character','cat-character'],['value','cat-value']].forEach(([key, id]) => {
+    const val = parseFloat(document.getElementById(id).value);
+    if(!isNaN(val)) ratings[key] = val;
+  });
 
   const entry = {name, area, country, type, lat, lng, overall, ratings, note, tags};
   if(photo) entry.photo = photo;
   if(price) entry.price = price;
+  if(story) entry.story = story;
+  if(mapsUrl) entry.mapsUrl = mapsUrl;
   if(visited.length) entry.visited = visited;
 
-  existingData.push(entry);
+  // If this place is already in the list, merge into it instead of creating
+  // a duplicate — visit dates accumulate, everything else reflects this
+  // latest review (since your opinion may have changed since last time).
+  const existingIndex = existingData.findIndex(s => (s.name || '').trim().toLowerCase() === name.toLowerCase());
+  let statusMsg;
+  if(existingIndex > -1){
+    const prev = existingData[existingIndex];
+    entry.visited = Array.from(new Set([...(prev.visited || []), ...visited]));
+    if(!entry.visited.length) delete entry.visited;
+
+    // A blank field on this submission shouldn't erase info you saved before —
+    // only overwrite when you actually typed something new. Ratings still
+    // always take the new value, since those are required fields anyway.
+    if(!entry.photo && prev.photo) entry.photo = prev.photo;
+    if(!entry.price && prev.price) entry.price = prev.price;
+    if(!entry.story && prev.story) entry.story = prev.story;
+    if(!entry.mapsUrl && prev.mapsUrl) entry.mapsUrl = prev.mapsUrl;
+    if(!entry.note && prev.note) entry.note = prev.note;
+    if(!entry.tags.length && prev.tags && prev.tags.length) entry.tags = prev.tags;
+    if(prev.ratings) entry.ratings = {...prev.ratings, ...entry.ratings};
+
+    existingData[existingIndex] = entry;
+    statusMsg = `Updated "${name}" — now ${entry.visited ? entry.visited.length : 0} visit(s) logged, not a duplicate.`;
+  }else{
+    existingData.push(entry);
+    statusMsg = `Added "${name}" as a new spot.`;
+  }
 
   const json = JSON.stringify(existingData, null, 2);
   const blob = new Blob([json], {type:'application/json'});
@@ -306,7 +392,7 @@ document.getElementById('add').onclick = () => {
   a.download = 'coffee.json';
   a.click();
 
-  document.getElementById('status').textContent = 'Downloaded with ' + existingData.length + ' entries. Replace the old file on your site.';
+  document.getElementById('status').textContent = `${statusMsg} Downloaded coffee.json with ${existingData.length} total entries — replace the old file on your site.`;
   const preview = document.getElementById('preview');
   preview.style.display = 'block';
   preview.textContent = json;

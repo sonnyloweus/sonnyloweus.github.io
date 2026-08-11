@@ -16,6 +16,9 @@
     --dim:#8C8579;
     --accent:#3B2A1E;
     --line:rgba(21,18,16,0.10);
+    --tier-high:#3B2A1E;
+    --tier-mid:#8A6E5C;
+    --tier-low:#C9B7A8;
   }
   *{box-sizing:border-box;}
   html,body{margin:0; height:100%;}
@@ -41,16 +44,21 @@
     border:1px solid var(--line); border-radius:20px;
     cursor:pointer; user-select:none;
     display:flex; align-items:center;
+    max-width:calc(100vw - 110px);
+    overflow:hidden;
   }
-  .brand span{ color:var(--dim); font-weight:400; margin-left:6px; }
+  .brand span{
+    color:var(--dim); font-weight:400; margin-left:6px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;
+  }
   .brand-chevron{
-    display:inline-flex; margin-left:7px; color:var(--dim);
+    display:inline-flex; margin-left:7px; color:var(--dim); flex:none;
     transition:transform 0.2s ease;
   }
   .brand.open .brand-chevron{ transform:rotate(180deg); }
 
   .onthisday-banner{
-    position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:500;
+    position:fixed; top:64px; left:50%; transform:translateX(-50%); z-index:500;
     display:flex; align-items:center; gap:10px;
     background:var(--bg); border:1px solid var(--line); border-radius:20px;
     padding:8px 10px 8px 14px; font-size:12px; color:var(--ink);
@@ -184,6 +192,7 @@
   .scrubber{
     position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:500;
     width:300px;
+    max-width:calc(100vw - 40px);
     background:var(--bg); border:1px solid var(--line); border-radius:16px;
     padding:10px 18px 14px;
   }
@@ -217,6 +226,7 @@
 
   /* rating pill marker */
   .bubble{
+    position:relative;
     display:flex; align-items:center; justify-content:center;
     border-radius:999px; font-weight:700; font-family:'Inter',sans-serif;
     box-shadow:0 2px 5px rgba(21,18,16,0.28);
@@ -224,9 +234,9 @@
   }
   @keyframes popin{ from{ opacity:0; transform:scale(0.4); } to{ opacity:1; transform:scale(1); } }
   .bubble:hover{ transform:scale(1.12); }
-  .bubble.high{ background:rgb(59,42,30); color:#fff; }
-  .bubble.mid{ background:rgba(59,42,30,0.55); color:#fff; }
-  .bubble.low{ background:rgba(59,42,30,0.22); color:var(--ink); }
+  .bubble.high{ background:var(--tier-high); color:#fff; }
+  .bubble.mid{ background:var(--tier-mid); color:#fff; }
+  .bubble.low{ background:var(--tier-low); color:var(--ink); }
   .bubble.small{ font-size:9px !important; }
   .bubble.journey-active{
     animation: journeyPulse 1.1s ease-in-out infinite;
@@ -265,6 +275,19 @@
   }
   .leaflet-marker-icon.marker-cluster-anim{ transition:transform 0.2s ease; }
 
+  /* Visit-count badge on an INDIVIDUAL spot's pin ("you've been here ×70") —
+     deliberately opposite the cluster-count badge in every way: bottom
+     instead of top, light outline instead of solid dark, pill instead of
+     circle — so the two are never confused for one another. */
+  .visit-count{
+    position:absolute; bottom:-3px; right:-3px;
+    background:var(--ink); color:#fff;
+    font-size:7.5px; font-weight:700; line-height:1;
+    padding:1.5px 4px; border-radius:999px;
+    box-shadow:0 1px 3px rgba(21,18,16,.3);
+    white-space:nowrap;
+  }
+
   .leaflet-tooltip.mini-tip{
     background:var(--bg); color:var(--ink); border:1px solid var(--line);
     border-radius:6px; font-family:'Inter',sans-serif; font-size:11px; font-weight:500;
@@ -275,6 +298,7 @@
   /* detail panel */
   .panel{
     position:fixed; left:20px; bottom:20px; z-index:600; width:300px;
+    max-width:calc(100vw - 40px);
     max-height:calc(100vh - 40px); overflow-y:auto;
     background:var(--bg); border:1px solid var(--line); border-radius:14px;
     box-shadow:0 12px 32px rgba(21,18,16,0.12);
@@ -284,6 +308,7 @@
   .panel.show{ opacity:1; transform:translateY(0); pointer-events:auto; }
   .panel-photo{ width:100%; height:140px; object-fit:cover; display:block; border-radius:14px 14px 0 0; background:var(--line); }
   .panel-body{ padding:16px 20px 18px; }
+  .panel-body.no-photo{ padding-top:20px; }
   .panel-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px; }
   .panel-name{ font-size:16px; font-weight:600; margin:0; }
   .panel-area{ font-size:12px; color:var(--dim); margin:2px 0 0; }
@@ -402,7 +427,7 @@
     <span>Price↔rating <button class="mini-help" id="corr-help-btn" type="button" aria-label="What does this mean?">?</button></span>
     <b id="s-corr"></b>
   </div>
-  <div class="mini-desc" id="corr-desc">Correlation between price and rating (&minus;1 to +1). Higher means you rate pricier spots better.</div>
+  <div class="mini-desc" id="corr-desc">Pearson correlation between price and rating (&minus;1 to +1). Higher means you rate pricier spots better.</div>
   <div class="stats-row"><span>Crawl distance</span><b id="s-distance"></b></div>
   <div class="stats-row stack"><span>Most visited</span><b id="s-mostvisited"></b></div>
   <div class="stats-row stack"><span>Most beloved</span><b id="s-beloved"></b></div>
@@ -518,54 +543,69 @@
 // (e.g. previewing this file directly instead of via a local/deployed server).
 const FALLBACK_DATA = [
   {name:"Devoción", area:"Williamsburg", country:"USA", type:"coffee", lat:40.7145, lng:-73.9575, overall:4.6,
-   ratings:{richness:4.5, value:3.5, sweetness:3.0},
+   ratings:{depth:4.5, craft:4.7, ambiance:4.2, character:4.0, value:3.5},
    price:"$$", visited:["Aug 9, 2022","Jan 5, 2026","Mar 12, 2026"],
    note:"Single-origin pourover, roasted on-site.", tags:["pourover","quiet","laptop-friendly"],
    story:"This was my regular spot while building this very site.",
    photo:"https://picsum.photos/seed/devocion/500/350"},
   {name:"Sey Coffee", area:"Bushwick", country:"USA", type:"coffee", lat:40.7057, lng:-73.9339, overall:4.8,
-   ratings:{richness:4.8, value:4.5, sweetness:2.5},
+   ratings:{depth:4.8, craft:4.9, ambiance:3.0, character:4.3, value:4.5},
    price:"$", visited:["Feb 2, 2026"],
    note:"Best filter coffee in the city, full stop.", tags:["filter"],
    photo:"https://picsum.photos/seed/sey/500/350"},
   {name:"Cafe Kitsuné", area:"SoHo", country:"USA", type:"coffee", lat:40.7233, lng:-74.0020, overall:3.9,
-   ratings:{richness:3.5, value:2.5, sweetness:4.0},
+   ratings:{depth:3.0, craft:3.3, ambiance:4.8, character:4.2, value:2.5},
    price:"$$$", visited:["Apr 20, 2026"],
    note:"Beautiful space, come for the matcha.", tags:["aesthetic","laptop-friendly"],
    photo:"https://picsum.photos/seed/kitsune/500/350"},
+  {name:"Partners Coffee", area:"Boerum Hill", country:"USA", type:"coffee", lat:40.6838, lng:-73.9836, overall:4.4,
+   ratings:{depth:4.2, craft:4.3, ambiance:4.0, character:3.7, value:4.0},
+   price:"$$", visited:["May 3, 2026"],
+   note:"Great espresso, cozy window seats.", tags:["espresso","laptop-friendly"],
+   photo:"https://picsum.photos/seed/partners/500/350"},
+  {name:"Abraço", area:"East Village", country:"USA", type:"coffee", lat:40.7282, lng:-73.9857, overall:4.9,
+   ratings:{depth:4.9, craft:5.0, ambiance:3.2, character:4.8, value:4.0},
+   price:"$$", visited:["Jun 14, 2026","Jul 1, 2026"],
+   note:"Tiny counter, unreal espresso.", tags:["espresso","standing-room"],
+   photo:"https://picsum.photos/seed/abraco/500/350"},
+  {name:"Culture Espresso", area:"Midtown", country:"USA", type:"coffee", lat:40.7486, lng:-73.9857, overall:4.1,
+   ratings:{depth:3.8, craft:3.9, ambiance:3.5, character:3.3, value:3.5},
+   price:"$$", visited:["Jul 22, 2026"],
+   note:"Good for the neighborhood, great croissants.", tags:["pastries"],
+   photo:"https://picsum.photos/seed/culture/500/350"},
   {name:"Ludlow Coffee Supply", area:"Lower East Side", country:"USA", type:"coffee", lat:40.7186, lng:-73.9879, overall:3.6,
-   ratings:{richness:3.5, value:3.0, sweetness:3.5},
+   ratings:{depth:3.3, craft:3.4, ambiance:3.8, character:3.2, value:3.5},
    price:"$$", visited:["Feb 18, 2026"],
    note:"Solid drip, good people-watching from the window.", tags:["cozy"],
    photo:"https://picsum.photos/seed/ludlow/500/350"},
   {name:"Birch Coffee", area:"Flatiron", country:"USA", type:"coffee", lat:40.7410, lng:-73.9897, overall:4.0,
-   ratings:{richness:3.8, value:3.5, sweetness:3.0},
+   ratings:{depth:3.6, craft:3.8, ambiance:3.5, character:3.0, value:3.5},
    price:"$$", visited:["Mar 3, 2026","May 22, 2026"],
    note:"Dependable, good wifi, gets crowded at lunch.", tags:["wifi","laptop-friendly"],
    photo:"https://picsum.photos/seed/birch/500/350"},
   {name:"Little Canal", area:"Chinatown", country:"USA", type:"coffee", lat:40.7158, lng:-73.9970, overall:3.3,
-   ratings:{richness:3.0, value:3.5, sweetness:2.5},
+   ratings:{depth:3.0, craft:3.0, ambiance:2.8, character:3.8, value:3.5},
    price:"$", visited:["Jun 8, 2026"],
    note:"Tiny, easy to miss, decent black coffee.", tags:["hidden-gem"],
    story:"Found this by accident while lost looking for dim sum. Worth the detour.",
    photo:"https://picsum.photos/seed/littlecanal/500/350"},
   {name:"Variety Coffee Roasters", area:"Greenpoint", country:"USA", type:"coffee", lat:40.7305, lng:-73.9527, overall:4.7,
-   ratings:{richness:4.6, value:4.0, sweetness:2.5},
+   ratings:{depth:4.5, craft:4.6, ambiance:4.0, character:4.2, value:4.2},
    price:"$$", visited:["Feb 27, 2026","Apr 9, 2026","Jul 15, 2026"],
    note:"Consistently excellent, my most-visited spot for a reason.", tags:["espresso","quiet"],
    photo:"https://picsum.photos/seed/variety/500/350"},
   {name:"Onibus Coffee", area:"Nakameguro, Tokyo", country:"Japan", type:"coffee", lat:35.6446, lng:139.6989, overall:4.7,
-   ratings:{richness:4.5, value:4.0, sweetness:2.5},
+   ratings:{depth:4.3, craft:4.5, ambiance:4.9, character:4.6, value:3.8},
    price:"$$", visited:["Sep 4, 2025"],
    note:"Beautiful old house converted into a cafe, upstairs seating is worth it.", tags:["aesthetic","quiet"],
    photo:"https://picsum.photos/seed/onibus/500/350"},
   {name:"Kaffeine", area:"Fitzrovia, London", country:"UK", type:"coffee", lat:51.5178, lng:-0.1414, overall:4.3,
-   ratings:{richness:4.2, value:3.5, sweetness:3.0},
+   ratings:{depth:4.0, craft:4.3, ambiance:3.7, character:3.8, value:3.3},
    price:"$$", visited:["Nov 11, 2025"],
    note:"Australian-style flat white done right, always busy.", tags:["espresso","laptop-friendly"],
    photo:"https://picsum.photos/seed/kaffeine/500/350"},
   {name:"Café de Flore", area:"Saint-Germain, Paris", country:"France", type:"coffee", lat:48.8540, lng:2.3325, overall:3.8,
-   ratings:{richness:3.5, value:2.0, sweetness:3.5},
+   ratings:{depth:2.5, craft:2.8, ambiance:4.8, character:4.5, value:1.8},
    price:"$$$", visited:["Oct 2, 2025"],
    note:"You're paying for the history and the people-watching, not the coffee.", tags:["aesthetic","historic"],
    story:"Sat here for three hours pretending to write the great American novel.",
@@ -723,13 +763,21 @@ function computeFunStats(list){
 function showPanel(shop){
   document.getElementById('p-photo').src = shop.photo || '';
   document.getElementById('p-photo').style.display = shop.photo ? 'block' : 'none';
+  document.querySelector('.panel-body').classList.toggle('no-photo', !shop.photo);
   document.getElementById('p-name').textContent = shop.name;
   document.getElementById('p-area').textContent = shop.country ? `${shop.area} · ${shop.country}` : shop.area;
-  document.getElementById('p-maps-link').href = `https://www.google.com/maps/search/?api=1&query=${shop.lat},${shop.lng}`;
+  document.getElementById('p-maps-link').href = shop.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${shop.lat},${shop.lng}`;
 
   const metaParts = [];
   if(shop.price) metaParts.push(shop.price);
-  if(shop.visited && shop.visited.length) metaParts.push('Visited ' + shop.visited.join(', '));
+  if(shop.visited && shop.visited.length){
+    if(shop.visited.length <= 4){
+      metaParts.push('Visited ' + shop.visited.join(', '));
+    }else{
+      const sorted = [...shop.visited].sort((a,b) => new Date(a) - new Date(b));
+      metaParts.push(`${shop.visited.length} visits · first ${sorted[0]} · latest ${sorted[sorted.length-1]}`);
+    }
+  }
   document.getElementById('p-meta').textContent = metaParts.join('  ·  ');
 
   document.getElementById('p-num-overall').textContent = shop.overall.toFixed(1);
@@ -1200,9 +1248,11 @@ if(!alreadySeenIntro) openModal();
     const w = 34, h = 22;
     const tier = tierClass(shop.overall);
     const delay = (i % 12) * 0.03;
+    const visitCount = (shop.visited && shop.visited.length) || 0;
+    const visitBadge = visitCount > 1 ? `<span class="visit-count">×${visitCount}</span>` : '';
     const icon = L.divIcon({
       className: '',
-      html: `<div class="bubble ${tier}" style="width:${w}px;height:${h}px;animation-delay:${delay}s;">${shop.overall.toFixed(1)}</div>`,
+      html: `<div class="bubble ${tier}" style="width:${w}px;height:${h}px;animation-delay:${delay}s;">${shop.overall.toFixed(1)}${visitBadge}</div>`,
       iconSize: [w, h],
       iconAnchor: [w/2, h/2]
     });

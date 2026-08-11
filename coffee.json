@@ -1,0 +1,490 @@
+[
+  {
+    "name": "Small World Coffee",
+    "area": "Princeton",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 40.3501239,
+    "lng": -74.6602256,
+    "overall": 4.3,
+    "ratings": {
+      "depth": 4,
+      "craft": 3.9,
+      "ambiance": 4.7,
+      "character": 4.5,
+      "value": 4.1
+    },
+    "note": "Solid coffee, great matcha, and tasty scones to enjoy in a packed cozy cafe full of working students.",
+    "tags": [
+      "cozy",
+      "lively",
+      "laptop-friendly",
+      "study",
+      "crowded",
+      "pastries"
+    ],
+    "price": "$$",
+    "story": "Countless math psets were done here...",
+    "mapsUrl": "https://maps.app.goo.gl/ByG3i4PBEJcHRcsV8",
+    "visited": [
+      "Sep 16, 2023",
+      "Oct 1, 2023",
+      "Oct 28, 2023",
+      "Nov 5, 2023",
+      "Nov 11, 2023",
+      "Nov 18, 2023",
+      "Dec 2, 2023",
+      "Dec 9, 2023",
+      "Jan 28, 2024",
+      "Feb 4, 2024",
+      "Feb 17, 2024",
+      "Mar 2, 2024",
+      "Mar 23, 2024",
+      "Apr 6, 2024",
+      "Apr 14, 2024",
+      "Apr 27, 2024",
+      "May 3, 2024",
+      "May 5, 2024",
+      "Sep 8, 2024",
+      "Sep 15, 2024",
+      "Sep 28, 2024",
+      "Oct 5, 2024",
+      "Oct 26, 2024",
+      "Nov 2, 2024",
+      "Nov 10, 2024",
+      "Nov 16, 2024",
+      "Nov 23, 2024",
+      "Dec 3, 2024",
+      "Dec 7, 2024",
+      "Jan 31, 2025",
+      "Feb 2, 2025",
+      "Feb 8, 2025",
+      "Feb 16, 2025",
+      "Feb 22, 2025",
+      "Mar 1, 2025",
+      "Mar 22, 2025",
+      "Mar 27, 2025",
+      "Mar 30, 2025",
+      "Apr 5, 2025",
+      "Apr 12, 2025",
+      "Apr 17, 2025",
+      "Apr 19, 2025",
+      "Apr 20, 2025",
+      "Apr 23, 2025",
+      "Apr 26, 2025",
+      "Apr 27, 2025",
+      "Apr 30, 2025",
+      "May 2, 2025",
+      "Sep 6, 2025",
+      "Sep 7, 2025",
+      "Sep 13, 2025",
+      "Sep 18, 2025",
+      "Sep 20, 2025",
+      "Sep 25, 2025",
+      "Sep 27, 2025",
+      "Oct 3, 2025",
+      "Oct 5, 2025",
+      "Oct 26, 2025",
+      "Oct 30, 2025",
+      "Nov 1, 2025",
+      "Nov 6, 2025",
+      "Nov 8, 2025",
+      "Nov 13, 2025",
+      "Nov 15, 2025",
+      "Nov 20, 2025",
+      "Nov 22, 2025",
+      "Dec 1, 2025",
+      "Dec 3, 2025",
+      "Dec 6, 2025",
+      "Dec 8, 2025"
+    ]
+  },
+  {
+    "name": "MAME Seefeld",
+    "area": "Zürich",
+    "country": "Switzerland",
+    "type": "coffee",
+    "lat": 47.3642411,
+    "lng": 8.5494766,
+    "overall": 4.7,
+    "ratings": {
+      "depth": 4.6,
+      "craft": 4.7,
+      "ambiance": 4.5,
+      "character": 4.1,
+      "value": 4.1
+    },
+    "note": "Amazing specialty coffee in Zürich with a wide selection of beans, commitment to craft, and workspace.",
+    "tags": [
+      "modern",
+      "lively",
+      "laptop-friendly",
+      "specialty-coffee",
+      "expensive"
+    ],
+    "price": "$$$",
+    "story": "The birthplace of my Junior Paper on quantum superconducting circuits and symplectic geometry.",
+    "mapsUrl": "https://maps.app.goo.gl/Db3gDKaV2Refsd9U6",
+    "visited": [
+      "Feb 21, 2026",
+      "Mar 1, 2026",
+      "Mar 14, 2026",
+      "Mar 22, 2026",
+      "Mar 28, 2026",
+      "Apr 18, 2026",
+      "Apr 20, 2026",
+      "Apr 23, 2026",
+      "Apr 25, 2026",
+      "Apr 28, 2026",
+      "Apr 30, 2026",
+      "May 2, 2026",
+      "May 5, 2026",
+      "May 7, 2026",
+      "May 9, 2026",
+      "May 11, 2026",
+      "May 13, 2026",
+      "May 15, 2026",
+      "May 17, 2026",
+      "May 18, 2026",
+      "May 19, 2026",
+      "May 20, 2026",
+      "May 21, 2026"
+    ]
+  },
+  {
+    "name": "Coeur Coffee Roasters",
+    "area": "Paris",
+    "country": "France",
+    "type": "coffee",
+    "lat": 48.88544,
+    "lng": 2.33779,
+    "overall": 4.4,
+    "ratings": {
+      "depth": 4.2,
+      "craft": 4.2,
+      "ambiance": 4.3,
+      "character": 4.5,
+      "value": 4.6
+    },
+    "note": "Great coffee in the 18th Arr. of Paris.",
+    "tags": [
+      "no-seating",
+      "crowded"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/76eJDEEZUp3WmTr66",
+    "visited": [
+      "Jun 10, 2025"
+    ]
+  },
+  {
+    "name": "Noir Coffee Shop",
+    "area": "Paris",
+    "country": "France",
+    "type": "coffee",
+    "lat": 48.8839406,
+    "lng": 2.3416204,
+    "overall": 4.3,
+    "ratings": {
+      "depth": 4.2,
+      "craft": 4.3,
+      "ambiance": 4.4,
+      "character": 4.3,
+      "value": 4.3
+    },
+    "note": "Refreshing iced latte with interesting interior design.",
+    "tags": [
+      "unique",
+      "modern"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/Z1sLMZARFGypVy368",
+    "visited": [
+      "Jun 10, 2025"
+    ]
+  },
+  {
+    "name": "Frappé Coffee Shop",
+    "area": "Paris",
+    "country": "France",
+    "type": "coffee",
+    "lat": 48.8483436,
+    "lng": 2.3500495,
+    "overall": 3.7,
+    "ratings": {
+      "depth": 3.7,
+      "craft": 3.8,
+      "ambiance": 3.4,
+      "character": 3.5,
+      "value": 4
+    },
+    "note": "Okay coffee, decent frappe version.",
+    "tags": [
+      "modern",
+      "minimal"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/Tu3CA2cePxM9ji7b6",
+    "visited": [
+      "Jun 12, 2025"
+    ]
+  },
+  {
+    "name": "Shakespeare and Company Café",
+    "area": "Paris",
+    "country": "France",
+    "type": "coffee",
+    "lat": 48.8525433,
+    "lng": 2.3472507,
+    "overall": 3.9,
+    "ratings": {
+      "depth": 3.9,
+      "craft": 3.9,
+      "ambiance": 4,
+      "character": 4.3,
+      "value": 3.8
+    },
+    "note": "Mediocre coffee boosted by the nearby famous bookstore.",
+    "tags": [
+      "lively",
+      "crowded"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/VYvUu1DgzYGrYH717",
+    "visited": [
+      "Jun 12, 2025"
+    ]
+  },
+  {
+    "name": "Bäckerei Konditorei Hausammann Zollikon",
+    "area": "Zollikon",
+    "country": "Switzerland",
+    "type": "coffee",
+    "lat": 47.3376993,
+    "lng": 8.5757258,
+    "overall": 2.9,
+    "ratings": {
+      "depth": 1.9,
+      "craft": 2.2,
+      "ambiance": 3.9,
+      "character": 3.2,
+      "value": 3.1
+    },
+    "note": "Bakery/coffee open on Sunday in lovely Zollikon, but the coffee is horrible.",
+    "tags": [
+      "quiet",
+      "laptop-friendly",
+      "study",
+      "pastries"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/ZMQA2u8pkwaagEfJA",
+    "visited": [
+      "Mar 1, 2026",
+      "Mar 29, 2026",
+      "May 17, 2026"
+    ]
+  },
+  {
+    "name": "Babu's Bakery & Coffeehouse",
+    "area": "Zürich",
+    "country": "Switzerland",
+    "type": "coffee",
+    "lat": 47.3654084,
+    "lng": 8.5475507,
+    "overall": 4.1,
+    "ratings": {
+      "depth": 4.2,
+      "craft": 4.2,
+      "ambiance": 3.9,
+      "character": 4,
+      "value": 3.9
+    },
+    "note": "Decent coffee and tasty cakes at this relatively famous spot.",
+    "tags": [
+      "pastries",
+      "modern",
+      "lively",
+      "crowded"
+    ],
+    "price": "$$$",
+    "mapsUrl": "https://maps.app.goo.gl/w9WTeXvNTtAvQPJK9",
+    "visited": [
+      "May 16, 2026"
+    ]
+  },
+  {
+    "name": "Einstein & Zweistein",
+    "area": "Zürich",
+    "country": "Switzerland",
+    "type": "coffee",
+    "lat": 47.3763014,
+    "lng": 8.5466052,
+    "overall": 3.2,
+    "ratings": {
+      "depth": 1.3,
+      "craft": 1.2,
+      "ambiance": 3.6,
+      "character": 2.7,
+      "value": 3.5
+    },
+    "note": "You don't go here for the coffee, you go here to study.",
+    "tags": [
+      "quiet",
+      "laptop-friendly",
+      "study"
+    ],
+    "price": "$",
+    "mapsUrl": "https://maps.app.goo.gl/42JXB7fWB9hcCmCy9",
+    "visited": [
+      "Feb 25, 2026",
+      "Mar 18, 2026",
+      "Apr 29, 2026",
+      "May 18, 2026"
+    ]
+  },
+  {
+    "name": "Kraftwerk",
+    "area": "Zürich",
+    "country": "Switzerland",
+    "type": "coffee",
+    "lat": 47.372115,
+    "lng": 8.5319335,
+    "overall": 4.5,
+    "ratings": {
+      "depth": 4.2,
+      "craft": 4.3,
+      "ambiance": 4.7,
+      "character": 4.8,
+      "value": 3.9
+    },
+    "note": "Fancy coffee shop built with shipping containers, lots of workspaces.",
+    "tags": [
+      "modern",
+      "lively",
+      "unique",
+      "laptop-friendly",
+      "study",
+      "expensive"
+    ],
+    "price": "$$$",
+    "story": "Apparently this place turns into a bar at night?",
+    "mapsUrl": "https://maps.app.goo.gl/UZurJpiZmbp9QVAcA",
+    "visited": [
+      "Mar 19, 2026"
+    ]
+  },
+  {
+    "name": "Sphères",
+    "area": "Zürich",
+    "country": "Switzerland",
+    "type": "coffee",
+    "lat": 47.3920621,
+    "lng": 8.5188165,
+    "overall": 4.6,
+    "ratings": {
+      "depth": 4.4,
+      "craft": 4.5,
+      "ambiance": 4.7,
+      "character": 4.2,
+      "value": 4.1
+    },
+    "note": "Fantastic coffee with an indoor book store and outdoor foyer.",
+    "tags": [
+      "lively",
+      "laptop-friendly",
+      "outdoor"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/dUSBNjFrWW9eBy7Y9",
+    "visited": [
+      "Mar 28, 2026",
+      "May 3, 2026"
+    ]
+  },
+  {
+    "name": "ViCAFE Rösterei & Kaffeebar",
+    "area": "Zürich",
+    "country": "Switzerland",
+    "type": "coffee",
+    "lat": 47.3881531,
+    "lng": 8.5016196,
+    "overall": 4.7,
+    "ratings": {
+      "depth": 4.6,
+      "craft": 4.7,
+      "ambiance": 4.6,
+      "character": 4.3,
+      "value": 4.2
+    },
+    "note": "Outstanding coffee shop and local roastery with nice architecture and eats.",
+    "tags": [
+      "modern",
+      "unique",
+      "laptop-friendly",
+      "specialty-coffee"
+    ],
+    "price": "$$$",
+    "story": "Went on a private roastery tour here.",
+    "mapsUrl": "https://maps.app.goo.gl/HiBBfGov1LZQxXaA8",
+    "visited": [
+      "May 6, 2026",
+      "May 9, 2026"
+    ]
+  },
+  {
+    "name": "Café het Paleis",
+    "area": "Amsterdam",
+    "country": "Netherlands",
+    "type": "coffee",
+    "lat": 52.3723178,
+    "lng": 4.8889866,
+    "overall": 4.2,
+    "ratings": {
+      "depth": 4,
+      "craft": 3.9,
+      "ambiance": 4.4,
+      "character": 4.2,
+      "value": 4.6
+    },
+    "note": "Beautiful cafe whose coffee and cakes are good, and ambiance is great.",
+    "tags": [
+      "cozy",
+      "pastries",
+      "scenic"
+    ],
+    "photo": "https://maps.app.goo.gl/4PZuBzWyXTyoYshm8",
+    "price": "$$",
+    "mapsUrl": "https://www.google.com/maps/place/Caf%C3%A9+het+Paleis/@52.3722145,4.8825559,15z/data=!4m6!3m5!1s0x47c609c6aac8a0d5:0xede4223458336dc1!8m2!3d52.3723178!4d4.8889866!16s%2Fg%2F1tdpl8hg?entry=ttu&g_ep=EgoyMDI2MDgwNS4xIKXMDSoASAFQAw%3D%3D",
+    "visited": [
+      "April 10, 2026"
+    ]
+  },
+  {
+    "name": "Strudel Cafe Kroll",
+    "area": "Innsbruck",
+    "country": "Austria",
+    "type": "coffee",
+    "lat": 47.2684971,
+    "lng": 11.3940355,
+    "overall": 4.1,
+    "ratings": {
+      "depth": 3.8,
+      "craft": 3.9,
+      "ambiance": 4.2,
+      "character": 4.1,
+      "value": 4
+    },
+    "note": "The apfelstrudel (apple strudel) overshadows the coffee.",
+    "tags": [
+      "cozy",
+      "pastries",
+      "scenic"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/NdLHszhJFj3SBwCG8",
+    "visited": [
+      "April 11, 2026"
+    ]
+  }
+]
