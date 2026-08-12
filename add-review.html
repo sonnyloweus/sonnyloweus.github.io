@@ -93,6 +93,12 @@
   button.secondary{
     margin-top:10px;
     color:var(--accent);
+    background:#fff;
+    border:1px solid var(--line);
+  }
+  button.secondary{
+    margin-top:10px;
+    color:var(--accent);
     background:transparent;
     border:1px solid var(--line);
   }
@@ -118,8 +124,10 @@
 <h1>Add a review</h1>
 <p class="sub">Runs entirely in your browser — nothing is uploaded anywhere. Fill this in, download the updated JSON, and replace the file on your site.</p>
 
-<label>Existing data file (optional — skip to start fresh)</label>
-<input type="file" id="existing" accept="application/json">
+<label>Existing coffee.json (optional — skip to start fresh)</label>
+<button type="button" class="secondary" id="load-existing-btn" style="margin-top:6px;">Choose file…</button>
+<input type="file" id="existing-fallback" accept="application/json" style="display:none;">
+<div id="existing-status" style="font-size:11px; color:var(--dim); margin-top:6px;"></div>
 
 <div class="section-label">Quick fill from Google Maps</div>
 <input id="maps-link" placeholder="Paste a Google Maps link here">
@@ -223,12 +231,16 @@
 <div class="chip-row" id="tag-chip-row"></div>
 <input id="tags" placeholder="Click above, or type your own — comma separated">
 
-<button id="add">Add and download JSON</button>
+<button id="add">Download new JSON</button>
+<button id="save-existing" class="secondary">Save to existing file</button>
+<button id="copy-json" class="secondary">Copy full JSON</button>
 <div id="status"></div>
 <div id="preview"></div>
 
 <script>
 let existingData = [];
+let fileHandle = null; // FileSystemFileHandle — only set if the browser supports it and the user picked via it
+const supportsFileSystemAccess = 'showOpenFilePicker' in window;
 
 const PRESET_TAGS = [
   'cozy','modern','minimal','lively','quiet','unique','laptop-friendly','study',
@@ -309,20 +321,48 @@ document.getElementById('parse-maps-link').onclick = () => {
     : 'Filled in the coordinates — name wasn\'t in the link, so add it manually.';
 };
 
+// ---- loading the existing file ----
+// Prefer the File System Access API (Chrome/Edge) since it gives us a handle
+// we can write straight back to later. Falls back to a plain file input
+// (works everywhere, but "Save to existing file" won't be available).
+const existingStatusEl = document.getElementById('existing-status');
 
-document.getElementById('existing').addEventListener('change', async (e) => {
+document.getElementById('load-existing-btn').onclick = async () => {
+  if(supportsFileSystemAccess){
+    try{
+      const [handle] = await window.showOpenFilePicker({
+        types: [{description: 'JSON', accept: {'application/json': ['.json']}}]
+      });
+      fileHandle = handle;
+      const file = await handle.getFile();
+      const text = await file.text();
+      existingData = JSON.parse(text);
+      existingStatusEl.textContent = `Loaded ${existingData.length} existing entries from ${file.name} — "Save to existing file" will write straight back here.`;
+    }catch(err){
+      if(err.name !== 'AbortError'){
+        existingStatusEl.textContent = 'Could not read that file — check it is valid JSON.';
+      }
+    }
+  }else{
+    document.getElementById('existing-fallback').click();
+  }
+};
+
+document.getElementById('existing-fallback').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if(!file) return;
   try{
     const text = await file.text();
     existingData = JSON.parse(text);
-    document.getElementById('status').textContent = 'Loaded ' + existingData.length + ' existing entries.';
+    fileHandle = null; // classic file input never gives a writable handle
+    existingStatusEl.textContent = `Loaded ${existingData.length} existing entries. Your browser doesn't support saving straight back to the file — use Download or Copy instead.`;
   }catch(err){
-    document.getElementById('status').textContent = 'Could not read that file — check it is valid JSON.';
+    existingStatusEl.textContent = 'Could not read that file — check it is valid JSON.';
   }
 });
 
-document.getElementById('add').onclick = () => {
+// ---- building the entry from the form (shared by all three output buttons) ----
+function buildUpdatedJson(){
   const type = document.getElementById('type').value.trim() || 'coffee';
   const name = document.getElementById('name').value.trim();
   const area = document.getElementById('area').value.trim();
@@ -340,7 +380,7 @@ document.getElementById('add').onclick = () => {
 
   if(!name || isNaN(lat) || isNaN(lng) || isNaN(overall)){
     document.getElementById('status').textContent = 'Name, latitude, longitude, and overall rating are required.';
-    return;
+    return null;
   }
 
   const ratings = {};
@@ -385,17 +425,74 @@ document.getElementById('add').onclick = () => {
   }
 
   const json = JSON.stringify(existingData, null, 2);
-  const blob = new Blob([json], {type:'application/json'});
+  const preview = document.getElementById('preview');
+  preview.style.display = 'block';
+  preview.textContent = json;
+
+  return {json, statusMsg};
+}
+
+// ---- 1. Download new JSON ----
+document.getElementById('add').onclick = () => {
+  const result = buildUpdatedJson();
+  if(!result) return;
+  const blob = new Blob([result.json], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = 'coffee.json';
   a.click();
+  document.getElementById('status').textContent = `${result.statusMsg} Downloaded coffee.json with ${existingData.length} total entries — replace the old file on your site.`;
+};
 
-  document.getElementById('status').textContent = `${statusMsg} Downloaded coffee.json with ${existingData.length} total entries — replace the old file on your site.`;
-  const preview = document.getElementById('preview');
-  preview.style.display = 'block';
-  preview.textContent = json;
+// ---- 2. Save to existing file (writes straight back to the file you loaded) ----
+async function verifyWritePermission(handle){
+  const opts = {mode: 'readwrite'};
+  if((await handle.queryPermission(opts)) === 'granted') return true;
+  if((await handle.requestPermission(opts)) === 'granted') return true;
+  return false;
+}
+
+document.getElementById('save-existing').onclick = async () => {
+  if(!supportsFileSystemAccess){
+    document.getElementById('status').textContent = 'Your browser doesn\'t support saving straight to a file (this needs Chrome or Edge) — use Download or Copy instead.';
+    return;
+  }
+  if(!fileHandle){
+    document.getElementById('status').textContent = 'No existing file loaded yet — click "Choose file" above and pick your coffee.json first.';
+    return;
+  }
+  const result = buildUpdatedJson();
+  if(!result) return;
+  try{
+    const ok = await verifyWritePermission(fileHandle);
+    if(!ok){
+      document.getElementById('status').textContent = 'Permission to write to that file was denied.';
+      return;
+    }
+    const writable = await fileHandle.createWritable();
+    await writable.write(result.json);
+    await writable.close();
+    document.getElementById('status').textContent = `${result.statusMsg} Saved directly to ${fileHandle.name} — no download needed.`;
+  }catch(err){
+    document.getElementById('status').textContent = 'Could not save to that file. Try Download instead.';
+  }
+};
+
+// ---- 3. Copy full JSON ----
+document.getElementById('copy-json').onclick = async () => {
+  const result = buildUpdatedJson();
+  if(!result) return;
+  const btn = document.getElementById('copy-json');
+  try{
+    await navigator.clipboard.writeText(result.json);
+    document.getElementById('status').textContent = `${result.statusMsg} Copied full JSON to your clipboard.`;
+    const original = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = original; }, 1800);
+  }catch(err){
+    document.getElementById('status').textContent = 'Could not copy automatically — select the text below and copy it manually.';
+  }
 };
 </script>
 </body>

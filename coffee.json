@@ -486,5 +486,32 @@
     "visited": [
       "April 11, 2026"
     ]
+  },
+  {
+    "name": "Restaurant Charivari in der Vitalwelt Schliersee",
+    "area": "Schliersee",
+    "country": "Germany",
+    "type": "coffee",
+    "lat": 47.7338934,
+    "lng": 11.8599695,
+    "overall": 3.5,
+    "ratings": {
+      "depth": 3.6,
+      "craft": 3.4,
+      "ambiance": 4.1,
+      "character": 2.9,
+      "value": 3.7
+    },
+    "note": "Okay coffee with good eats and an amazing view.",
+    "tags": [
+      "outdoor",
+      "scenic"
+    ],
+    "photo": "https://maps.app.goo.gl/Njfbw8TTWW75pw5e9",
+    "price": "$$",
+    "mapsUrl": "https://www.google.com/maps/place/Restaurant+Charivari+in+der+Vitalwelt+Schliersee/@47.7339568,11.8600655,20.92z/data=!3m1!5s0x479d8a4e0161c639:0xdfe6a842882fd6bd!4m6!3m5!1s0x479d8a4e03677f9d:0xed31d8357a22b87b!8m2!3d47.7338934!4d11.8599695!16s%2Fg%2F1tk1lzn7?entry=ttu&g_ep=EgoyMDI2MDgwNS4xIKXMDSoASAFQAw%3D%3D",
+    "visited": [
+      "Apr 19, 2026"
+    ]
   }
 ]

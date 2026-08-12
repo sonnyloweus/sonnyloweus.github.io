@@ -111,6 +111,7 @@
     font-size:9.5px; font-weight:600; text-transform:uppercase;
     letter-spacing:.05em; color:var(--dim); margin-bottom:8px; opacity:0.75;
   }
+  .panel-radar svg text{ font-family:'Inter',sans-serif; }
 
   .filter-card{
     width:210px;
@@ -332,7 +333,8 @@
   .rating-row.overall .rating-num{ font-size:14px; }
   .rating-bar{ flex:1; height:3px; background:var(--line); border-radius:2px; overflow:hidden; }
   .rating-fill{ height:100%; background:var(--accent); }
-  .breakdown{ margin-bottom:14px; }
+  .panel-radar{ margin:2px auto 12px; max-width:68%; }
+  .panel-radar svg{ display:block; width:100%; height:auto; }
   .panel-note{ font-size:13px; line-height:1.55; color:var(--ink); margin:0 0 10px; }
   .panel-story{
     font-size:12.5px; line-height:1.55; color:var(--dim); font-style:italic;
@@ -457,6 +459,7 @@
 
   <div class="toggle" id="toggle-trail">Trail</div>
   <div class="toggle" id="toggle-compare">Compare</div>
+  <div class="toggle on" id="toggle-clustering">Clustering</div>
 
   <div class="filter-card" id="compare-card">
     <div class="filter-label">Head to head</div>
@@ -529,7 +532,7 @@
       <span class="rating-num" id="p-num-overall"></span>
     </div>
     <p class="panel-context" id="p-context"></p>
-    <div class="breakdown" id="p-breakdown"></div>
+    <div class="panel-radar" id="p-radar"></div>
     <p class="panel-note" id="p-note"></p>
     <p class="panel-story" id="p-story" style="display:none;"></p>
     <div class="panel-tags" id="p-tags"></div>
@@ -650,6 +653,61 @@ function computeStats(list){
   const buckets = new Array(10).fill(0); // half-point bins: 0–0.5, 0.5–1, ... 4.5–5
   vals.forEach(v => buckets[Math.min(9, Math.max(0, Math.floor(v * 2)))]++);
   return {n, avg, median, stddev, min, max, buckets};
+}
+
+function polarPoint(cx, cy, radius, angleDeg){
+  const rad = (angleDeg - 90) * Math.PI / 180;
+  return [cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)];
+}
+
+// Per-shop taste-profile radar for the detail panel — same shape logic as
+// the aggregate one above, but for a single spot's ratings, with each axis
+// label showing its actual number rather than just the category name.
+const CATEGORY_ORDER = ['depth','craft','ambiance','character','value'];
+function renderShopRadar(shop){
+  if(!shop.ratings) return '';
+  const present = Object.keys(shop.ratings);
+  const keys = [
+    ...CATEGORY_ORDER.filter(k => present.includes(k)),
+    ...present.filter(k => !CATEGORY_ORDER.includes(k))
+  ];
+  if(keys.length < 3) return ''; // not enough axes for a sensible radar
+
+  const values = keys.map(k => shop.ratings[k]);
+  const labels = keys.map(k => k.charAt(0).toUpperCase() + k.slice(1));
+
+  const size = 210, cx = size/2, cy = size/2, maxR = 66;
+  const step = 360 / keys.length;
+  const toPath = pts => pts.map(p => p.join(',')).join(' ');
+
+  const outerPts = keys.map((_,i) => polarPoint(cx, cy, maxR, i*step));
+  const midPts = keys.map((_,i) => polarPoint(cx, cy, maxR*0.5, i*step));
+  const dataPts = values.map((v,i) => polarPoint(cx, cy, (v/5)*maxR, i*step));
+
+  const axisLines = keys.map((_,i) => {
+    const [x,y] = polarPoint(cx, cy, maxR, i*step);
+    return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`;
+  }).join('');
+
+  const categoryLabelsSvg = keys.map((k,i) => {
+    const [x,y] = polarPoint(cx, cy, maxR + 22, i*step);
+    return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="9" fill="var(--dim)">${labels[i]}</text>`;
+  }).join('');
+
+  // Value labels sit right above the tip of each axis's data point (in
+  // screen space), so the number reads directly where the point ends.
+  const valueLabelsSvg = dataPts.map(([x,y], i) => {
+    return `<text x="${x}" y="${y - 6}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--tier-high)">${values[i].toFixed(1)}</text>`;
+  }).join('');
+
+  return `<svg viewBox="0 0 ${size} ${size}">
+    <polygon points="${toPath(outerPts)}" fill="none" stroke="var(--line)" stroke-width="1"/>
+    <polygon points="${toPath(midPts)}" fill="none" stroke="var(--line)" stroke-width="1"/>
+    ${axisLines}
+    <polygon points="${toPath(dataPts)}" fill="rgba(59,42,30,0.28)" stroke="var(--tier-high)" stroke-width="1.5" stroke-linejoin="round"/>
+    ${categoryLabelsSvg}
+    ${valueLabelsSvg}
+  </svg>`;
 }
 
 function renderStats(list){
@@ -793,20 +851,7 @@ function showPanel(shop){
     contextEl.textContent = '';
   }
 
-  const breakdown = document.getElementById('p-breakdown');
-  breakdown.innerHTML = '';
-  if(shop.ratings){
-    Object.entries(shop.ratings).forEach(([label, value]) => {
-      const row = document.createElement('div');
-      row.className = 'rating-row';
-      row.innerHTML = `
-        <span class="rating-label">${label}</span>
-        <div class="rating-bar"><div class="rating-fill" style="width:${value/5*100}%"></div></div>
-        <span class="rating-num">${value.toFixed(1)}</span>
-      `;
-      breakdown.appendChild(row);
-    });
-  }
+  document.getElementById('p-radar').innerHTML = renderShopRadar(shop);
 
   document.getElementById('p-note').textContent = shop.note;
   const storyEl = document.getElementById('p-story');
@@ -978,7 +1023,7 @@ if(!alreadySeenIntro) openModal();
   }).addTo(map);
 
   const clusterGroup = L.markerClusterGroup({
-    maxClusterRadius: 55,
+    maxClusterRadius: 2, // basically only cluster pins that visually overlap
     spiderfyOnMaxZoom: true,
     showCoverageOnHover: false,
     iconCreateFunction: function(cluster){
@@ -994,6 +1039,9 @@ if(!alreadySeenIntro) openModal();
       });
     }
   });
+  const plainGroup = L.layerGroup(); // used when clustering is toggled off
+  let clusteringOn = true;
+  function activeGroup(){ return clusteringOn ? clusterGroup : plainGroup; }
   map.addLayer(clusterGroup);
 
   let filters = { ratingLow: 0, ratingHigh: 5, prices: new Set(), tags: new Set() };
@@ -1221,6 +1269,18 @@ if(!alreadySeenIntro) openModal();
     e.currentTarget.classList.toggle('on');
   };
 
+  document.getElementById('toggle-clustering').onclick = (e) => {
+    const oldGroup = activeGroup();
+    clusteringOn = !clusteringOn;
+    const newGroup = activeGroup();
+
+    activeSet.forEach(m => { oldGroup.removeLayer(m); newGroup.addLayer(m); });
+    map.removeLayer(oldGroup);
+    map.addLayer(newGroup);
+
+    e.currentTarget.classList.toggle('on', clusteringOn);
+  };
+
   function updateInViewStats(){
     const bounds = map.getBounds();
     const inView = currentVisible.filter(s => bounds.contains([s.lat, s.lng]));
@@ -1256,7 +1316,10 @@ if(!alreadySeenIntro) openModal();
       iconSize: [w, h],
       iconAnchor: [w/2, h/2]
     });
-    const marker = L.marker([shop.lat, shop.lng], {icon});
+    const marker = L.marker([shop.lat, shop.lng], {
+      icon,
+      zIndexOffset: Math.round(shop.overall * 1000) // higher-rated pins render on top when overlapping
+    });
     marker.shopRating = shop.overall;
     marker.bindTooltip(shop.name, {direction:'top', offset:[0,-14], className:'mini-tip'});
     marker.on('click', () => showPanel(shop));
@@ -1292,8 +1355,8 @@ if(!alreadySeenIntro) openModal();
     const toRemove = [];
     activeSet.forEach(m => { if(!nextActive.has(m)) toRemove.push(m); });
 
-    if(toAdd.length) clusterGroup.addLayers(toAdd);
-    if(toRemove.length) clusterGroup.removeLayers(toRemove);
+    if(toAdd.length) toAdd.forEach(m => activeGroup().addLayer(m));
+    if(toRemove.length) toRemove.forEach(m => activeGroup().removeLayer(m));
     activeSet = nextActive;
 
     currentVisible = shopMarkers.filter(e => activeSet.has(e.marker)).map(e => e.shop);
