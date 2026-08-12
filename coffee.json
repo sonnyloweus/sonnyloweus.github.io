@@ -6,13 +6,13 @@
     "type": "coffee",
     "lat": 40.3501239,
     "lng": -74.6602256,
-    "overall": 4.3,
+    "overall": 4.4,
     "ratings": {
-      "depth": 4,
-      "craft": 3.9,
+      "depth": 4.1,
+      "craft": 4.0,
       "ambiance": 4.7,
       "character": 4.5,
-      "value": 4.1
+      "value": 4.0
     },
     "note": "Solid coffee, great matcha, and tasty scones to enjoy in a packed cozy cafe full of working students.",
     "tags": [
@@ -110,8 +110,8 @@
     "ratings": {
       "depth": 4.6,
       "craft": 4.7,
-      "ambiance": 4.5,
-      "character": 4.1,
+      "ambiance": 4.6,
+      "character": 4.2,
       "value": 4.1
     },
     "note": "Amazing specialty coffee in Zürich with a wide selection of beans, commitment to craft, and workspace.",
@@ -160,7 +160,7 @@
     "lng": 2.33779,
     "overall": 4.4,
     "ratings": {
-      "depth": 4.2,
+      "depth": 4.3,
       "craft": 4.2,
       "ambiance": 4.3,
       "character": 4.5,
@@ -210,13 +210,13 @@
     "type": "coffee",
     "lat": 48.8483436,
     "lng": 2.3500495,
-    "overall": 3.7,
+    "overall": 3.4,
     "ratings": {
-      "depth": 3.7,
-      "craft": 3.8,
-      "ambiance": 3.4,
-      "character": 3.5,
-      "value": 4
+      "depth": 3.3,
+      "craft": 3.7,
+      "ambiance": 2.8,
+      "character": 3.3,
+      "value": 3.0
     },
     "note": "Okay coffee, decent frappe version.",
     "tags": [
@@ -236,12 +236,12 @@
     "type": "coffee",
     "lat": 48.8525433,
     "lng": 2.3472507,
-    "overall": 3.9,
+    "overall": 3.7,
     "ratings": {
-      "depth": 3.9,
-      "craft": 3.9,
-      "ambiance": 4,
-      "character": 4.3,
+      "depth": 3.1,
+      "craft": 3.6,
+      "ambiance": 4.0,
+      "character": 4.1,
       "value": 3.8
     },
     "note": "Mediocre coffee boosted by the nearby famous bookstore.",
@@ -266,9 +266,9 @@
     "ratings": {
       "depth": 1.9,
       "craft": 2.2,
-      "ambiance": 3.9,
-      "character": 3.2,
-      "value": 3.1
+      "ambiance": 4.0,
+      "character": 3.1,
+      "value": 3.0
     },
     "note": "Bakery/coffee open on Sunday in lovely Zollikon, but the coffee is horrible.",
     "tags": [
@@ -294,10 +294,10 @@
     "lng": 8.5475507,
     "overall": 4.1,
     "ratings": {
-      "depth": 4.2,
+      "depth": 4.3,
       "craft": 4.2,
       "ambiance": 3.9,
-      "character": 4,
+      "character": 4.0,
       "value": 3.9
     },
     "note": "Decent coffee and tasty cakes at this relatively famous spot.",
@@ -322,8 +322,8 @@
     "lng": 8.5466052,
     "overall": 3.2,
     "ratings": {
-      "depth": 1.3,
-      "craft": 1.2,
+      "depth": 1.4,
+      "craft": 1.3,
       "ambiance": 3.6,
       "character": 2.7,
       "value": 3.5
@@ -414,8 +414,8 @@
       "depth": 4.6,
       "craft": 4.7,
       "ambiance": 4.6,
-      "character": 4.3,
-      "value": 4.2
+      "character": 4.4,
+      "value": 4.1
     },
     "note": "Outstanding coffee shop and local roastery with nice architecture and eats.",
     "tags": [
@@ -453,9 +453,8 @@
       "pastries",
       "scenic"
     ],
-    "photo": "https://maps.app.goo.gl/4PZuBzWyXTyoYshm8",
     "price": "$$",
-    "mapsUrl": "https://www.google.com/maps/place/Caf%C3%A9+het+Paleis/@52.3722145,4.8825559,15z/data=!4m6!3m5!1s0x47c609c6aac8a0d5:0xede4223458336dc1!8m2!3d52.3723178!4d4.8889866!16s%2Fg%2F1tdpl8hg?entry=ttu&g_ep=EgoyMDI2MDgwNS4xIKXMDSoASAFQAw%3D%3D",
+    "mapsUrl": "https://maps.app.goo.gl/4PZuBzWyXTyoYshm8",
     "visited": [
       "April 10, 2026"
     ]
@@ -473,7 +472,7 @@
       "craft": 3.9,
       "ambiance": 4.2,
       "character": 4.1,
-      "value": 4
+      "value": 4.0
     },
     "note": "The apfelstrudel (apple strudel) overshadows the coffee.",
     "tags": [
@@ -494,11 +493,11 @@
     "type": "coffee",
     "lat": 47.7338934,
     "lng": 11.8599695,
-    "overall": 3.5,
+    "overall": 3.4,
     "ratings": {
-      "depth": 3.6,
+      "depth": 3.3,
       "craft": 3.4,
-      "ambiance": 4.1,
+      "ambiance": 4.2,
       "character": 2.9,
       "value": 3.7
     },
@@ -507,9 +506,8 @@
       "outdoor",
       "scenic"
     ],
-    "photo": "https://maps.app.goo.gl/Njfbw8TTWW75pw5e9",
     "price": "$$",
-    "mapsUrl": "https://www.google.com/maps/place/Restaurant+Charivari+in+der+Vitalwelt+Schliersee/@47.7339568,11.8600655,20.92z/data=!3m1!5s0x479d8a4e0161c639:0xdfe6a842882fd6bd!4m6!3m5!1s0x479d8a4e03677f9d:0xed31d8357a22b87b!8m2!3d47.7338934!4d11.8599695!16s%2Fg%2F1tk1lzn7?entry=ttu&g_ep=EgoyMDI2MDgwNS4xIKXMDSoASAFQAw%3D%3D",
+    "mapsUrl": "https://maps.app.goo.gl/Njfbw8TTWW75pw5e9",
     "visited": [
       "Apr 19, 2026"
     ]

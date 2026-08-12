@@ -19,6 +19,13 @@
     --tier-high:#3B2A1E;
     --tier-mid:#8A6E5C;
     --tier-low:#C9B7A8;
+    --crema:#E8D3AC;
+    --crema-light:#F3E6C9;
+    --crema-lightest:#FBF3DD;
+    --coffee-mid:#5E3E24;
+    --coffee-dark:#3A2712;
+    --ceramic:#FBF8F2;
+    --ceramic-edge:#DDD5C5;
   }
   *{box-sizing:border-box;}
   html,body{margin:0; height:100%;}
@@ -326,14 +333,14 @@
 
   .rating-row{ display:flex; align-items:center; gap:8px; margin-bottom:4px; }
   .rating-row.overall{ margin-bottom:3px; }
-  .panel-context{ font-size:11px; color:var(--dim); margin:0 0 14px; }
+  .panel-context{ font-size:11px; color:var(--dim); margin:0 0 6px; }
   .rating-label{ font-size:11px; color:var(--dim); width:64px; flex:none; text-transform:capitalize; }
   .rating-row.overall .rating-label{ font-size:12px; font-weight:600; color:var(--ink); width:auto; }
   .rating-num{ font-size:11px; font-weight:600; width:24px; flex:none; text-align:right; }
   .rating-row.overall .rating-num{ font-size:14px; }
   .rating-bar{ flex:1; height:3px; background:var(--line); border-radius:2px; overflow:hidden; }
   .rating-fill{ height:100%; background:var(--accent); }
-  .panel-radar{ margin:2px auto 12px; max-width:68%; }
+  .panel-radar{ margin:0 auto; max-width:86%; }
   .panel-radar svg{ display:block; width:100%; height:auto; }
   .panel-note{ font-size:13px; line-height:1.55; color:var(--ink); margin:0 0 10px; }
   .panel-story{
@@ -660,9 +667,53 @@ function polarPoint(cx, cy, radius, angleDeg){
   return [cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)];
 }
 
-// Per-shop taste-profile radar for the detail panel — same shape logic as
-// the aggregate one above, but for a single spot's ratings, with each axis
-// label showing its actual number rather than just the category name.
+function smoothClosedPath(pts, tension){
+  tension = tension === undefined ? 0.55 : tension;
+  const n = pts.length;
+  const p = i => pts[(i+n)%n];
+  let d = `M ${p(0)[0]},${p(0)[1]} `;
+  for(let i=0;i<n;i++){
+    const p0=p(i-1), p1=p(i), p2=p(i+1), p3=p(i+2);
+    const c1 = [p1[0] + (p2[0]-p0[0])/6*tension, p1[1] + (p2[1]-p0[1])/6*tension];
+    const c2 = [p2[0] - (p3[0]-p1[0])/6*tension, p2[1] - (p3[1]-p1[1])/6*tension];
+    d += `C ${c1[0]},${c1[1]} ${c2[0]},${c2[1]} ${p2[0]},${p2[1]} `;
+  }
+  return d + 'Z';
+}
+
+// A point-by-point directional stretch: only the component of each point
+// *along* the cast-shadow axis is scaled and pushed out; the perpendicular
+// component is untouched. Because this is a plain linear map, two shapes
+// that genuinely overlap before the transform still overlap after — which
+// is what keeps the handle's shadow fused to the rim's shadow instead of
+// drifting into a separate floating blob.
+function stretchPoint(px, py, cx, cy, dirx, diry, stretch, dist){
+  const vx = px-cx, vy = py-cy;
+  const along = vx*dirx + vy*diry;
+  const perpx = vx - along*dirx, perpy = vy - along*diry;
+  const newAlong = along*stretch + dist;
+  return [cx + perpx + newAlong*dirx, cy + perpy + newAlong*diry];
+}
+
+function stadiumPoints(hx, hy, w, h, n){
+  n = n || 16;
+  const r = h/2;
+  const rightC = [hx + w/2 - r, hy], leftC = [hx - w/2 + r, hy];
+  const pts = [];
+  for(let i=0;i<=n;i++){
+    const t = -Math.PI/2 + (i/n)*Math.PI;
+    pts.push([rightC[0] + r*Math.cos(t), rightC[1] + r*Math.sin(t)]);
+  }
+  for(let i=0;i<=n;i++){
+    const t = Math.PI/2 + (i/n)*Math.PI;
+    pts.push([leftC[0] + r*Math.cos(t), leftC[1] + r*Math.sin(t)]);
+  }
+  return pts;
+}
+
+// Per-shop taste-profile "coffee cup" radar for the detail panel: the ratings
+// trace a patch of foam on a cup of coffee viewed from directly above, with
+// a half-pill handle, a gloss highlight, and a fused directional shadow.
 const CATEGORY_ORDER = ['depth','craft','ambiance','character','value'];
 function renderShopRadar(shop){
   if(!shop.ratings) return '';
@@ -675,38 +726,126 @@ function renderShopRadar(shop){
 
   const values = keys.map(k => shop.ratings[k]);
   const labels = keys.map(k => k.charAt(0).toUpperCase() + k.slice(1));
-
-  const size = 210, cx = size/2, cy = size/2, maxR = 66;
   const step = 360 / keys.length;
-  const toPath = pts => pts.map(p => p.join(',')).join(' ');
 
-  const outerPts = keys.map((_,i) => polarPoint(cx, cy, maxR, i*step));
-  const midPts = keys.map((_,i) => polarPoint(cx, cy, maxR*0.5, i*step));
-  const dataPts = values.map((v,i) => polarPoint(cx, cy, (v/5)*maxR, i*step));
+  const size = 240, cx = 110, cy = size/2, rimThick = 9, cupR = 78, coffeeR = cupR - rimThick;
+  const blobR = coffeeR * 0.82;
+  const lightDeg = 315, feather = 2.5, shadowDist = 34, stretch = 1.4;
+  const hw = 40, hh = 22, hx = cx + cupR - 3, hy = cy;
 
-  const axisLines = keys.map((_,i) => {
-    const [x,y] = polarPoint(cx, cy, maxR, i*step);
-    return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`;
+  const dataPts = values.map((v,i) => polarPoint(cx, cy, 6 + (v/5)*blobR, i*step));
+  const id = 'radar-' + Math.round(values.reduce((s,v)=>s+v,0)*10) + '-' + keys.length;
+
+  // Fused cast shadow: rim + handle silhouettes stretched together as one path.
+  const [dirx,diry] = polarPoint(0, 0, 1, lightDeg + 180);
+  const rimPts = Array.from({length:64}, (_,i) => polarPoint(cx, cy, cupR, (i/64)*360));
+  const handlePts = stadiumPoints(hx, hy, hw, hh, 16);
+  const rimShadowPts = rimPts.map(([x,y]) => stretchPoint(x,y,cx,cy,dirx,diry,stretch,shadowDist));
+  const handleShadowPts = handlePts.map(([x,y]) => stretchPoint(x,y,cx,cy,dirx,diry,stretch,shadowDist));
+  const rimShadowPath = smoothClosedPath(rimShadowPts, 0.6);
+  const handleShadowPath = smoothClosedPath(handleShadowPts, 0.6);
+  // The shadow's actual farthest point (the rim, stretched) sits at
+  // shadowDist + cupR*stretch from center — the handle never reaches
+  // further than that. Used for the gradient's fade-to-transparent point.
+  const shadowReach = shadowDist + cupR*stretch;
+  const shadowFar = polarPoint(cx, cy, shadowReach, lightDeg + 180);
+  // The handle sits off-center, so its stretched shadow actually reaches
+  // further out (in absolute x/y) than the rim's does — use the real
+  // sampled extent of both shadow shapes for layout instead of a
+  // center-based approximation, so nothing gets hard-clipped by the
+  // viewBox even at the shadow's faint outer edge.
+  const allShadowPts = rimShadowPts.concat(handleShadowPts);
+  const shadowMinX = Math.min(...allShadowPts.map(p=>p[0]));
+  const shadowMaxX = Math.max(...allShadowPts.map(p=>p[0]));
+  const shadowMinY = Math.min(...allShadowPts.map(p=>p[1]));
+  const shadowMaxY = Math.max(...allShadowPts.map(p=>p[1]));
+
+  // Gloss highlight arc on the rim, on the side facing the light.
+  const half = 38;
+  const hlA = polarPoint(cx, cy, cupR-2.5, lightDeg-half), hlB = polarPoint(cx, cy, cupR-2.5, lightDeg+half);
+  const hlMid = polarPoint(cx, cy, cupR-5.5, lightDeg);
+
+  // Handle gloss streak, on whichever edge of the pill faces the light.
+  const lr = (lightDeg-90) * Math.PI/180;
+  const vx = Math.cos(lr), vy = Math.sin(lr);
+  const streakY = hy + vy*hh*0.32, streakX = hx + vx*hw*0.12, streakBow = -vy*hh*0.22;
+
+  // Foam: 3 nested copies of the same rating shape, scaled toward the
+  // center and each a step lighter, so it reads as layered crema rather
+  // than one flat fill.
+  const scaleToward = f => dataPts.map(([x,y]) => [cx+(x-cx)*f, cy+(y-cy)*f]);
+  const foamLayers = [
+    {f:1.0,  fill:'var(--crema)'},
+    {f:0.68, fill:'var(--crema-light)'},
+    {f:0.36, fill:'var(--crema-lightest)'}
+  ].map(l => `<path d="${smoothClosedPath(scaleToward(l.f))}" fill="${l.fill}"/>`).join('');
+
+  // Category name + value are anchored together at the fixed end of each
+  // axis (just past the outer ring), pulled outward a bit further on the
+  // bottom-leaning axes so they clear the rim.
+  const labelBaseR = cupR + 20;
+  const labelPts = keys.map((_,i) => {
+    const deg = i*step, rad = (deg-90)*Math.PI/180, extra = Math.max(0, Math.sin(rad))*11;
+    return polarPoint(cx, cy, labelBaseR+extra, deg);
+  });
+  const labelsSvg = keys.map((k,i) => {
+    const [x,y] = labelPts[i];
+    return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle">
+      <tspan x="${x}" dy="-5.5" fill="var(--dim)" font-size="10.5">${labels[i]}</tspan>
+      <tspan x="${x}" dy="13.5" font-weight="700" font-size="12" fill="var(--ink)">${values[i].toFixed(1)}</tspan>
+    </text>`;
   }).join('');
 
-  const categoryLabelsSvg = keys.map((k,i) => {
-    const [x,y] = polarPoint(cx, cy, maxR + 22, i*step);
-    return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="9" fill="var(--dim)">${labels[i]}</text>`;
-  }).join('');
+  // Tight viewBox around the actual drawn extent — labels, handle, and the
+  // stretched shadow all factor in so nothing gets clipped. Mirrored around
+  // the cup's true center (cx,cy) so the cup itself always sits centered in
+  // the panel, instead of getting pulled off-center by the shadow, which
+  // only extends on one side.
+  const rawLeft = Math.min(...labelPts.map(p=>p[0]), cx-cupR-4, shadowMinX) - 14;
+  const rawRight = Math.max(...labelPts.map(p=>p[0]), hx+hw, cx+cupR+4, shadowMaxX) + 14;
+  const rawTop = Math.min(...labelPts.map(p=>p[1]), cy-cupR-4, shadowMinY) - 15;
+  const rawBottom = Math.max(...labelPts.map(p=>p[1]), cy+cupR+4, shadowMaxY) + 14;
+  const halfW = Math.max(cx-rawLeft, rawRight-cx);
+  const halfH = Math.max(cy-rawTop, rawBottom-cy);
+  const left = cx-halfW, right = cx+halfW, top = cy-halfH, bottom = cy+halfH;
 
-  // Value labels sit right above the tip of each axis's data point (in
-  // screen space), so the number reads directly where the point ends.
-  const valueLabelsSvg = dataPts.map(([x,y], i) => {
-    return `<text x="${x}" y="${y - 6}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--tier-high)">${values[i].toFixed(1)}</text>`;
-  }).join('');
-
-  return `<svg viewBox="0 0 ${size} ${size}">
-    <polygon points="${toPath(outerPts)}" fill="none" stroke="var(--line)" stroke-width="1"/>
-    <polygon points="${toPath(midPts)}" fill="none" stroke="var(--line)" stroke-width="1"/>
-    ${axisLines}
-    <polygon points="${toPath(dataPts)}" fill="rgba(59,42,30,0.28)" stroke="var(--tier-high)" stroke-width="1.5" stroke-linejoin="round"/>
-    ${categoryLabelsSvg}
-    ${valueLabelsSvg}
+  return `<svg viewBox="${left} ${top} ${right-left} ${bottom-top}">
+    <defs>
+      <radialGradient id="coffee-${id}" cx="42%" cy="38%" r="70%">
+        <stop offset="0%" stop-color="var(--coffee-mid)"/>
+        <stop offset="100%" stop-color="var(--coffee-dark)"/>
+      </radialGradient>
+      <radialGradient id="innerShadow-${id}" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+        <stop offset="78%" stop-color="#000000" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#000000" stop-opacity="0.4"/>
+      </radialGradient>
+      <linearGradient id="shadowFade-${id}" gradientUnits="userSpaceOnUse" x1="${cx}" y1="${cy}" x2="${shadowFar[0]}" y2="${shadowFar[1]}">
+        <stop offset="0%" stop-color="#241608" stop-opacity="0.32"/>
+        <stop offset="100%" stop-color="#241608" stop-opacity="0"/>
+      </linearGradient>
+      <filter id="foamShadow-${id}" x="-40%" y="-40%" width="180%" height="180%">
+        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.35"/>
+      </filter>
+      <filter id="softBlur-${id}" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="0.6"/>
+      </filter>
+      <filter id="shadowBlur-${id}" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="${feather}"/>
+      </filter>
+    </defs>
+    <g filter="url(#shadowBlur-${id})">
+      <path d="${rimShadowPath} ${handleShadowPath}" fill="url(#shadowFade-${id})"/>
+    </g>
+    <rect x="${hx-hw/2}" y="${hy-hh/2}" width="${hw}" height="${hh}" rx="${hh/2}" ry="${hh/2}" fill="var(--ceramic)" stroke="var(--ceramic-edge)" stroke-width="1"/>
+    <path d="M ${streakX-hw*0.28},${streakY} Q ${streakX},${streakY+streakBow} ${streakX+hw*0.28},${streakY}" stroke="#FFFFFF" stroke-opacity="0.85" stroke-width="2" fill="none" stroke-linecap="round" filter="url(#softBlur-${id})"/>
+    <circle cx="${cx}" cy="${cy}" r="${cupR}" fill="var(--ceramic)" stroke="var(--ceramic-edge)" stroke-width="1"/>
+    <path d="M ${hlA[0]},${hlA[1]} Q ${hlMid[0]},${hlMid[1]} ${hlB[0]},${hlB[1]}" stroke="#FFFFFF" stroke-opacity="0.8" stroke-width="2.6" fill="none" stroke-linecap="round" filter="url(#softBlur-${id})"/>
+    <circle cx="${cx}" cy="${cy}" r="${coffeeR}" fill="url(#coffee-${id})" stroke="#160D04" stroke-width="1"/>
+    <g filter="url(#foamShadow-${id})">${foamLayers}</g>
+    <circle cx="${cx}" cy="${cy}" r="3" fill="var(--crema-lightest)"/>
+    <circle cx="${cx}" cy="${cy}" r="${coffeeR}" fill="url(#innerShadow-${id})"/>
+    ${labelsSvg}
   </svg>`;
 }
 
@@ -1031,6 +1170,13 @@ if(!alreadySeenIntro) openModal();
       const avg = childMarkers.reduce((sum, m) => sum + m.shopRating, 0) / childMarkers.length;
       const tier = tierClass(avg);
       const w = 42, h = 26;
+      // Clusters always render above individual pins, no matter how low their
+      // average rating is — a cluster represents multiple locations, and
+      // letting a single low-rated pin hide that (and its count badge) would
+      // bury real information. Base offset (10000) clears the highest
+      // possible individual zIndexOffset (rating 5 * 1000 = 5000); avg rating
+      // is added on top only to break ties between two overlapping clusters.
+      cluster.setZIndexOffset(10000 + Math.round(avg * 1000));
       return L.divIcon({
         className: '',
         html: `<div class="bubble cluster ${tier}" style="width:${w}px;height:${h}px;">${avg.toFixed(1)}<span class="cluster-count">${childMarkers.length}</span></div>`,
