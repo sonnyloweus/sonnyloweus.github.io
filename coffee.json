@@ -9,10 +9,10 @@
     "overall": 4.4,
     "ratings": {
       "depth": 4.1,
-      "craft": 4.0,
+      "craft": 4,
       "ambiance": 4.7,
       "character": 4.5,
-      "value": 4.0
+      "value": 4
     },
     "note": "Solid coffee, great matcha, and tasty scones to enjoy in a packed cozy cafe full of working students.",
     "tags": [
@@ -216,7 +216,7 @@
       "craft": 3.7,
       "ambiance": 2.8,
       "character": 3.3,
-      "value": 3.0
+      "value": 3
     },
     "note": "Okay coffee, decent frappe version.",
     "tags": [
@@ -240,7 +240,7 @@
     "ratings": {
       "depth": 3.1,
       "craft": 3.6,
-      "ambiance": 4.0,
+      "ambiance": 4,
       "character": 4.1,
       "value": 3.8
     },
@@ -266,9 +266,9 @@
     "ratings": {
       "depth": 1.9,
       "craft": 2.2,
-      "ambiance": 4.0,
+      "ambiance": 4,
       "character": 3.1,
-      "value": 3.0
+      "value": 3
     },
     "note": "Bakery/coffee open on Sunday in lovely Zollikon, but the coffee is horrible.",
     "tags": [
@@ -297,7 +297,7 @@
       "depth": 4.3,
       "craft": 4.2,
       "ambiance": 3.9,
-      "character": 4.0,
+      "character": 4,
       "value": 3.9
     },
     "note": "Decent coffee and tasty cakes at this relatively famous spot.",
@@ -472,7 +472,7 @@
       "craft": 3.9,
       "ambiance": 4.2,
       "character": 4.1,
-      "value": 4.0
+      "value": 4
     },
     "note": "The apfelstrudel (apple strudel) overshadows the coffee.",
     "tags": [
@@ -510,6 +510,154 @@
     "mapsUrl": "https://maps.app.goo.gl/Njfbw8TTWW75pw5e9",
     "visited": [
       "Apr 19, 2026"
+    ]
+  },
+  {
+    "name": "Alumni Quattro Lounge",
+    "area": "Zürich",
+    "country": "Switzerland",
+    "type": "coffee",
+    "lat": 47.4082196,
+    "lng": 8.506749,
+    "overall": 3.8,
+    "ratings": {
+      "depth": 3.7,
+      "craft": 3.3,
+      "ambiance": 4.2,
+      "character": 3.7,
+      "value": 4.2
+    },
+    "note": "Study spot filled with natural lighting on the ETH Hönggerberg campus.",
+    "tags": [
+      "lively",
+      "laptop-friendly",
+      "study"
+    ],
+    "price": "$",
+    "mapsUrl": "https://maps.app.goo.gl/rUeRfPGPnyenwuJT8",
+    "visited": [
+      "Feb 24, 2026",
+      "Mar 10, 2026",
+      "Mar 17, 2026",
+      "Mar 31, 2026",
+      "Apr 14, 2026",
+      "Apr 21, 2026",
+      "May 12, 2026"
+    ]
+  },
+  {
+    "name": "Kolacherie Kampus Hybernská",
+    "area": "Prague",
+    "country": "Czechia",
+    "type": "coffee",
+    "lat": 50.0870578,
+    "lng": 14.429897,
+    "overall": 4.4,
+    "ratings": {
+      "depth": 4.2,
+      "craft": 4.3,
+      "ambiance": 4.3,
+      "character": 4.2,
+      "value": 4.8
+    },
+    "note": "A must try kolache pastry spot, also serving tasty simple coffee.",
+    "tags": [
+      "minimal",
+      "pastries",
+      "modern"
+    ],
+    "price": "$",
+    "mapsUrl": "https://maps.app.goo.gl/fug1GNVbBaAit79r5",
+    "visited": [
+      "Apr 7, 2026"
+    ]
+  },
+  {
+    "name": "Sweet & Pepper DAYS",
+    "area": "Prague 2",
+    "country": "Czechia",
+    "type": "coffee",
+    "lat": 50.0765174,
+    "lng": 14.4339102,
+    "overall": 4.1,
+    "ratings": {
+      "depth": 4,
+      "craft": 4.5,
+      "ambiance": 4.2,
+      "character": 3.9,
+      "value": 4
+    },
+    "note": "Solid iced latte with some great brunch sliders.",
+    "tags": [
+      "modern",
+      "lively",
+      "food"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://www.google.com/maps/place/Sweet+%26+Pepper+DAYS/@50.0765174,14.4335883,20z/data=!4m6!3m5!1s0x470b948ef4d8ca55:0x30b0ae554241a557!8m2!3d50.0765174!4d14.4339102!16s%2Fg%2F1q6kk8t68?entry=ttu&g_ep=EgoyMDI2MDgwNS4xIKXMDSoASAFQAw%3D%3D",
+    "visited": [
+      "Apr 7, 2026"
+    ]
+  },
+  {
+    "name": "Philz Coffee",
+    "area": "Cupertino",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.324237,
+    "lng": -122.0104416,
+    "overall": 4.5,
+    "ratings": {
+      "depth": 4.6,
+      "craft": 4.1,
+      "ambiance": 4.2,
+      "character": 4.3,
+      "value": 4.2
+    },
+    "note": "California-based coffee spot with an overcomplicated but nice coffee menu to help you feel even more performative.",
+    "tags": [
+      "lively",
+      "crowded",
+      "laptop-friendly",
+      "outdoor",
+      "cozy"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/TWm5SpqA2ConpNsN8",
+    "visited": [
+      "May 26, 2025",
+      "Jun 7, 2025",
+      "Aug 23, 2025",
+      "Jan 11, 2026",
+      "Jan 19, 2026"
+    ]
+  },
+  {
+    "name": "Voyager Craft Coffee - Cupertino",
+    "area": "Cupertino",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.3231357,
+    "lng": -122.0383091,
+    "overall": 3.8,
+    "ratings": {
+      "depth": 3.5,
+      "craft": 3.9,
+      "ambiance": 4.3,
+      "character": 4,
+      "value": 3.4
+    },
+    "note": "",
+    "tags": [
+      "modern",
+      "lively",
+      "laptop-friendly"
+    ],
+    "price": "$$",
+    "story": "Ordered some sort of weird pumpkin spice thing, tasted like sugar water - stick to normal coffees.",
+    "mapsUrl": "https://maps.app.goo.gl/JAv8akQMZtDR1aRa9",
+    "visited": [
+      "Jan 18, 2026"
     ]
   }
 ]

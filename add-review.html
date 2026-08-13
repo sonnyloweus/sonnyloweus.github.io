@@ -125,6 +125,7 @@
 <p class="sub">Runs entirely in your browser — nothing is uploaded anywhere. Fill this in, download the updated JSON, and replace the file on your site.</p>
 
 <label>Existing coffee.json (optional — skip to start fresh)</label>
+<button type="button" class="secondary" id="use-last-btn" style="margin-top:6px; display:none;">Use last file…</button>
 <button type="button" class="secondary" id="load-existing-btn" style="margin-top:6px;">Choose file…</button>
 <input type="file" id="existing-fallback" accept="application/json" style="display:none;">
 <div id="existing-status" style="font-size:11px; color:var(--dim); margin-top:6px;"></div>
@@ -321,11 +322,91 @@ document.getElementById('parse-maps-link').onclick = () => {
     : 'Filled in the coordinates — name wasn\'t in the link, so add it manually.';
 };
 
+// ---- remembering the last file picked, across page loads ----
+// showOpenFilePicker() gives us a FileSystemFileHandle, and the File System
+// Access API lets a handle be stored in IndexedDB and reused later — so
+// instead of trying to remember a *directory*, we remember the exact file
+// you picked last time and offer a one-click "Use last file" shortcut.
+const HANDLE_DB = 'coffee-review-db', HANDLE_STORE = 'handles', HANDLE_KEY = 'lastCoffeeJson';
+
+function idbOpen(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(HANDLE_DB, 1);
+    req.onupgradeneeded = () => { req.result.createObjectStore(HANDLE_STORE); };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbSet(key, val){
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(HANDLE_STORE, 'readwrite');
+    tx.objectStore(HANDLE_STORE).put(val, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function idbGet(key){
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(HANDLE_STORE, 'readonly');
+    const req = tx.objectStore(HANDLE_STORE).get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function loadFromHandle(handle, {silent} = {}){
+  const file = await handle.getFile();
+  const text = await file.text();
+  existingData = JSON.parse(text);
+  fileHandle = handle;
+  existingStatusEl.textContent = `Loaded ${existingData.length} existing entries from ${file.name} — "Save to existing file" will write straight back here.`;
+}
+
 // ---- loading the existing file ----
 // Prefer the File System Access API (Chrome/Edge) since it gives us a handle
-// we can write straight back to later. Falls back to a plain file input
-// (works everywhere, but "Save to existing file" won't be available).
+// we can write straight back to later, and can remember for next time.
+// Falls back to a plain file input (works everywhere, but "Save to existing
+// file" and "Use last file" won't be available).
 const existingStatusEl = document.getElementById('existing-status');
+const useLastBtn = document.getElementById('use-last-btn');
+
+// On page load, see if we remember a file from last time. If permission is
+// already granted (Chrome persists this for a while) we can load it silently;
+// otherwise show the "Use last file" button so a click can (re-)request it.
+(async () => {
+  if(!supportsFileSystemAccess) return;
+  try{
+    const handle = await idbGet(HANDLE_KEY);
+    if(!handle) return;
+    const perm = await handle.queryPermission({mode: 'readwrite'});
+    if(perm === 'granted'){
+      await loadFromHandle(handle);
+    }else{
+      useLastBtn.textContent = `Use last file (${handle.name})…`;
+      useLastBtn.style.display = 'block';
+    }
+  }catch(err){
+    // no remembered handle, or it's no longer valid — ignore
+  }
+})();
+
+useLastBtn.onclick = async () => {
+  try{
+    const handle = await idbGet(HANDLE_KEY);
+    if(!handle){ useLastBtn.style.display = 'none'; return; }
+    const ok = (await handle.queryPermission({mode: 'readwrite'})) === 'granted'
+      || (await handle.requestPermission({mode: 'readwrite'})) === 'granted';
+    if(!ok){
+      existingStatusEl.textContent = 'Permission to reuse that file was denied.';
+      return;
+    }
+    await loadFromHandle(handle);
+  }catch(err){
+    existingStatusEl.textContent = 'Could not reload the last file — choose it manually instead.';
+  }
+};
 
 document.getElementById('load-existing-btn').onclick = async () => {
   if(supportsFileSystemAccess){
@@ -333,11 +414,9 @@ document.getElementById('load-existing-btn').onclick = async () => {
       const [handle] = await window.showOpenFilePicker({
         types: [{description: 'JSON', accept: {'application/json': ['.json']}}]
       });
-      fileHandle = handle;
-      const file = await handle.getFile();
-      const text = await file.text();
-      existingData = JSON.parse(text);
-      existingStatusEl.textContent = `Loaded ${existingData.length} existing entries from ${file.name} — "Save to existing file" will write straight back here.`;
+      await loadFromHandle(handle);
+      await idbSet(HANDLE_KEY, handle);
+      useLastBtn.style.display = 'none';
     }catch(err){
       if(err.name !== 'AbortError'){
         existingStatusEl.textContent = 'Could not read that file — check it is valid JSON.';
