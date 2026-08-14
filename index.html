@@ -340,7 +340,20 @@
     transition:opacity 0.18s ease, transform 0.18s ease;
   }
   .panel.show{ opacity:1; transform:translateY(0); pointer-events:auto; }
-  .panel-photo{ width:100%; height:140px; object-fit:cover; display:block; border-radius:14px 14px 0 0; background:var(--line); }
+  .panel-photo-wrap{ position:relative; width:100%; height:140px; border-radius:14px 14px 0 0; overflow:hidden; background:var(--line); touch-action:pan-y; cursor:pointer; }
+  .panel-photo{ width:100%; height:140px; object-fit:cover; display:block; background:var(--line); }
+  .panel-photo-dots{
+    position:absolute; bottom:8px; left:0; right:0;
+    display:flex; justify-content:center; gap:5px;
+    pointer-events:none;
+  }
+  .panel-photo-dots .dot{
+    width:5px; height:5px; border-radius:3px;
+    background:rgba(255,255,255,0.55);
+    cursor:pointer; pointer-events:auto;
+    transition:width 0.15s ease, background 0.15s ease;
+  }
+  .panel-photo-dots .dot.active{ background:#fff; width:14px; }
   .panel-body{ padding:16px 20px 18px; }
   .panel-body.no-photo{ padding-top:20px; }
   .panel-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px; }
@@ -543,7 +556,10 @@
 </div>
 
 <div class="panel" id="panel">
-  <img class="panel-photo" id="p-photo" alt="">
+  <div class="panel-photo-wrap" id="p-photo-wrap">
+    <img class="panel-photo" id="p-photo" alt="">
+    <div class="panel-photo-dots" id="p-photo-dots"></div>
+  </div>
   <div class="panel-body">
     <div class="panel-top">
       <div>
@@ -585,7 +601,11 @@ const FALLBACK_DATA = [
    price:"$$", visited:["Aug 9, 2022","Jan 5, 2026","Mar 12, 2026"],
    note:"Single-origin pourover, roasted on-site.", tags:["pourover","quiet","laptop-friendly"],
    story:"This was my regular spot while building this very site.",
-   photo:"https://picsum.photos/seed/devocion/500/350"},
+   photos:[
+     {src:"https://picsum.photos/seed/devocion/500/350", date:"Aug 9, 2022"},
+     {src:"https://picsum.photos/seed/devocion2/500/350", date:"Jan 5, 2026"},
+     {src:"https://picsum.photos/seed/devocion3/500/350", date:"Mar 12, 2026"}
+   ]},
   {name:"Sey Coffee", area:"Bushwick", country:"USA", type:"coffee", lat:40.7057, lng:-73.9339, overall:4.8,
    ratings:{depth:4.8, craft:4.9, ambiance:3.0, character:4.3, value:4.5},
    price:"$", visited:["Feb 2, 2026"],
@@ -989,10 +1009,81 @@ function computeFunStats(list){
   return { cups, spent, caffeineMg: cups * MG_CAFFEINE_PER_CUP, corr, mostBeloved, distanceMiles, mostVisited };
 }
 
+// Returns this shop's photos newest-first, whether it uses the new `photos`
+// array (each {src, date}) or the older single `photo` string.
+function getShopPhotos(shop){
+  const list = shop.photos && shop.photos.length
+    ? shop.photos.slice()
+    : (shop.photo ? [{src: shop.photo}] : []);
+  return list.sort((a, b) => {
+    const da = a.date ? new Date(a.date).getTime() : 0;
+    const db = b.date ? new Date(b.date).getTime() : 0;
+    return db - da; // newest first
+  });
+}
+
+let panelPhotos = [];
+let panelPhotoIndex = 0;
+
+function renderPanelPhoto(){
+  const photoImg = document.getElementById('p-photo');
+  const dotsEl = document.getElementById('p-photo-dots');
+  if(!panelPhotos.length){
+    photoImg.src = '';
+    dotsEl.innerHTML = '';
+    return;
+  }
+  photoImg.src = panelPhotos[panelPhotoIndex].src;
+  dotsEl.innerHTML = '';
+  if(panelPhotos.length > 1){
+    panelPhotos.forEach((p, i) => {
+      const dot = document.createElement('div');
+      dot.className = 'dot' + (i === panelPhotoIndex ? ' active' : '');
+      dot.onclick = (e) => { e.stopPropagation(); panelPhotoIndex = i; renderPanelPhoto(); };
+      dotsEl.appendChild(dot);
+    });
+  }
+}
+
+(function setupPanelPhotoNav(){
+  const wrap = document.getElementById('p-photo-wrap');
+  let touchStartX = null;
+  let suppressClick = false;
+
+  wrap.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive:true});
+  wrap.addEventListener('touchend', e => {
+    if(touchStartX === null || !panelPhotos.length){ touchStartX = null; return; }
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    touchStartX = null;
+    if(Math.abs(dx) < 30) return; // treat as a tap, let the click handler below decide left/right
+    suppressClick = true; // this was a swipe — don't also fire the tap-nav click handler
+    panelPhotoIndex = dx < 0
+      ? (panelPhotoIndex + 1) % panelPhotos.length
+      : (panelPhotoIndex - 1 + panelPhotos.length) % panelPhotos.length;
+    renderPanelPhoto();
+  }, {passive:true});
+
+  // Click (or tap) the left/right half of the photo to go to the previous/next
+  // one — handy on a laptop where there's no swipe gesture. Dots (which stop
+  // propagation) still work exactly as before.
+  wrap.addEventListener('click', e => {
+    if(suppressClick){ suppressClick = false; return; }
+    if(panelPhotos.length <= 1) return;
+    const rect = wrap.getBoundingClientRect();
+    const clickedLeftHalf = (e.clientX - rect.left) < rect.width / 2;
+    panelPhotoIndex = clickedLeftHalf
+      ? (panelPhotoIndex - 1 + panelPhotos.length) % panelPhotos.length
+      : (panelPhotoIndex + 1) % panelPhotos.length;
+    renderPanelPhoto();
+  });
+})();
+
 function showPanel(shop){
-  document.getElementById('p-photo').src = shop.photo || '';
-  document.getElementById('p-photo').style.display = shop.photo ? 'block' : 'none';
-  document.querySelector('.panel-body').classList.toggle('no-photo', !shop.photo);
+  panelPhotos = getShopPhotos(shop);
+  panelPhotoIndex = 0;
+  renderPanelPhoto();
+  document.getElementById('p-photo-wrap').style.display = panelPhotos.length ? 'block' : 'none';
+  document.querySelector('.panel-body').classList.toggle('no-photo', !panelPhotos.length);
   document.getElementById('p-name').textContent = shop.name;
   document.getElementById('p-area').textContent = shop.country ? `${shop.area} · ${shop.country}` : shop.area;
   document.getElementById('p-maps-link').href = shop.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${shop.lat},${shop.lng}`;
@@ -1058,6 +1149,12 @@ document.getElementById('onthisday-close').onclick = () => {
 const INTRO_KEY = 'coffeeMapIntroSeen';
 let GLOBAL_DATA = []; // populated once init() loads the real data
 let GLOBAL_AVG_RATING = 0;
+
+// Wired up once init() below builds the markers — lets the modal-close
+// handler replay the map's pop-in animation, since a first-time visitor's
+// markers already finished popping in behind the modal before they could see it.
+let replayMarkerPopIn = null;
+let isFirstRunIntro = false;
 
 const INTRO_SLIDES = [
   {
@@ -1133,6 +1230,13 @@ function openModal(){
 function closeModal(){
   document.getElementById('modal-overlay').classList.remove('show');
   try{ localStorage.setItem(INTRO_KEY, '1'); }catch(e){ /* storage unavailable, no-op */ }
+  // First-time visitors had the map hidden behind this modal while the
+  // markers did their initial pop-in, so give them the reveal now instead —
+  // wait for the modal's own fade-out (0.2s) to finish first.
+  if(isFirstRunIntro){
+    isFirstRunIntro = false;
+    setTimeout(() => { if(replayMarkerPopIn) replayMarkerPopIn(); }, 250);
+  }
 }
 document.getElementById('modal-close').onclick = () => {
   if(introIndex < INTRO_SLIDES.length - 1){ introIndex++; renderIntroSlide(); }
@@ -1143,7 +1247,7 @@ document.getElementById('help-btn').onclick = openModal;
 
 let alreadySeenIntro = false;
 try{ alreadySeenIntro = !!localStorage.getItem(INTRO_KEY); }catch(e){ /* storage unavailable */ }
-if(!alreadySeenIntro) openModal();
+if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
 
 (async function init(){
   const data = await loadData();
@@ -1197,6 +1301,12 @@ if(!alreadySeenIntro) openModal();
     maxClusterRadius: 2, // basically only cluster pins that visually overlap
     spiderfyOnMaxZoom: true,
     showCoverageOnHover: false,
+    // The plugin's built-in zoomToBoundsOnClick often only bumps the zoom by
+    // a single level (it zooms just enough to fit the cluster's own bounds,
+    // which — with such a tight maxClusterRadius — can be a barely-there
+    // jump). We turn that off and drive the zoom step ourselves below so a
+    // cluster click reliably zooms in by a fixed, tunable amount.
+    zoomToBoundsOnClick: false,
     iconCreateFunction: function(cluster){
       const childMarkers = cluster.getAllChildMarkers();
       const avg = childMarkers.reduce((sum, m) => sum + m.shopRating, 0) / childMarkers.length;
@@ -1217,6 +1327,14 @@ if(!alreadySeenIntro) openModal();
       });
     }
   });
+  // How many zoom levels a cluster click jumps in by. Bump this up if it
+  // still feels too shy, or down if it starts to feel like too much.
+  const CLUSTER_ZOOM_STEP = 3;
+  clusterGroup.on('clusterclick', (e) => {
+    const targetZoom = Math.min(map.getMaxZoom(), map.getZoom() + CLUSTER_ZOOM_STEP);
+    map.setView(e.layer.getLatLng(), targetZoom, {animate: true});
+  });
+
   const plainGroup = L.layerGroup(); // used when clustering is toggled off
   let clusteringOn = true;
   function activeGroup(){ return clusteringOn ? clusterGroup : plainGroup; }
@@ -1549,18 +1667,30 @@ if(!alreadySeenIntro) openModal();
 
   // ---- markers are created once per shop; filtering just adds/removes
   // them from the cluster group instead of rebuilding everything ----
-  function makeMarkerFor(shop, i){
+  // buildBubbleIcon is shared by initial creation and by applyFilters, so a
+  // shop's ×N badge can be refreshed in place to show only the visits that
+  // fall inside the current date range (see applyFilters below). `animate`
+  // is off for in-place refreshes so dragging the slider doesn't replay the
+  // pop-in animation on every pin whose count ticks up or down.
+  function buildBubbleIcon(shop, badgeCount, opts){
+    opts = opts || {};
     const w = 34, h = 22;
     const tier = tierClass(shop.overall);
-    const delay = (i % 12) * 0.03;
-    const visitCount = (shop.visited && shop.visited.length) || 0;
-    const visitBadge = visitCount > 1 ? `<span class="visit-count">×${visitCount}</span>` : '';
-    const icon = L.divIcon({
+    const animStyle = opts.animate ? `animation-delay:${opts.delay || 0}s;` : `animation:none;`;
+    const visitBadge = badgeCount > 1 ? `<span class="visit-count">×${badgeCount}</span>` : '';
+    return L.divIcon({
       className: '',
-      html: `<div class="bubble ${tier}" style="width:${w}px;height:${h}px;animation-delay:${delay}s;">${shop.overall.toFixed(1)}${visitBadge}</div>`,
+      html: `<div class="bubble ${tier}" style="width:${w}px;height:${h}px;${animStyle}">${shop.overall.toFixed(1)}${visitBadge}</div>`,
       iconSize: [w, h],
       iconAnchor: [w/2, h/2]
     });
+  }
+
+  function makeMarkerFor(shop, i, initialBadgeCount){
+    // No pop-in here — popInVisibleMarkers() (called once markers are on the
+    // map) handles the animated reveal with a randomized fill order instead
+    // of this sequential, data-order-based one.
+    const icon = buildBubbleIcon(shop, initialBadgeCount, { animate: false });
     const marker = L.marker([shop.lat, shop.lng], {
       icon,
       zIndexOffset: Math.round(shop.overall * 1000) // higher-rated pins render on top when overlapping
@@ -1571,11 +1701,22 @@ if(!alreadySeenIntro) openModal();
     return marker;
   }
 
-  const shopMarkers = data.map((shop, i) => ({
-    shop,
-    marker: makeMarkerFor(shop, i),
-    earliestDay: earliestVisit(shop) !== null ? Math.floor(earliestVisit(shop) / 86400000) : null
-  }));
+  const shopMarkers = data.map((shop, i) => {
+    const visitDays = (shop.visited || []).map(dateStr => {
+      const t = new Date(dateStr).getTime();
+      return isNaN(t) ? null : Math.floor(t / 86400000);
+    }).filter(v => v !== null);
+    const totalVisits = visitDays.length;
+    return {
+      shop,
+      marker: makeMarkerFor(shop, i, totalVisits),
+      // earliestDay still drives "Show Journey" (chronological, ignores the
+      // date filter entirely) — visitDays is what the range filter uses.
+      earliestDay: earliestVisit(shop) !== null ? Math.floor(earliestVisit(shop) / 86400000) : null,
+      visitDays,
+      badgeCount: totalVisits
+    };
+  });
   let activeSet = new Set();
 
   function passesNonDateFilters(shop){
@@ -1591,7 +1732,20 @@ if(!alreadySeenIntro) openModal();
     const nextActive = new Set();
     const toAdd = [];
     shopMarkers.forEach(entry => {
-      const dateOk = entry.earliestDay === null || (entry.earliestDay >= lowDay && entry.earliestDay <= highDay);
+      const hasDates = entry.visitDays.length > 0;
+      // A shop stays on the map as long as at least one of its visits falls
+      // in the selected range — it just shows however many of its visits
+      // landed there. It only drops off once that count hits zero.
+      const inRangeCount = hasDates
+        ? entry.visitDays.reduce((n, d) => n + (d >= lowDay && d <= highDay ? 1 : 0), 0)
+        : 0;
+      const dateOk = !hasDates || inRangeCount > 0;
+
+      if(hasDates && inRangeCount !== entry.badgeCount){
+        entry.marker.setIcon(buildBubbleIcon(entry.shop, inRangeCount, { animate: false }));
+        entry.badgeCount = inRangeCount;
+      }
+
       if(dateOk && passesNonDateFilters(entry.shop)){
         nextActive.add(entry.marker);
         if(!activeSet.has(entry.marker)) toAdd.push(entry.marker);
@@ -1610,6 +1764,27 @@ if(!alreadySeenIntro) openModal();
   }
 
   applyFilters();
+
+  // ---- pop-in reveal: every currently-visible pin fades/scales in with a
+  // randomized delay so the map fills in scattered order rather than in
+  // coffee.json's order or a left-to-right sweep. Re-running it (setIcon
+  // recreates the marker's DOM element) is how the animation gets replayed
+  // — used here on load, and again by closeModal() for first-time visitors
+  // whose markers already finished popping in behind the intro modal. ----
+  function popInVisibleMarkers(){
+    const entries = shopMarkers.filter(e => activeSet.has(e.marker));
+    for(let i = entries.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [entries[i], entries[j]] = [entries[j], entries[i]];
+    }
+    const spread = Math.min(1.3, 0.25 + entries.length * 0.02); // total fill duration, capped for huge lists
+    entries.forEach((entry, idx) => {
+      const delay = (entries.length > 1 ? (idx / (entries.length - 1)) * spread : 0) + Math.random() * 0.06;
+      entry.marker.setIcon(buildBubbleIcon(entry.shop, entry.badgeCount, { animate: true, delay }));
+    });
+  }
+  popInVisibleMarkers();
+  replayMarkerPopIn = popInVisibleMarkers;
 
   document.getElementById('toggle-filter').onclick = (e) => {
     document.getElementById('filter-card').classList.toggle('show');
