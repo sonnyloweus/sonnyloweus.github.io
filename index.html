@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Caffinated Sonny</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
@@ -14,7 +14,7 @@
     --bg:#FAFAF8;
     --ink:#151210;
     --dim:#8C8579;
-    --accent:#3B2A1E;
+    --accent:#4A2A16;
     --line:rgba(21,18,16,0.10);
     /* Rating tiers — one hue (matches --accent), 7 monotone lightness steps,
        light→dark low→high. t1 = lowest ratings, t7 = highest (= --accent). */
@@ -24,7 +24,7 @@
     --tier-4:#8F694D;
     --tier-5:#72533C;
     --tier-6:#543D2B;
-    --tier-7:#3B2A1E;
+    --tier-7:#4A2A16;
     --crema:#E8D3AC;
     --crema-light:#F3E6C9;
     --crema-lightest:#FBF3DD;
@@ -32,15 +32,27 @@
     --coffee-dark:#3A2712;
     --ceramic:#FBF8F2;
     --ceramic-edge:#DDD5C5;
+    /* Safe-area insets — 0px on devices without a notch/home-indicator,
+       and the real inset (with viewport-fit=cover) on ones that have it. */
+    --safe-t: env(safe-area-inset-top, 0px);
+    --safe-r: env(safe-area-inset-right, 0px);
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --safe-l: env(safe-area-inset-left, 0px);
   }
   *{box-sizing:border-box;}
-  html,body{margin:0; height:100%;}
+  html,body{margin:0; height:100%; overscroll-behavior:none;}
   body{
     font-family:'Inter',system-ui,sans-serif;
     color:var(--ink);
     background:var(--bg);
   }
-  #map{ position:fixed; inset:0; background:var(--bg); }
+  /* Let Leaflet's own touch handling fully own panning/pinch inside #map —
+     without this, the browser's default touch gestures compete with
+     Leaflet's for the same drag/pinch, which is what caused the janky,
+     double-handled feel while panning and zooming on mobile. Scrollable
+     panels (.stats-card, .filter-card, .panel, etc.) are untouched, since
+     touch-action isn't inherited by ancestors that don't opt in. */
+  #map{ position:fixed; inset:0; background:var(--bg); touch-action:none; }
   .leaflet-tile-pane{ filter:grayscale(1) brightness(1.04) contrast(0.92); }
   .leaflet-control-attribution{
     font-size:10px; background:transparent !important; color:var(--dim) !important;
@@ -51,33 +63,76 @@
   }
 
   .brand{
-    position:fixed; top:20px; left:20px; z-index:500;
+    position:fixed; top:calc(20px + var(--safe-t)); left:calc(20px + var(--safe-l)); z-index:500;
     font-size:13px; font-weight:500; letter-spacing:0.02em;
-    background:#fff; padding:8px 14px;
+    background:var(--accent); color:#fff;
+    /* Fixed height (matching .toggle-icon's 32px — see the mobile override
+       below for the 40px pairing) instead of a padding-driven height, so
+       the pill is exactly as tall as the toolbar buttons. Vertical
+       centering of its content comes from align-items below. */
+    height:32px; padding:0 14px;
     border:none; border-radius:20px;
     box-shadow:0 24px 60px rgba(21,18,16,0.32);
     cursor:pointer; user-select:none;
     display:flex; align-items:center;
-    max-width:calc(100vw - 110px);
+    max-width:calc(100vw - 110px - var(--safe-l) - var(--safe-r));
     overflow:hidden;
+    white-space:nowrap;
   }
   .brand span{
-    color:var(--dim); font-weight:400; margin-left:6px;
+    color:rgba(255,255,255,0.62); font-weight:400; margin-left:6px;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;
   }
+  /* #count no longer needs its own leading margin — the .brand-gap either
+     side of it now owns that spacing (and centers the dot within it). */
+  .brand #count{ margin-left:0; }
+  /* The title needs to always render on a single line — left as a bare
+     text node it was an anonymous flex item with no flex-shrink/min-width
+     override, so at narrow widths the flexbox shrink algorithm would wrap
+     it onto two lines instead of just clipping, which threw off the
+     pill's height and spacing. Wrapping it in its own span + flex:none
+     keeps it at its natural width always; the count/dot/icons (which
+     already shrink+ellipsis via the ".brand span" rule above) give way
+     first instead. The ".brand .brand-title" selector (two classes) is
+     needed to outrank ".brand span" (class+type) so the title keeps the
+     brand's full-opacity color and isn't shoved right by that rule's
+     margin-left. */
+  .brand .brand-title{ flex:none; white-space:nowrap; color:#fff; margin-left:0; }
+  /* A dot lives inside its own flex item between two sections, rather than
+     glued to the front of whichever section follows it. On mobile, where
+     the bar is stretched full-width, this item's flex-grow soaks up the
+     leftover space on both sides of the dot equally, so the dot sits in
+     the true middle of the gap instead of hugging one edge. On desktop,
+     where the bar shrink-wraps its content and there's no leftover space
+     to grow into, it just falls back to its own small fixed padding — the
+     same modest breathing room a plain margin used to give it. */
+  .brand-gap{
+    flex:1 1 auto; display:flex; align-items:center; justify-content:center;
+    padding:0 6px;
+  }
+  .brand-gap .brand-dot{ margin-left:0; }
+  /* Groups the stats-icon and chevron so they move together as one flex
+     item — needed so the mobile layout above treats them as a single
+     "icon cluster" rather than two separately-spread items. */
+  .brand-icons{ display:inline-flex; align-items:center; flex:none; }
+  .brand-sigma{
+    display:inline-flex; margin-left:0; color:rgba(255,255,255,0.62); flex:none;
+    transition:color 0.2s ease;
+  }
+  .brand.open .brand-sigma{ color:#fff; }
   .brand-chevron{
-    display:inline-flex; margin-left:7px; color:var(--dim); flex:none;
+    display:inline-flex; margin-left:7px; color:rgba(255,255,255,0.62); flex:none;
     transition:transform 0.2s ease;
   }
   .brand.open .brand-chevron{ transform:rotate(180deg); }
 
   .onthisday-banner{
-    position:fixed; top:64px; left:50%; transform:translateX(-50%); z-index:500;
+    position:fixed; top:calc(64px + var(--safe-t)); left:50%; transform:translateX(-50%); z-index:500;
     display:flex; align-items:center; gap:10px;
     background:#fff; border:none; border-radius:20px;
     padding:8px 10px 8px 14px; font-size:12px; color:var(--ink);
     box-shadow:0 24px 60px rgba(21,18,16,0.32);
-    max-width:calc(100vw - 40px);
+    max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
   }
   .onthisday-close{
     color:var(--dim); cursor:pointer; font-size:15px; line-height:1; padding:2px 4px;
@@ -85,9 +140,9 @@
   .onthisday-close:hover{ color:var(--ink); }
 
   .stats-card{
-    position:fixed; top:66px; left:20px; z-index:500;
+    position:fixed; top:calc(66px + var(--safe-t)); left:calc(20px + var(--safe-l)); z-index:500;
     width:188px;
-    max-height:calc(100vh - 100px);
+    max-height:calc(100vh - 100px - var(--safe-t) - var(--safe-b));
     overflow-y:auto;
     background:#fff; border:none; border-radius:14px;
     box-shadow:0 24px 60px rgba(21,18,16,0.32);
@@ -128,6 +183,13 @@
   }
   .panel-radar svg text{ font-family:'Inter',sans-serif; }
 
+  /* .filter-card is shared by three panels — #filter-card, #compare-card,
+     #settings-card — so this base rule set has to stay generic (padding,
+     scroll, sizing all included) and match what compare/settings actually
+     need. The custom-scrollbar treatment below is scoped to #filter-card
+     specifically via ID (which outranks the shared class), so compare and
+     settings keep their original plain padded/auto-scroll behavior instead
+     of losing their padding to it. */
   .filter-card{
     width:210px;
     max-height:0;
@@ -140,12 +202,63 @@
     transition:max-height .25s ease, opacity .2s ease, padding .25s ease, box-shadow .2s ease, margin-bottom .25s ease;
   }
   .filter-card.show{
-    max-height:440px;
+    /* Capped to whatever room is actually left below the card's own
+       position, the same way .stats-card is (see above) — not just a flat
+       vh guess, which could still run past the bottom of short viewports
+       since the card sits ~150px down the fixed toggle-group already.
+       180px = that 150px offset plus a ~30px breathing-room margin at the
+       bottom of the screen. Past this, it scrolls instead of overflowing
+       off-screen or getting clipped. */
+    max-height:min(calc(100vh - 180px - var(--safe-t) - var(--safe-b)), 380px);
+    overflow-y:auto;
+    overflow-x:hidden;
     opacity:1;
     margin-bottom:8px;
-    padding:14px 16px 16px;
+    padding:14px 16px 20px;
     box-shadow:0 24px 60px rgba(21,18,16,0.32);
   }
+  /* ---- #filter-card only: swaps the native scroll above for a custom,
+     always-visible, light-brown one (see the JS-driven #filter-scrollbar-*
+     elements). Native scrollbars can't be reliably clipped to a rounded
+     container across browsers, and current Chrome (~121+) ignores a styled
+     ::-webkit-scrollbar for its auto-hiding overlay scrollbar anyway, so
+     this panel gets its own inner scroller instead of relying on the
+     shared .filter-card.show behavior above. ---- */
+  #filter-card{ position:relative; } /* anchors the custom scrollbar */
+  #filter-card.show{
+    /* Outer just clips to the rounded corners now; the real scroll cap
+       lives on .filter-scroll below. 34px = .filter-scroll's own
+       top+bottom padding, so the outer stays tall enough not to clip it. */
+    max-height:calc(min(calc(100vh - 180px - var(--safe-t) - var(--safe-b)), 380px) + 34px);
+    overflow:hidden;
+    padding:0;
+  }
+  .filter-scroll{
+    max-height:min(calc(100vh - 180px - var(--safe-t) - var(--safe-b)), 380px);
+    overflow-y:auto;
+    overflow-x:hidden;
+    /* Extra right padding clears the custom scrollbar so text/chips never
+       sit under it. */
+    padding:14px 20px 20px 16px;
+    scrollbar-width:none;
+  }
+  .filter-scroll::-webkit-scrollbar{ width:0; height:0; display:none; }
+  /* Track is inset 10px from the top/bottom and 5px from the right edge,
+     so the thumb can never reach the rounded corners or the card's outer
+     edge, no matter how far it's scrolled. */
+  .filter-scrollbar-track{
+    position:absolute; top:10px; right:5px; bottom:10px; width:5px;
+    border-radius:3px; background:rgba(21,18,16,0.06);
+    opacity:0; pointer-events:none;
+    transition:opacity .15s ease;
+  }
+  .filter-scrollbar-track.visible{ opacity:1; pointer-events:auto; }
+  .filter-scrollbar-thumb{
+    position:absolute; left:0; width:100%; min-height:24px;
+    border-radius:3px; background:var(--tier-2);
+    cursor:pointer;
+  }
+  .filter-scrollbar-thumb:hover, .filter-scrollbar-thumb.dragging{ background:var(--tier-3); }
   .filter-label{
     font-size:10.5px; font-weight:600; text-transform:uppercase;
     letter-spacing:.05em; color:var(--dim); margin:14px 0 8px;
@@ -153,6 +266,9 @@
   .filter-label:first-child{ margin-top:0; }
   .filter-range-value{ font-size:11px; color:var(--dim); text-align:center; margin-bottom:8px; }
   .filter-range-value b{ color:var(--ink); font-weight:600; }
+  /* Same bars as the stats panel's rating histogram, just sized to sit
+     snugly between the lo–hi readout and the range slider it previews. */
+  .filter-card .stats-hist{ height:22px; margin:0 0 10px; }
   .chip-row{ display:flex; gap:6px; flex-wrap:wrap; }
   .chip{
     font-size:11px; padding:5px 10px; border-radius:999px;
@@ -162,7 +278,7 @@
   .chip.active{ background:var(--accent); border-color:var(--accent); color:#fff; }
   .filter-reset{
     font-size:11px; color:var(--dim); text-decoration:underline;
-    cursor:pointer; margin-top:14px; text-align:center;
+    cursor:pointer; margin-top:16px; margin-bottom:2px; text-align:center;
   }
   .compare-select{
     width:100%; font-family:inherit; font-size:12px;
@@ -195,7 +311,11 @@
   }
   .toggle.on .filter-dot{ background:#fff; }
   .toggle-group{
-    position:fixed; top:20px; right:20px; z-index:500;
+    /* Sits below the "Caffinated Sonny" brand pill (not level with it) so
+       the search bar, once expanded, opens underneath the title with some
+       breathing room instead of sliding left and covering it. Same offset
+       on mobile and laptop, per request. */
+    position:fixed; top:calc(70px + var(--safe-t)); right:calc(20px + var(--safe-r)); z-index:500;
     display:flex; flex-direction:column; align-items:flex-end;
   }
   .toggle{
@@ -208,11 +328,68 @@
   }
   .toggle:hover{ box-shadow:0 6px 18px rgba(21,18,16,0.22); }
   .toggle.on{ color:#fff; background:var(--accent); box-shadow:0 4px 14px rgba(59,42,30,0.4); }
+  .toggle-icon{
+    position:relative;
+    width:32px; height:32px; padding:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .toggle-icon .filter-dot{
+    position:absolute; top:5px; right:5px; margin-left:0;
+  }
+  #help-btn{ font-size:13px; font-weight:600; }
+  .search-pill{
+    --icon-size:32px;
+    width:32px;
+    transition:width 0.25s cubic-bezier(.4,0,.2,1);
+  }
+  .search-pill.expanded{
+    width:200px; cursor:default;
+    padding-left:calc(var(--icon-size) + 8px);
+  }
+  /* The badge is sized to the full height of the pill. Collapsed, it sits
+     flush and transparent (just centers the icon). Expanded, it becomes a
+     full espresso circle that bulges out past the bar's left edge — a
+     round badge overlapping a white pill, not a flat-edged cap. */
+  .search-icon-wrap{
+    position:absolute; top:0; left:0;
+    width:var(--icon-size); height:var(--icon-size);
+    display:flex; align-items:center; justify-content:center;
+    border-radius:50%;
+    z-index:1;
+    transition:background 0.15s ease, color 0.15s ease, left 0.15s ease, box-shadow 0.15s ease;
+  }
+  .search-pill.expanded .search-icon-wrap{
+    left:calc(var(--icon-size) * -0.2);
+    background:var(--accent); color:#fff;
+    box-shadow:0 2px 8px rgba(59,42,30,0.35);
+  }
+  .search-pill:not(.expanded) .search-icon-wrap{ cursor:pointer; }
+  .search-pill .search-input{
+    flex:1; min-width:0;
+    border:none; outline:none; background:transparent;
+    font-family:inherit; font-size:12px; color:var(--ink);
+    padding:0; opacity:0; pointer-events:none;
+    transition:opacity 0.15s ease;
+  }
+  .search-pill.expanded .search-input{
+    opacity:1; padding-right:4px; pointer-events:auto;
+  }
+  .search-pill.expanded .filter-dot{ display:none; }
+
+  .search-clear{
+    flex:none; display:none; align-items:center; justify-content:center;
+    width:18px; height:18px; margin-right:6px; padding:0; line-height:0;
+    border:none; border-radius:50%; background:var(--line);
+    color:var(--dim); cursor:pointer;
+  }
+  .search-clear svg{ display:block; }
+  .search-clear:hover{ background:#e3dbd2; color:var(--ink); }
+  .search-pill.expanded.has-text .search-clear{ display:flex; }
 
   .scrubber{
-    position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:500;
+    position:fixed; bottom:calc(20px + var(--safe-b)); left:50%; transform:translateX(-50%); z-index:500;
     width:300px;
-    max-width:calc(100vw - 40px);
+    max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
     background:#fff; border:none; border-radius:16px;
     box-shadow:0 24px 60px rgba(21,18,16,0.32);
     padding:10px 18px 14px;
@@ -247,8 +424,9 @@
   .range-ticks{ position:relative; height:13px; margin-top:3px; }
   .range-tick{
     position:absolute; top:0; width:1px; height:4px;
-    background:var(--line); transform:translateX(-50%);
+    background:var(--dim); transform:translateX(-50%);
   }
+  .range-tick.minor{ height:3px; }
   .range-tick-label{
     position:absolute; top:6px; font-size:9px; color:var(--dim);
     transform:translateX(-50%); white-space:nowrap;
@@ -260,7 +438,7 @@
     display:flex; align-items:center; justify-content:center;
     border-radius:999px; font-weight:700; font-family:'Inter',sans-serif;
     box-shadow:0 2px 5px rgba(21,18,16,0.28);
-    transition:transform 0.15s ease; animation:popin 0.3s ease backwards;
+    transition:transform 0.15s ease; animation:popin 0.55s ease backwards;
   }
   @keyframes popin{ from{ opacity:0; transform:scale(0.4); } to{ opacity:1; transform:scale(1); } }
   .bubble:hover{ transform:scale(1.12); }
@@ -283,11 +461,11 @@
   }
 
   .journey-bar{
-    position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:550;
+    position:fixed; bottom:calc(20px + var(--safe-b)); left:50%; transform:translateX(-50%); z-index:550;
     display:flex; align-items:center; gap:14px;
     background:#fff; border:none; border-radius:20px;
     padding:10px 16px; box-shadow:0 24px 60px rgba(21,18,16,0.32);
-    max-width:calc(100vw - 40px);
+    max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
   }
   .journey-info{ display:flex; flex-direction:column; line-height:1.35; }
   .journey-info b{ font-size:12.5px; font-weight:600; white-space:nowrap; }
@@ -331,9 +509,9 @@
 
   /* detail panel */
   .panel{
-    position:fixed; left:20px; bottom:20px; z-index:600; width:300px;
-    max-width:calc(100vw - 40px);
-    max-height:calc(100vh - 40px); overflow-y:auto;
+    position:fixed; left:calc(20px + var(--safe-l)); bottom:calc(20px + var(--safe-b)); z-index:600; width:300px;
+    max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
+    max-height:calc(100vh - 40px - var(--safe-t) - var(--safe-b)); overflow-y:auto;
     background:#fff; border:none; border-radius:14px;
     box-shadow:0 24px 60px rgba(21,18,16,0.32);
     opacity:0; transform:translateY(8px); pointer-events:none;
@@ -398,7 +576,7 @@
   }
   .modal-overlay.show{ opacity:1; pointer-events:auto; }
   .modal{
-    width:320px; max-width:calc(100vw - 40px);
+    width:320px; max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
     background:#fff; border-radius:16px;
     padding:24px 24px 20px;
     box-shadow:0 24px 60px rgba(21,18,16,0.32);
@@ -436,22 +614,65 @@
     border:none; border-radius:8px; cursor:pointer;
   }
 
-  .help-btn{
-    position:fixed; bottom:20px; left:20px; z-index:500;
-    width:32px; height:32px; border-radius:50%;
-    background:var(--bg); border:1px solid var(--line);
-    display:flex; align-items:center; justify-content:center;
-    font-size:13px; font-weight:600; color:var(--dim);
-    cursor:pointer; user-select:none;
+  .switch-row{
+    display:flex; align-items:center; justify-content:space-between;
+    font-size:12.5px; color:var(--ink); padding:9px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .switch-row:last-child{ border-bottom:none; }
+  .switch{
+    position:relative; flex:none;
+    width:34px; height:20px; border-radius:999px;
+    background:var(--line); cursor:pointer;
+    transition:background 0.15s ease;
+  }
+  .switch-knob{
+    position:absolute; top:2px; left:2px;
+    width:16px; height:16px; border-radius:50%;
+    background:#fff; box-shadow:0 1px 3px rgba(21,18,16,.3);
+    transition:left 0.15s ease;
+  }
+  .switch.on{ background:var(--accent); }
+  .switch.on .switch-knob{ left:16px; }
+
+  /* ---- Mobile: bigger touch targets on the toolbar, a little more
+     breathing room between stacked buttons, and slightly roomier text
+     entry so search doesn't feel cramped under a thumb. ---- */
+  @media (max-width: 640px){
+    /* Same 20px side margins as everything else, but no longer reserving
+       room for the toolbar next to it — that moved below the brand pill
+       (see .toggle-group) — so it can stretch edge-to-edge instead of
+       hugging its own content. Height matches the 40px toolbar buttons,
+       same pairing as the 32px desktop height above. Spreading the three
+       sections evenly (title / stats summary / icon cluster), with each
+       dot centered in the gap between them, is handled by .brand-gap's
+       flex-grow above — nothing extra needed here. */
+    .brand{ height:40px; right:calc(20px + var(--safe-r)); max-width:none; }
+    .toggle-icon{ width:40px; height:40px; }
+    .toggle{ margin-bottom:10px; }
+    .search-pill{ --icon-size:40px; width:40px; }
+    .search-pill.expanded{ width:min(220px, calc(100vw - 90px - var(--safe-r))); }
+    #help-btn{ font-size:14px; }
+    /* Icons scale up along with their bigger buttons above, roughly the
+       same ~1.25x the button size grew by, so they don't look lost inside
+       the now-larger tap targets. */
+    .toggle-icon svg{ width:17px; height:17px; }
+    .search-clear{ width:20px; height:20px; }
+    .search-clear svg{ width:12px; height:12px; }
   }
 </style>
 </head>
 <body>
 
-<div class="brand" id="brand">Caffinated Sonny <span id="count"></span>
+<div class="brand" id="brand"><span class="brand-title">Caffinated Sonny</span><span class="brand-gap"><span class="brand-dot">&middot;</span></span><span id="count"></span><span class="brand-gap"><span class="brand-dot">&middot;</span></span><span class="brand-icons"><span class="brand-sigma" title="Stats">
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+      <rect x="2.5" y="2.5" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M5 5.5H11M5 8H11M5 10.5H8.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+    </svg>
+  </span>
   <svg class="brand-chevron" width="9" height="9" viewBox="0 0 10 10" fill="none">
     <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
+  </svg></span>
 </div>
 
 <div class="onthisday-banner" id="onthisday-banner" style="display:none;">
@@ -482,29 +703,58 @@
 </div>
 
 <div class="toggle-group">
-  <div class="toggle" id="toggle-filter">Filter</div>
-
-  <div class="filter-card" id="filter-card">
-    <div class="filter-label">Rating</div>
-    <div class="filter-range-value"><b id="rating-lo"></b> &ndash; <b id="rating-hi"></b></div>
-    <div class="range-slider" id="rating-slider">
-      <div class="range-track"></div>
-      <div class="range-fill" id="rating-fill"></div>
-      <div class="range-handle" id="rating-handle-low"></div>
-      <div class="range-handle" id="rating-handle-high"></div>
-    </div>
-
-    <div class="filter-label">Price</div>
-    <div class="chip-row" id="price-chips"></div>
-
-    <div class="filter-label">Vibe</div>
-    <div class="chip-row" id="tag-chips"></div>
-
-    <div class="filter-reset" id="filter-reset">Reset filters</div>
+  <div class="toggle toggle-icon search-pill" id="toggle-search" title="Search" aria-label="Search shops by name, area, or country">
+    <span class="search-icon-wrap">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <circle cx="7" cy="7" r="5.3" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M11.3 11.3L15 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </span>
+    <input type="text" class="search-input" id="search-input" placeholder="Search" autocomplete="off">
+    <button type="button" class="search-clear" id="search-clear" title="Clear search" aria-label="Clear search">
+      <svg width="10" height="10" viewBox="0 0 16 16" fill="none">
+        <path d="M3 3L13 13M13 3L3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </button>
   </div>
 
-  <div class="toggle" id="toggle-trail">Trail</div>
-  <div class="toggle" id="toggle-compare">Compare</div>
+  <div class="toggle toggle-icon" id="toggle-filter" title="Filter" aria-label="Filter shops">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+      <path d="M2 3.5H14M4.5 8H11.5M7 12.5H9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <div class="filter-card" id="filter-card">
+    <div class="filter-scroll" id="filter-scroll">
+      <div class="filter-label">Rating</div>
+      <div class="filter-range-value"><b id="rating-lo"></b> &ndash; <b id="rating-hi"></b></div>
+      <div class="stats-hist" id="filter-rating-hist"></div>
+      <div class="range-slider" id="rating-slider">
+        <div class="range-track"></div>
+        <div class="range-fill" id="rating-fill"></div>
+        <div class="range-handle" id="rating-handle-low"></div>
+        <div class="range-handle" id="rating-handle-high"></div>
+      </div>
+
+      <div class="filter-label">Price</div>
+      <div class="chip-row" id="price-chips"></div>
+
+      <div class="filter-label">Vibe</div>
+      <div class="chip-row" id="tag-chips"></div>
+
+      <div class="filter-reset" id="filter-reset">Reset filters</div>
+    </div>
+    <div class="filter-scrollbar-track" id="filter-scrollbar-track">
+      <div class="filter-scrollbar-thumb" id="filter-scrollbar-thumb"></div>
+    </div>
+  </div>
+
+  <div class="toggle toggle-icon" id="toggle-compare" title="Compare" aria-label="Compare shops head to head">
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+      <path d="M2 5.5H12.5M12.5 5.5L9.5 2.5M12.5 5.5L9.5 8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M14 10.5H3.5M3.5 10.5L6.5 7.5M3.5 10.5L6.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
 
   <div class="filter-card" id="compare-card">
     <div class="filter-label">Head to head</div>
@@ -513,7 +763,26 @@
     <div class="compare-results" id="compare-results"></div>
   </div>
 
-  <div class="toggle on" id="toggle-clustering">Clustering</div>
+  <div class="toggle toggle-icon" id="toggle-settings" title="Settings" aria-label="Map settings">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13.09H2.91a2 2 0 0 1 0-4H3a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <div class="filter-card" id="settings-card">
+    <div class="filter-label">Map settings</div>
+    <div class="switch-row">
+      <span>Clustering</span>
+      <div class="switch on" id="switch-clustering"><div class="switch-knob"></div></div>
+    </div>
+    <div class="switch-row">
+      <span>Trail</span>
+      <div class="switch on" id="switch-trail"><div class="switch-knob"></div></div>
+    </div>
+  </div>
+
+  <div class="toggle toggle-icon" id="help-btn" title="Help" aria-label="Help">?</div>
 </div>
 
 <div class="scrubber" id="scrubber" style="display:none;">
@@ -538,8 +807,6 @@
 </div>
 
 <div id="map"></div>
-
-<div class="help-btn" id="help-btn">?</div>
 
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
@@ -903,11 +1170,17 @@ function renderShopRadar(shop){
 
 function renderStats(list){
   const stats = computeStats(list);
-  document.getElementById('count').textContent = stats ? `· ${stats.n} in view · ${stats.avg.toFixed(1)} avg` : '· 0 in view';
+  // No leading "· " here anymore — that separator now lives in its own
+  // .brand-gap element between the title and this count (see the HTML),
+  // so it can be centered in the gap on mobile instead of glued to the
+  // front of this text.
+  document.getElementById('count').textContent = stats ? `${stats.n} in view ${stats.avg.toFixed(1)} avg` : '0 in view';
   if(!stats){
     ['s-count','s-avg','s-median','s-stddev','s-range','s-cups','s-caffeine','s-spent','s-corr','s-beloved','s-distance','s-mostvisited']
       .forEach(id => document.getElementById(id).textContent = '—');
     document.getElementById('stats-hist').innerHTML = '';
+    const emptyFilterHist = document.getElementById('filter-rating-hist');
+    if(emptyFilterHist) emptyFilterHist.innerHTML = '';
     return;
   }
   document.getElementById('s-count').textContent = stats.n;
@@ -916,8 +1189,13 @@ function renderStats(list){
   document.getElementById('s-stddev').textContent = stats.stddev.toFixed(2);
   document.getElementById('s-range').textContent = `${stats.min.toFixed(1)}–${stats.max.toFixed(1)}`;
   const maxBucket = Math.max(1, ...stats.buckets);
-  const hist = document.getElementById('stats-hist');
-  hist.innerHTML = stats.buckets.map(c => `<div class="stats-bar" style="height:${Math.max(2,(c/maxBucket)*26)}px" title="${c}"></div>`).join('');
+  // Same bars, rendered twice: once in the stats panel, once above the
+  // rating range slider in the filter panel (see filter-rating-hist) — both
+  // read straight off stats.buckets so they never drift out of sync.
+  const histBarsHtml = stats.buckets.map(c => `<div class="stats-bar" style="height:${Math.max(2,(c/maxBucket)*26)}px" title="${c}"></div>`).join('');
+  document.getElementById('stats-hist').innerHTML = histBarsHtml;
+  const filterHist = document.getElementById('filter-rating-hist');
+  if(filterHist) filterHist.innerHTML = histBarsHtml;
 
   const fun = computeFunStats(list);
   document.getElementById('s-cups').textContent = fun.cups;
@@ -1276,6 +1554,14 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     document.getElementById('onthisday-banner').style.display = 'flex';
   })();
 
+  // Kept in sync with the `@media (max-width: 640px)` breakpoint in the
+  // <style> block above — used to size pin/cluster bubbles a bit bigger
+  // and space out clustering a bit more on phones, where fingers are far
+  // less precise than a cursor. Read once at load; a phone doesn't
+  // typically cross this breakpoint mid-session via resize, and re-reading
+  // it live would mean rebuilding every marker on orientation change.
+  const isMobileViewport = window.matchMedia('(max-width: 640px)').matches;
+
   const map = L.map('map', {
     zoomControl:false,
     attributionControl:true,
@@ -1298,7 +1584,11 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
   }).addTo(map);
 
   const clusterGroup = L.markerClusterGroup({
-    maxClusterRadius: 2, // basically only cluster pins that visually overlap
+    // Was 2 ("basically only cluster pins that visually overlap"), which on
+    // a touchscreen left too many near-neighbor pins each demanding a
+    // pinpoint-precise tap. Loosened a bit on laptop, and more on mobile
+    // since fingers are far less precise than a cursor.
+    maxClusterRadius: isMobileViewport ? 9 : 4,
     spiderfyOnMaxZoom: true,
     showCoverageOnHover: false,
     // The plugin's built-in zoomToBoundsOnClick often only bumps the zoom by
@@ -1311,7 +1601,8 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
       const childMarkers = cluster.getAllChildMarkers();
       const avg = childMarkers.reduce((sum, m) => sum + m.shopRating, 0) / childMarkers.length;
       const tier = tierClass(avg);
-      const w = 42, h = 26;
+      // Bigger hit target on mobile — easier to land a thumb on than a cursor.
+      const w = isMobileViewport ? 50 : 42, h = isMobileViewport ? 31 : 26;
       // Clusters always render above individual pins, no matter how low their
       // average rating is — a cluster represents multiple locations, and
       // letting a single low-rated pin hide that (and its count badge) would
@@ -1319,9 +1610,20 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
       // possible individual zIndexOffset (rating 5 * 1000 = 5000); avg rating
       // is added on top only to break ties between two overlapping clusters.
       cluster.setZIndexOffset(10000 + Math.round(avg * 1000));
+      // iconCreateFunction re-fires (and Leaflet.markercluster swaps in a
+      // brand-new icon element) every time this cluster's membership changes
+      // — including every extra pin that lands in it during the staggered
+      // reveal. Popping the whole bubble in fresh on each of those updates
+      // reads as flicker; it should only pop the first time this cluster
+      // forms, then just update its average/count in place afterward. The
+      // cluster object itself persists across those recomputations, so a
+      // flag stashed on it is enough to tell "just formed" from "updated".
+      const justFormed = !cluster._hasPoppedIn;
+      cluster._hasPoppedIn = true;
+      const animStyle = justFormed ? '' : 'animation:none;';
       return L.divIcon({
         className: '',
-        html: `<div class="bubble cluster ${tier}" style="width:${w}px;height:${h}px;">${avg.toFixed(1)}<span class="cluster-count">${childMarkers.length}</span></div>`,
+        html: `<div class="bubble cluster ${tier}" style="width:${w}px;height:${h}px;${animStyle}">${avg.toFixed(1)}<span class="cluster-count">${childMarkers.length}</span></div>`,
         iconSize: [w, h],
         iconAnchor: [w/2, h/2]
       });
@@ -1340,8 +1642,8 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
   function activeGroup(){ return clusteringOn ? clusterGroup : plainGroup; }
   map.addLayer(clusterGroup);
 
-  let filters = { ratingLow: 0, ratingHigh: 5, prices: new Set(), tags: new Set() };
-  let trailOn = false;
+  let filters = { ratingLow: 0, ratingHigh: 5, prices: new Set(), tags: new Set(), search: '' };
+  let trailOn = true;
   let trailLine = null;
   let currentVisible = [];
 
@@ -1381,19 +1683,39 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     updateHistogramRange();
   }
 
+  // days (floored to UTC day number) for every visit belonging to a given
+  // list of shops — shared by the full-dataset histogram and the
+  // in-viewport recompute below.
+  function daysFromShops(shops){
+    return shops.flatMap(shop => (shop.visited || []).map(dateStr => {
+      const t = new Date(dateStr).getTime();
+      return isNaN(t) ? null : Math.floor(t / 86400000);
+    })).filter(v => v !== null);
+  }
+
   // ---- visit-frequency histogram (sits above the slider track) ----
-  // One bar per calendar month, height = total visits (across every shop)
-  // that occurred in that month. Bars inside the current [lowDay, highDay]
-  // selection are drawn at full strength; bars outside it are dimmed, the
-  // same way the track's unfilled portion is deemphasized — so the shape
-  // doubles as a live preview of what dragging the handles will include.
-  function renderVisitHistogram(){
+  // One bar per calendar month, height = total visits that occurred in
+  // that month among the given shops. Defaults to the full dataset, but
+  // updateInViewStats() re-renders this with only the shops currently
+  // on-screen (in the map viewport, passing the active filters) every time
+  // the map pans/zooms or a filter changes — so the histogram tracks what's
+  // actually visible rather than the whole collection. The x-axis scale
+  // (dayToPct, driven by the full dataset's minDay/maxDay) stays fixed
+  // either way, so the timeline itself doesn't rescale as you pan. Bars
+  // inside the current [lowDay, highDay] selection are drawn at full
+  // strength; bars outside it are dimmed, the same way the track's
+  // unfilled portion is deemphasized — so the shape doubles as a live
+  // preview of what dragging the handles will include.
+  function renderVisitHistogram(shops){
     const histEl = document.getElementById('visit-hist');
     if(!histEl) return;
-    if(!scrubberShouldShow || !allVisitDays.length){ histEl.style.display = 'none'; return; }
+    if(!scrubberShouldShow){ histEl.style.display = 'none'; return; }
+
+    const days = daysFromShops(shops || data);
+    if(!days.length){ histEl.innerHTML = ''; histEl.style.display = 'block'; return; }
 
     const buckets = new Map(); // 'Y-M' -> { startDay, endDay, count }
-    allVisitDays.forEach(day => {
+    days.forEach(day => {
       const dt = new Date(day * 86400000);
       const y = dt.getUTCFullYear(), m = dt.getUTCMonth();
       const key = y + '-' + m;
@@ -1465,9 +1787,17 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     let html = '';
     for(let y = minYear; y <= maxYear; y++){
       const jan1Day = Math.round(Date.UTC(y, 0, 1) / 86400000);
-      if(jan1Day < minDay || jan1Day > maxDay) continue;
-      const pct = dayToPct(jan1Day) * 100;
-      html += `<div class="range-tick" style="left:${pct}%"></div><div class="range-tick-label" style="left:${pct}%">${y}</div>`;
+      if(jan1Day >= minDay && jan1Day <= maxDay){
+        const pct = dayToPct(jan1Day) * 100;
+        html += `<div class="range-tick" style="left:${pct}%"></div><div class="range-tick-label" style="left:${pct}%">${y}</div>`;
+      }
+      // Unlabeled mid-year tick (Jul 1) so the scale reads evenly between
+      // the labeled year marks instead of leaving a long bare stretch.
+      const jul1Day = Math.round(Date.UTC(y, 6, 1) / 86400000);
+      if(jul1Day >= minDay && jul1Day <= maxDay){
+        const pct = dayToPct(jul1Day) * 100;
+        html += `<div class="range-tick minor" style="left:${pct}%"></div>`;
+      }
     }
     ticksEl.innerHTML = html;
   }
@@ -1555,6 +1885,67 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     tagChipsEl.appendChild(chip);
   });
 
+  // ---- filter panel's custom scrollbar ----
+  // Built by hand instead of styling the native one: native scrollbars
+  // can't be reliably clipped to a rounded container across browsers (the
+  // old thumb poked out past the corners at the ends of its travel), and
+  // Chrome (~121+) stopped letting a styled ::-webkit-scrollbar disable its
+  // auto-hiding overlay scrollbar, so "always visible" isn't achievable by
+  // styling the real one there either. This one is fully within our
+  // control: sized/positioned in JS off the real scroll state, and
+  // draggable like the site's other custom sliders.
+  const filterScrollEl = document.getElementById('filter-scroll');
+  const filterTrackEl = document.getElementById('filter-scrollbar-track');
+  const filterThumbEl = document.getElementById('filter-scrollbar-thumb');
+
+  function updateFilterScrollbar(){
+    if(!filterScrollEl || !filterTrackEl || !filterThumbEl) return;
+    const { scrollTop, scrollHeight, clientHeight } = filterScrollEl;
+    const scrollable = scrollHeight - clientHeight > 1;
+    filterTrackEl.classList.toggle('visible', scrollable);
+    if(!scrollable) return;
+    const trackHeight = filterTrackEl.clientHeight;
+    const thumbHeight = Math.max(24, (clientHeight / scrollHeight) * trackHeight);
+    const maxThumbTop = Math.max(0, trackHeight - thumbHeight);
+    const maxScroll = scrollHeight - clientHeight;
+    const thumbTop = maxScroll > 0 ? (scrollTop / maxScroll) * maxThumbTop : 0;
+    filterThumbEl.style.height = thumbHeight + 'px';
+    filterThumbEl.style.top = thumbTop + 'px';
+  }
+  filterScrollEl.addEventListener('scroll', updateFilterScrollbar);
+  // Height depends on viewport (see the min()/calc() in .filter-scroll), so
+  // recompute whenever that can change, not just when content changes.
+  if('ResizeObserver' in window){
+    new ResizeObserver(updateFilterScrollbar).observe(filterScrollEl);
+  }else{
+    window.addEventListener('resize', updateFilterScrollbar);
+  }
+  updateFilterScrollbar();
+
+  filterThumbEl.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    filterThumbEl.setPointerCapture(e.pointerId);
+    filterThumbEl.classList.add('dragging');
+    const startY = e.clientY;
+    const startScrollTop = filterScrollEl.scrollTop;
+    const trackHeight = filterTrackEl.clientHeight;
+    const thumbHeight = filterThumbEl.clientHeight;
+    const maxThumbTravel = Math.max(1, trackHeight - thumbHeight);
+    const maxScroll = filterScrollEl.scrollHeight - filterScrollEl.clientHeight;
+    const move = ev => {
+      const dy = ev.clientY - startY;
+      const scrollDelta = (dy / maxThumbTravel) * maxScroll;
+      filterScrollEl.scrollTop = Math.min(maxScroll, Math.max(0, startScrollTop + scrollDelta));
+    };
+    const up = () => {
+      filterThumbEl.classList.remove('dragging');
+      filterThumbEl.removeEventListener('pointermove', move);
+      filterThumbEl.removeEventListener('pointerup', up);
+    };
+    filterThumbEl.addEventListener('pointermove', move);
+    filterThumbEl.addEventListener('pointerup', up);
+  });
+
   function filtersActive(){
     return filters.ratingLow > 0 || filters.ratingHigh < 5 || filters.prices.size > 0 || filters.tags.size > 0;
   }
@@ -1569,12 +1960,61 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
   }
 
   document.getElementById('filter-reset').onclick = () => {
-    filters = { ratingLow: 0, ratingHigh: 5, prices: new Set(), tags: new Set() };
+    filters = { ratingLow: 0, ratingHigh: 5, prices: new Set(), tags: new Set(), search: filters.search };
     updateRatingHandles();
     document.querySelectorAll('#price-chips .chip, #tag-chips .chip').forEach(c => c.classList.remove('active'));
     updateFilterDot();
     applyFilters();
   };
+
+  function updateSearchDot(){
+    const btn = document.getElementById('toggle-search');
+    const existing = btn.querySelector('.filter-dot');
+    if(filters.search && !existing){
+      btn.insertAdjacentHTML('beforeend', '<span class="filter-dot"></span>');
+    }else if(!filters.search && existing){
+      existing.remove();
+    }
+  }
+
+  document.getElementById('toggle-search').onclick = (e) => {
+    const pill = e.currentTarget;
+    const input = document.getElementById('search-input');
+    if(e.target === input) return; // clicking into the box just places the caret
+    if(e.target.closest('.search-clear')) return; // handled by its own listener
+    const expanded = pill.classList.toggle('expanded');
+    if(expanded){
+      input.focus();
+    }else{
+      input.blur();
+      if(input.value){
+        input.value = '';
+        filters.search = '';
+        pill.classList.remove('has-text');
+        updateSearchDot();
+        applyFilters();
+      }
+    }
+  };
+
+  document.getElementById('search-input').addEventListener('input', (e) => {
+    filters.search = e.target.value.trim().toLowerCase();
+    document.getElementById('toggle-search').classList.toggle('has-text', !!e.target.value);
+    updateSearchDot();
+    applyFilters();
+  });
+
+  document.getElementById('search-clear').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const input = document.getElementById('search-input');
+    const pill = document.getElementById('toggle-search');
+    input.value = '';
+    filters.search = '';
+    pill.classList.remove('has-text');
+    updateSearchDot();
+    applyFilters();
+    input.focus();
+  });
 
   // ---- Head to head compare ----
   const compareA = document.getElementById('compare-a');
@@ -1632,7 +2072,12 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     e.currentTarget.classList.toggle('on');
   };
 
-  document.getElementById('toggle-clustering').onclick = (e) => {
+  document.getElementById('toggle-settings').onclick = (e) => {
+    document.getElementById('settings-card').classList.toggle('show');
+    e.currentTarget.classList.toggle('on');
+  };
+
+  document.getElementById('switch-clustering').onclick = (e) => {
     const oldGroup = activeGroup();
     clusteringOn = !clusteringOn;
     const newGroup = activeGroup();
@@ -1648,6 +2093,7 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     const bounds = map.getBounds();
     const inView = currentVisible.filter(s => bounds.contains([s.lat, s.lng]));
     renderStats(inView);
+    renderVisitHistogram(inView);
   }
 
   function updateTrail(){
@@ -1674,7 +2120,9 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
   // pop-in animation on every pin whose count ticks up or down.
   function buildBubbleIcon(shop, badgeCount, opts){
     opts = opts || {};
-    const w = 34, h = 22;
+    // Bigger on mobile only — desktop's precise cursor doesn't need it, and
+    // a larger pin there would just crowd the map unnecessarily.
+    const w = isMobileViewport ? 40 : 34, h = isMobileViewport ? 27 : 22;
     const tier = tierClass(shop.overall);
     const animStyle = opts.animate ? `animation-delay:${opts.delay || 0}s;` : `animation:none;`;
     const visitBadge = badgeCount > 1 ? `<span class="visit-count">×${badgeCount}</span>` : '';
@@ -1686,11 +2134,35 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     });
   }
 
+  // ---- pop-in timing helper: given n items, returns a randomized, eased
+  // delay (seconds) per original index so a reveal fills in scattered order
+  // rather than in coffee.json's order or a left-to-right sweep. POP_EASE > 1
+  // means the gap between each successive pop widens as the reveal goes on,
+  // instead of a flat, evenly-spaced tick. ----
+  const POP_EASE = 1.6;
+  const POP_IN_BASE_WAIT = 0.6; // pause after page load before the first pop, so the map/tiles settle first
+  function easedPopDelays(n, spread){
+    const order = Array.from({length:n}, (_, i) => i);
+    for(let i = order.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    const rank = new Array(n);
+    order.forEach((originalIdx, pos) => { rank[originalIdx] = pos; });
+    return rank.map(pos => {
+      const t = n > 1 ? pos / (n - 1) : 0;
+      return Math.pow(t, POP_EASE) * spread + Math.random() * 0.12;
+    });
+  }
+
+  // Markers are built up front but NOT added to the map here — they're
+  // staggered onto the cluster group later (see revealMarkers), one at a
+  // time, so clusters actually form and grow live as pins land instead of
+  // the whole cluster snapping into its final shape the instant everything
+  // is added in one synchronous batch. Each marker's own bubble still gets
+  // the CSS pop (0.3s, scale+fade) the moment it's added to the map.
   function makeMarkerFor(shop, i, initialBadgeCount){
-    // No pop-in here — popInVisibleMarkers() (called once markers are on the
-    // map) handles the animated reveal with a randomized fill order instead
-    // of this sequential, data-order-based one.
-    const icon = buildBubbleIcon(shop, initialBadgeCount, { animate: false });
+    const icon = buildBubbleIcon(shop, initialBadgeCount, { animate: true, delay: 0 });
     const marker = L.marker([shop.lat, shop.lng], {
       icon,
       zIndexOffset: Math.round(shop.overall * 1000) // higher-rated pins render on top when overlapping
@@ -1723,14 +2195,21 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     if(shop.overall < filters.ratingLow || shop.overall > filters.ratingHigh) return false;
     if(filters.prices.size && !filters.prices.has(shop.price)) return false;
     if(filters.tags.size && !(shop.tags||[]).some(t => filters.tags.has(t))) return false;
+    if(filters.search){
+      const q = filters.search;
+      const hay = `${shop.name} ${shop.area||''} ${shop.country||''}`.toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
     return true;
   }
 
-  // Lightweight: only adds/removes the markers whose membership actually
-  // changed, instead of clearing and rebuilding every pill on the map.
-  function applyFilters(){
-    const nextActive = new Set();
-    const toAdd = [];
+  // Shared by applyFilters() and revealMarkers(): refreshes each entry's
+  // visit-count badge for the current date range and returns the list of
+  // entries that should currently be on the map, without touching activeSet
+  // or the map itself — the two callers differ only in *how* they add them
+  // (instantly vs. staggered).
+  function syncBadgeCountsAndGetActive(){
+    const active = [];
     shopMarkers.forEach(entry => {
       const hasDates = entry.visitDays.length > 0;
       // A shop stays on the map as long as at least one of its visits falls
@@ -1746,11 +2225,25 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
         entry.badgeCount = inRangeCount;
       }
 
-      if(dateOk && passesNonDateFilters(entry.shop)){
-        nextActive.add(entry.marker);
-        if(!activeSet.has(entry.marker)) toAdd.push(entry.marker);
-      }
+      if(dateOk && passesNonDateFilters(entry.shop)) active.push(entry);
     });
+    return active;
+  }
+
+  function refreshDependentUI(){
+    currentVisible = shopMarkers.filter(e => activeSet.has(e.marker)).map(e => e.shop);
+    updateTrail();
+    updateInViewStats();
+  }
+
+  // Lightweight: only adds/removes the markers whose membership actually
+  // changed, instead of clearing and rebuilding every pill on the map. Used
+  // for every filter/date-range/clustering-toggle change after the initial
+  // reveal — those should feel instant, not staggered.
+  function applyFilters(){
+    const activeEntries = syncBadgeCountsAndGetActive();
+    const nextActive = new Set(activeEntries.map(e => e.marker));
+    const toAdd = activeEntries.filter(e => !activeSet.has(e.marker)).map(e => e.marker);
     const toRemove = [];
     activeSet.forEach(m => { if(!nextActive.has(m)) toRemove.push(m); });
 
@@ -1758,42 +2251,61 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     if(toRemove.length) toRemove.forEach(m => activeGroup().removeLayer(m));
     activeSet = nextActive;
 
-    currentVisible = shopMarkers.filter(e => activeSet.has(e.marker)).map(e => e.shop);
-    updateTrail();
-    updateInViewStats();
+    refreshDependentUI();
   }
 
-  applyFilters();
-
-  // ---- pop-in reveal: every currently-visible pin fades/scales in with a
-  // randomized delay so the map fills in scattered order rather than in
-  // coffee.json's order or a left-to-right sweep. Re-running it (setIcon
-  // recreates the marker's DOM element) is how the animation gets replayed
-  // — used here on load, and again by closeModal() for first-time visitors
-  // whose markers already finished popping in behind the intro modal. ----
-  function popInVisibleMarkers(){
-    const entries = shopMarkers.filter(e => activeSet.has(e.marker));
-    for(let i = entries.length - 1; i > 0; i--){
-      const j = Math.floor(Math.random() * (i + 1));
-      [entries[i], entries[j]] = [entries[j], entries[i]];
-    }
-    const spread = Math.min(1.3, 0.25 + entries.length * 0.02); // total fill duration, capped for huge lists
+  // The reveal: adds currently-eligible-but-not-yet-active markers to the
+  // map one at a time on a randomized, eased schedule (see easedPopDelays)
+  // instead of all at once. Because each addLayer() call happens for real,
+  // spaced out over time, the cluster group actually recomputes and regrows
+  // its bubbles live as pins land near each other — clusters form
+  // dynamically along with the individual pop-ins, rather than the whole
+  // group (clustered or not) just snapping into its finished layout.
+  function revealMarkers(baseWaitSec){
+    const entries = syncBadgeCountsAndGetActive().filter(e => !activeSet.has(e.marker));
+    const n = entries.length;
+    if(!n){ refreshDependentUI(); return; }
+    const spread = Math.min(2.4, 0.45 + n * 0.035); // total fill duration, capped for huge lists
+    const delays = easedPopDelays(n, spread);
+    let remaining = n;
     entries.forEach((entry, idx) => {
-      const delay = (entries.length > 1 ? (idx / (entries.length - 1)) * spread : 0) + Math.random() * 0.06;
-      entry.marker.setIcon(buildBubbleIcon(entry.shop, entry.badgeCount, { animate: true, delay }));
+      const delay = (baseWaitSec || 0) + delays[idx];
+      setTimeout(() => {
+        activeGroup().addLayer(entry.marker);
+        activeSet.add(entry.marker);
+        remaining--;
+        if(remaining === 0) refreshDependentUI();
+      }, delay * 1000);
     });
   }
-  popInVisibleMarkers();
+
+  revealMarkers(POP_IN_BASE_WAIT);
+
+  // Replays the reveal on demand — e.g. from closeModal() for first-time
+  // visitors whose markers already finished popping in (and clustering
+  // already settled) behind the intro modal. Pulls everything back off the
+  // map first so revealMarkers() can stagger it back on and clusters can
+  // regrow live, instead of just replaying each pin's own pop in place.
+  function popInVisibleMarkers(){
+    shopMarkers.forEach(entry => {
+      if(activeSet.has(entry.marker)){
+        activeGroup().removeLayer(entry.marker);
+        activeSet.delete(entry.marker);
+      }
+    });
+    revealMarkers(0);
+  }
   replayMarkerPopIn = popInVisibleMarkers;
 
   document.getElementById('toggle-filter').onclick = (e) => {
     document.getElementById('filter-card').classList.toggle('show');
     e.currentTarget.classList.toggle('on');
+    updateFilterScrollbar();
   };
 
-  document.getElementById('toggle-trail').onclick = (e) => {
+  document.getElementById('switch-trail').onclick = (e) => {
     trailOn = !trailOn;
-    e.target.classList.toggle('on', trailOn);
+    e.currentTarget.classList.toggle('on', trailOn);
     updateTrail();
   };
 

@@ -3,6 +3,7 @@
     "name": "Small World Coffee",
     "area": "Princeton",
     "country": "USA",
+    "state": "New Jersey",
     "type": "coffee",
     "lat": 40.3501239,
     "lng": -74.6602256,
@@ -166,7 +167,7 @@
       "character": 4.5,
       "value": 4.6
     },
-    "note": "Great coffee in the 18th Arr. of Paris.",
+    "note": "Great coffee in a small packed store inthe 18th Arr. of Paris. Great location to get a coffee before strolling around Montmartre.",
     "tags": [
       "no-seating",
       "crowded"
@@ -192,7 +193,7 @@
       "character": 4.3,
       "value": 4.3
     },
-    "note": "Refreshing iced latte with interesting interior design.",
+    "note": "Refreshing iced latte with an interesting interior design.",
     "tags": [
       "unique",
       "modern"
@@ -603,6 +604,7 @@
     "name": "Philz Coffee",
     "area": "Cupertino",
     "country": "USA",
+    "state": "California",
     "type": "coffee",
     "lat": 37.324237,
     "lng": -122.0104416,
@@ -636,6 +638,7 @@
     "name": "Voyager Craft Coffee - Cupertino",
     "area": "Cupertino",
     "country": "USA",
+    "state": "California",
     "type": "coffee",
     "lat": 37.3231357,
     "lng": -122.0383091,
@@ -657,6 +660,183 @@
     "mapsUrl": "https://maps.app.goo.gl/JAv8akQMZtDR1aRa9",
     "visited": [
       "Jan 18, 2026"
+    ]
+  },
+  {
+    "name": "33 Coffee (Qinggu Shop)",
+    "area": "Hangzhou",
+    "country": "China",
+    "type": "coffee",
+    "lat": 30.191532,
+    "lng": 120.070428,
+    "overall": 4.6,
+    "ratings": {
+      "depth": 4.6,
+      "craft": 4.7,
+      "ambiance": 4.3,
+      "character": 4.5,
+      "value": 4.6
+    },
+    "note": "Amazing artisanal dirty coffees on the outskirts of Hangzhou with some good popcorn chicken.",
+    "tags": [
+      "quiet",
+      "study",
+      "laptop-friendly",
+      "hidden-gem",
+      "scenic",
+      "outdoor",
+      "unique"
+    ],
+    "price": "$",
+    "story": "Has a special place in my heart since I always visit when seeing family",
+    "mapsUrl": "https://maps.apple/p/gbc4m_05qrDyGJ",
+    "visited": [
+      "May 28, 2025",
+      "Feb 3, 2026"
+    ]
+  },
+  {
+    "name": "Fiddleheads Menomonee Falls",
+    "area": "Menomonee Falls",
+    "country": "USA",
+    "state": "Wisconsin",
+    "type": "coffee",
+    "lat": 43.1776897,
+    "lng": -88.1165158,
+    "overall": 3.9,
+    "ratings": {
+      "depth": 3.8,
+      "craft": 3.7,
+      "ambiance": 4.4,
+      "character": 4.1,
+      "value": 4.3
+    },
+    "note": "Okay coffee at a cute downtown area with multiple stories of laptop friendly space.",
+    "tags": [
+      "study",
+      "laptop-friendly",
+      "cozy"
+    ],
+    "price": "$$",
+    "story": "Some unnamed individual spilled there entire coffee on the table here.",
+    "mapsUrl": "https://maps.app.goo.gl/Cq2wRUFVFuBEGiK49",
+    "visited": [
+      "Jun 20, 2024"
+    ]
+  },
+  {
+    "name": "Colectivo Coffee Mequon",
+    "area": "Mequon",
+    "country": "USA",
+    "state": "Wisconsin",
+    "type": "coffee",
+    "lat": 43.2221473,
+    "lng": -87.9833323,
+    "overall": 4.1,
+    "ratings": {
+      "depth": 4.1,
+      "craft": 4.1,
+      "ambiance": 4.3,
+      "character": 4,
+      "value": 4.1
+    },
+    "note": "Modern cozy plant-filled vibe with good coffee and lots of indoor and outdoor seating.",
+    "tags": [
+      "modern",
+      "lively",
+      "laptop-friendly",
+      "study",
+      "outdoor"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/6rpBRNQYzuP4wWcw7",
+    "visited": [
+      "Jun 18, 2024"
+    ]
+  },
+  {
+    "name": "Colectivo Coffee Wicker Park",
+    "area": "Chicago",
+    "country": "USA",
+    "state": "Illinois",
+    "type": "coffee",
+    "lat": 41.9036121,
+    "lng": -87.6770481,
+    "overall": 4.3,
+    "ratings": {
+      "depth": 4.1,
+      "craft": 4.1,
+      "ambiance": 4.5,
+      "character": 4.2,
+      "value": 4
+    },
+    "note": "The location and fantastic seating/interior-design steals the spotlight from an otherwise decent coffee.",
+    "tags": [
+      "cozy",
+      "modern",
+      "lively",
+      "unique"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/6KcCP9W1Zo6v4wsEA",
+    "visited": [
+      "Aug 16, 2025"
+    ]
+  },
+  {
+    "name": "Einstein – au jardin –",
+    "area": "Bern",
+    "country": "Switzerland",
+    "type": "coffee",
+    "lat": 46.9465805,
+    "lng": 7.4524479,
+    "overall": 4.4,
+    "ratings": {
+      "depth": 4.3,
+      "craft": 4.2,
+      "ambiance": 4.7,
+      "character": 4.2,
+      "value": 3.9
+    },
+    "note": "A peaceful coffee in a garden courtyard overlooking the river, cathedral, with some serious bocce ball gameplay.",
+    "tags": [
+      "lively",
+      "unique",
+      "outdoor",
+      "scenic"
+    ],
+    "price": "$$",
+    "story": "Following the Einstein path of Princeton, ETH, Bern, Berlin combo.",
+    "mapsUrl": "https://maps.app.goo.gl/WgYXPdMVdDPp844F7",
+    "visited": [
+      "Mar 2, 2026"
+    ]
+  },
+  {
+    "name": "Couloir Chamonix",
+    "area": "Chamonix",
+    "country": "France",
+    "type": "coffee",
+    "lat": 45.9230336,
+    "lng": 6.8723405,
+    "overall": 4.3,
+    "ratings": {
+      "depth": 4.4,
+      "craft": 4.5,
+      "ambiance": 3.8,
+      "character": 4,
+      "value": 4.2
+    },
+    "note": "Small specialty cafe that makes up for their lackluster interior design with some good smooth coffee.",
+    "tags": [
+      "hidden-gem",
+      "scenic",
+      "specialty-coffee"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/oFH898Tn6FmDrxT17",
+    "visited": [
+      "Mar 22, 2026"
     ]
   }
 ]

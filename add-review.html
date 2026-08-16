@@ -7,6 +7,7 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
     --bg:#FAFAF8;
@@ -145,9 +146,64 @@
   }
   .photo-hint{ font-size:11px; color:var(--dim); margin-top:6px; }
   .existing-photos-label{ font-size:11px; color:var(--dim); margin-bottom:6px; }
+
+  .crop-overlay{
+    position:fixed; inset:0; background:rgba(21,18,16,0.55);
+    display:none; align-items:center; justify-content:center;
+    z-index:1000; padding:20px;
+  }
+  .crop-overlay.show{ display:flex; }
+  .crop-modal{
+    background:#fff; border-radius:14px; padding:18px;
+    width:100%; max-width:380px; max-height:90vh; overflow:auto;
+    box-shadow:0 24px 60px rgba(21,18,16,0.32);
+  }
+  .crop-modal h2{ font-size:14px; font-weight:600; margin:0 0 4px; }
+  .crop-modal .crop-sub{ font-size:11.5px; color:var(--dim); margin:0 0 14px; line-height:1.5; }
+  .crop-frame{
+    position:relative; width:100%; aspect-ratio:300/140;
+    border-radius:10px; overflow:hidden; background:var(--line);
+    touch-action:none; cursor:grab; border:1px solid var(--line);
+  }
+  .crop-frame.dragging{ cursor:grabbing; }
+  .crop-frame img{
+    position:absolute; top:0; left:0; user-select:none;
+    -webkit-user-drag:none; pointer-events:none; transform-origin:top left; max-width:none;
+  }
+  .crop-zoom-row{ display:flex; align-items:center; gap:8px; margin-top:12px; }
+  .crop-zoom-row .crop-zoom-label{ font-size:11px; color:var(--dim); }
+  .crop-zoom-row input[type=range]{ flex:1; accent-color:var(--accent); }
+  .crop-buttons{ display:flex; gap:8px; margin-top:10px; }
+  .crop-buttons button{ margin-top:0; flex:1; font-size:13px; padding:10px; }
+  .crop-count{ font-size:11px; color:var(--dim); text-align:center; margin-top:10px; }
+
+  .lock-overlay{
+    position:fixed; inset:0; background:var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    z-index:2000; padding:20px;
+  }
+  .lock-overlay.unlocked{ display:none; }
+  .lock-box{
+    width:100%; max-width:320px; background:#fff; border:1px solid var(--line);
+    border-radius:14px; padding:22px; box-shadow:0 24px 60px rgba(21,18,16,0.18);
+  }
+  .lock-box h1{ font-size:16px; margin:0 0 4px; }
+  .lock-box p{ font-size:12.5px; color:var(--dim); margin:0 0 16px; line-height:1.5; }
+  .lock-box input{ margin-bottom:10px; }
+  .lock-error{ font-size:11.5px; color:#a83232; min-height:14px; margin:-2px 0 8px; }
 </style>
 </head>
 <body>
+
+<div class="lock-overlay" id="lock-overlay">
+  <div class="lock-box">
+    <h1>This page is locked</h1>
+    <p>Enter the password to add or edit reviews.</p>
+    <input type="password" id="lock-password" placeholder="Password" autocomplete="off">
+    <div class="lock-error" id="lock-error"></div>
+    <button type="button" id="lock-submit">Unlock</button>
+  </div>
+</div>
 
 <h1>Add a review</h1>
 <p class="sub">Runs entirely in your browser — nothing is uploaded anywhere. Fill this in, save straight back to your site folder (or download/copy the JSON).</p>
@@ -158,10 +214,17 @@
 <input type="file" id="existing-fallback" accept="application/json" style="display:none;">
 <div id="existing-status" style="font-size:11px; color:var(--dim); margin-top:6px;"></div>
 
-<div class="section-label">Quick fill from Google Maps</div>
-<input id="maps-link" placeholder="Paste a Google Maps link here">
+<div class="section-label">On your phone?</div>
+<p class="sub" style="margin:0 0 8px;">Phones can't grant this page write access to a folder, so fill the review in here, tap "Save draft" at the bottom, and AirDrop/save the .zip to your laptop. Then open this page there, choose your site folder above, and import the draft below to finish adding it.</p>
+<button type="button" class="secondary" id="import-draft-btn">Import draft from phone…</button>
+<input type="file" id="import-draft-input" accept=".zip" style="display:none;">
+<div id="import-draft-status" style="font-size:11px; color:var(--dim); margin-top:6px;"></div>
+
+<div class="section-label">Quick fill from Google or Apple Maps</div>
+<input id="maps-link" placeholder="Paste a Google or Apple Maps link here">
 <div class="file-row" id="maps-link-hint">
-  Use the <b>full</b> address-bar URL (starts with google.com/maps/place/...), not a share/short link. If you have a maps.app.goo.gl link, open it once in your browser first, then copy the full URL from the address bar and paste that instead.
+  <b>Google:</b> use the full address-bar URL (starts with google.com/maps/place/...), not a share/short link — if you have a maps.app.goo.gl link, open it once in your browser first, then paste the full URL from the address bar.<br><br>
+  <b>Apple:</b> tap Share on the place in Maps and paste the maps.apple.com link — those already carry name, coordinates, and address, so they work as-is.
 </div>
 <button type="button" id="parse-maps-link" class="secondary">Fill in name &amp; coordinates</button>
 <div id="maps-link-status" style="font-size:11px; color:var(--dim); margin-top:6px;"></div>
@@ -185,6 +248,13 @@
 <label>Country</label>
 <input id="country" placeholder="USA">
 
+<div id="state-row" style="display:none;">
+  <label>State</label>
+  <select id="state">
+    <option value="">Select a state…</option>
+  </select>
+</div>
+
 <div class="row2">
   <div>
     <label>Latitude</label>
@@ -198,11 +268,13 @@
 <div class="file-row">
   Open the spot in Google Maps → long-press the pin → tap the coordinates to copy them.
 </div>
+<button type="button" id="guess-location" class="secondary" style="margin-top:8px;">Guess country/state from coordinates</button>
+<div id="guess-location-status" style="font-size:11px; color:var(--dim); margin-top:6px;"></div>
 
-<label>Google Maps link (optional, but recommended)</label>
-<input id="mapsUrl" placeholder="https://www.google.com/maps/place/...">
+<label>Map link (optional, but recommended)</label>
+<input id="mapsUrl" placeholder="https://www.google.com/maps/place/... or https://maps.apple.com/...">
 <div class="file-row">
-  This is what the map icon in the panel actually opens. If you used the "Quick fill" box above, this gets filled in automatically — otherwise paste the full place link here.
+  This is what the map icon in the panel actually opens. If you used the "Quick fill" box above, this gets filled in automatically — otherwise paste the full place link here (Google or Apple).
 </div>
 
 <label>Photos</label>
@@ -210,10 +282,11 @@
   <div class="existing-photos-label" id="existing-photos-label"></div>
   <div class="photo-thumb-row" id="existing-photos-row"></div>
 </div>
-<div class="dropzone disabled" id="photo-dropzone">Choose a site folder above first — photos save straight into its images/ folder</div>
+<div class="dropzone" id="photo-dropzone">Drag photos here, or click to choose files</div>
 <input type="file" id="photo-file-input" accept="image/*" multiple style="display:none;">
 <div id="pending-photos"></div>
 <div id="photo-status" class="photo-hint"></div>
+<div class="photo-hint">Each photo opens a quick crop step first — sized to match the map preview, auto-centered by default. Drag to reposition or zoom if you want a different section; just hit "Use this crop" to accept the auto-crop.</div>
 
 <div class="row2">
   <div>
@@ -270,10 +343,101 @@
 <button id="add">Download new JSON</button>
 <button id="save-existing" class="secondary">Save to existing file</button>
 <button id="copy-json" class="secondary">Copy full JSON</button>
+<button id="save-draft" class="secondary">Save draft (.zip) — finish on laptop later</button>
 <div id="status"></div>
 <div id="preview"></div>
 
+<div class="crop-overlay" id="crop-overlay">
+  <div class="crop-modal">
+    <h2>Crop this photo</h2>
+    <p class="crop-sub">Auto-centered to match the map preview — drag to reposition or zoom to pick a different section, or just confirm as-is.</p>
+    <div class="crop-frame" id="crop-frame">
+      <img id="crop-img" alt="">
+    </div>
+    <div class="crop-zoom-row">
+      <span class="crop-zoom-label">Zoom</span>
+      <input type="range" id="crop-zoom" min="1" max="3" step="0.01" value="1">
+    </div>
+    <div class="crop-buttons">
+      <button type="button" class="secondary" id="crop-recenter">Auto-crop / recenter</button>
+    </div>
+    <div class="crop-buttons">
+      <button type="button" class="secondary" id="crop-skip">Skip this photo</button>
+      <button type="button" id="crop-confirm">Use this crop</button>
+    </div>
+    <div class="crop-count" id="crop-count"></div>
+  </div>
+</div>
+
 <script>
+// ---- password gate ----
+// This is a static, no-backend page, so this can only ever be a deterrent
+// (view-source or devtools can bypass it) — it keeps the page off casual
+// visitors and out of anyone just poking around the repo, not a real
+// access-control system. The password itself isn't stored in the page —
+// only a salted PBKDF2 hash of it. The salt keeps it out of precomputed
+// rainbow tables, and 150,000 iterations makes each offline guess slow
+// (this is the same style of hashing, minus a server, that real login
+// systems use). On success, the derived hash is remembered in
+// localStorage so this device stays unlocked across visits.
+const LOCK_SALT_HEX = '70b5b72ad08e0bacb43bc96e9b22e936';
+const LOCK_ITERATIONS = 150000;
+const LOCK_HASH = '56b165a9d866fff3287c9ab7611ff29a436101c905a3c727335857b7c6d808fe';
+const LOCK_STORAGE_KEY = 'coffee-review-unlocked';
+
+function hexToBytes(hex){
+  const bytes = new Uint8Array(hex.length / 2);
+  for(let i = 0; i < bytes.length; i++) bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+  return bytes;
+}
+function bytesToHex(bytes){
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function pbkdf2Hex(text){
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(text), 'PBKDF2', false, ['deriveBits']
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt: hexToBytes(LOCK_SALT_HEX), iterations: LOCK_ITERATIONS, hash: 'SHA-256' },
+    keyMaterial, 256
+  );
+  return bytesToHex(new Uint8Array(bits));
+}
+
+const lockOverlayEl = document.getElementById('lock-overlay');
+const lockPasswordEl = document.getElementById('lock-password');
+const lockErrorEl = document.getElementById('lock-error');
+const lockSubmitEl = document.getElementById('lock-submit');
+
+async function tryUnlock(){
+  const value = lockPasswordEl.value;
+  if(!value) return;
+  lockSubmitEl.disabled = true;
+  lockErrorEl.textContent = 'Checking…';
+  const hash = await pbkdf2Hex(value);
+  lockSubmitEl.disabled = false;
+  if(hash === LOCK_HASH){
+    localStorage.setItem(LOCK_STORAGE_KEY, hash);
+    lockOverlayEl.classList.add('unlocked');
+    lockErrorEl.textContent = '';
+  }else{
+    lockErrorEl.textContent = 'Wrong password.';
+    lockPasswordEl.value = '';
+    lockPasswordEl.focus();
+  }
+}
+lockSubmitEl.onclick = tryUnlock;
+lockPasswordEl.addEventListener('keydown', e => { if(e.key === 'Enter') tryUnlock(); });
+
+(async () => {
+  const remembered = localStorage.getItem(LOCK_STORAGE_KEY);
+  if(remembered === LOCK_HASH){
+    lockOverlayEl.classList.add('unlocked');
+  }else{
+    lockPasswordEl.focus();
+  }
+})();
+
 let existingData = [];
 let folderHandle = null;   // FileSystemDirectoryHandle for the site root
 let imagesDirHandle = null; // FileSystemDirectoryHandle for <site>/images
@@ -285,6 +449,38 @@ const PRESET_TAGS = [
   'experimental','crowded','expensive','hidden-gem','pastries','outdoor',
   'specialty-coffee','no-seating','scenic'
 ];
+
+// ---- state field, shown only when Country is the US ----
+const US_STATES = [
+  'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
+  'Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa',
+  'Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan',
+  'Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada',
+  'New Hampshire','New Jersey','New Mexico','New York','North Carolina',
+  'North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island',
+  'South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont',
+  'Virginia','Washington','West Virginia','Wisconsin','Wyoming',
+  'District of Columbia'
+];
+const stateRowEl = document.getElementById('state-row');
+const stateSelectEl = document.getElementById('state');
+US_STATES.forEach(s => {
+  const opt = document.createElement('option');
+  opt.value = s;
+  opt.textContent = s;
+  stateSelectEl.appendChild(opt);
+});
+function isUSCountry(value){
+  const v = (value || '').trim().toLowerCase();
+  return v === 'usa' || v === 'us' || v === 'u.s.' || v === 'u.s.a.' || v === 'united states' || v === 'united states of america';
+}
+function syncStateVisibility(){
+  const show = isUSCountry(document.getElementById('country').value);
+  stateRowEl.style.display = show ? 'block' : 'none';
+  if(!show) stateSelectEl.value = '';
+}
+document.getElementById('country').addEventListener('input', syncStateVisibility);
+syncStateVisibility();
 
 function getTagsArray(){
   return document.getElementById('tags').value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
@@ -340,12 +536,91 @@ function parseGoogleMapsLink(url){
   return {name, lat, lng};
 }
 
-document.getElementById('parse-maps-link').onclick = () => {
+// Apple Maps place links (from the Share sheet, or the maps.apple.com
+// address-bar URL) carry everything as query params — no need to expand a
+// short link first. e.g.:
+// https://maps.apple.com/place?place-id=...&coordinate=30.191532,120.070428
+//   &name=33+Coffee+(Qinggu+Shop)&address=...
+// Some older share links use ll=lat,lng and q=name instead of coordinate/name.
+function parseAppleMapsLink(url){
+  let u;
+  try{ u = new URL(url); }
+  catch(e){ return {error: "That doesn't look like a valid URL."}; }
+
+  const params = u.searchParams;
+  const coordRaw = params.get('coordinate') || params.get('ll') || params.get('sll');
+  let lat = null, lng = null;
+  if(coordRaw){
+    const parts = coordRaw.split(',').map(s => parseFloat(s.trim()));
+    if(parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])){
+      lat = parts[0]; lng = parts[1];
+    }
+  }
+
+  let name = params.get('name') || params.get('q');
+  if(name) name = name.trim();
+  const address = (params.get('address') || '').trim();
+
+  if(lat === null || lng === null){
+    return {error: "Couldn't find coordinates in that Apple Maps link. In the Maps app, tap Share on the place and paste that link — short links from search results sometimes don't carry coordinates."};
+  }
+  return {name, lat, lng, address};
+}
+
+function parseMapsLink(url){
+  if(/maps\.apple\.com/.test(url)) return parseAppleMapsLink(url);
+  return parseGoogleMapsLink(url);
+}
+
+// ---- guessing country/state from coordinates (reverse geocoding) ----
+// Uses BigDataCloud's free client-side reverse-geocode endpoint — no API key,
+// CORS-enabled for browser use, no data leaves the browser except the lat/lng
+// itself. countryCode 'US' is normalized to 'USA' to match this site's data;
+// principalSubdivision is BigDataCloud's full state name, which lines up with
+// the values in the state dropdown.
+async function lookupLocationFromCoords(lat, lng){
+  const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
+  if(!res.ok) throw new Error('lookup failed');
+  const data = await res.json();
+  const country = data.countryCode === 'US' ? 'USA' : (data.countryName || '');
+  const state = data.principalSubdivision || '';
+  return {country, state};
+}
+
+async function applyLocationGuess(lat, lng){
+  const guess = await lookupLocationFromCoords(lat, lng);
+  if(guess.country){
+    document.getElementById('country').value = guess.country;
+    syncStateVisibility();
+  }
+  if(guess.state && US_STATES.includes(guess.state)){
+    stateSelectEl.value = guess.state;
+  }
+  return guess;
+}
+
+document.getElementById('guess-location').onclick = async () => {
+  const statusEl = document.getElementById('guess-location-status');
+  const lat = parseFloat(document.getElementById('lat').value);
+  const lng = parseFloat(document.getElementById('lng').value);
+  if(isNaN(lat) || isNaN(lng)){ statusEl.textContent = 'Fill in latitude and longitude first.'; return; }
+  statusEl.textContent = 'Looking up…';
+  try{
+    const guess = await applyLocationGuess(lat, lng);
+    statusEl.textContent = guess.country
+      ? `Filled in ${guess.country}${guess.state ? ', ' + guess.state : ''} — double check it.`
+      : "Couldn't tell — fill in country/state manually.";
+  }catch(err){
+    statusEl.textContent = "Couldn't reach the lookup service — fill in country/state manually.";
+  }
+};
+
+document.getElementById('parse-maps-link').onclick = async () => {
   const url = document.getElementById('maps-link').value.trim();
   const statusEl = document.getElementById('maps-link-status');
   if(!url){ statusEl.textContent = 'Paste a link first.'; return; }
 
-  const result = parseGoogleMapsLink(url);
+  const result = parseMapsLink(url);
   if(result.error){
     statusEl.textContent = result.error;
     return;
@@ -354,10 +629,21 @@ document.getElementById('parse-maps-link').onclick = () => {
   document.getElementById('lat').value = result.lat;
   document.getElementById('lng').value = result.lng;
   document.getElementById('mapsUrl').value = url;
-  statusEl.textContent = result.name
-    ? `Filled in "${result.name}" — double check the neighborhood, country, and everything else below.`
+  let msg = result.name
+    ? `Filled in "${result.name}" — double check the neighborhood and everything else below.`
     : 'Filled in the coordinates — name wasn\'t in the link, so add it manually.';
+  if(result.address) msg += ` Address on file: "${result.address}".`;
+  statusEl.textContent = msg + ' Looking up country/state…';
   refreshExistingPhotosPreview();
+
+  try{
+    const guess = await applyLocationGuess(result.lat, result.lng);
+    statusEl.textContent = msg + (guess.country
+      ? ` Guessed ${guess.country}${guess.state ? ', ' + guess.state : ''} — double check it.`
+      : " Couldn't guess country/state — fill it in manually.");
+  }catch(err){
+    statusEl.textContent = msg + " Couldn't reach the lookup service for country/state — fill it in manually.";
+  }
 };
 
 // ---- remembering the last folder picked, across page loads ----
@@ -536,10 +822,157 @@ async function writeImageFile(dirHandle, filename, file){
 }
 
 function addPendingFiles(fileList){
-  Array.from(fileList).filter(f => f.type.startsWith('image/')).forEach(f => {
-    pendingPhotos.push({file: f, previewUrl: URL.createObjectURL(f)});
+  const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+  if(!files.length) return;
+  const shouldStart = !cropQueue.length;
+  cropQueue.push(...files);
+  if(shouldStart) processCropQueue();
+}
+
+// ---- crop step: each dropped photo gets cropped to match the live map
+// preview's aspect ratio (300x140 panel-photo-wrap) before it's staged.
+// Defaults to a centered "cover" crop (auto-crop) — drag/zoom to pick a
+// different section, or hit confirm as-is. Re-encoding to a fixed-size JPEG
+// also shrinks file size vs. a full iPhone portrait photo.
+const CROP_ASPECT = 300 / 140;
+const CROP_OUTPUT_W = 900;
+const CROP_OUTPUT_H = Math.round(CROP_OUTPUT_W / CROP_ASPECT);
+
+let cropQueue = [];
+let cropState = null; // {naturalW, naturalH, baseScale, zoom, tx, ty, frameW, frameH}
+
+const cropOverlayEl = document.getElementById('crop-overlay');
+const cropFrameEl = document.getElementById('crop-frame');
+const cropImgEl = document.getElementById('crop-img');
+const cropZoomEl = document.getElementById('crop-zoom');
+const cropCountEl = document.getElementById('crop-count');
+const cropConfirmBtn = document.getElementById('crop-confirm');
+const cropSkipBtn = document.getElementById('crop-skip');
+const cropRecenterBtn = document.getElementById('crop-recenter');
+
+function clampCropTranslate(){
+  const dispW = cropState.naturalW * cropState.baseScale * cropState.zoom;
+  const dispH = cropState.naturalH * cropState.baseScale * cropState.zoom;
+  const minX = Math.min(0, cropState.frameW - dispW);
+  const minY = Math.min(0, cropState.frameH - dispH);
+  cropState.tx = Math.min(0, Math.max(minX, cropState.tx));
+  cropState.ty = Math.min(0, Math.max(minY, cropState.ty));
+}
+function applyCropTransform(){
+  const dispW = cropState.naturalW * cropState.baseScale * cropState.zoom;
+  const dispH = cropState.naturalH * cropState.baseScale * cropState.zoom;
+  cropImgEl.style.width = dispW + 'px';
+  cropImgEl.style.height = dispH + 'px';
+  cropImgEl.style.transform = `translate(${cropState.tx}px, ${cropState.ty}px)`;
+}
+function recenterCrop(){
+  cropState.zoom = 1;
+  cropZoomEl.value = 1;
+  const dispW = cropState.naturalW * cropState.baseScale;
+  const dispH = cropState.naturalH * cropState.baseScale;
+  cropState.tx = (cropState.frameW - dispW) / 2;
+  cropState.ty = (cropState.frameH - dispH) / 2;
+  applyCropTransform();
+}
+
+function openCropper(file){
+  return new Promise(resolve => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const rect = cropFrameEl.getBoundingClientRect();
+      cropState = {
+        naturalW: img.naturalWidth, naturalH: img.naturalHeight,
+        baseScale: Math.max(rect.width / img.naturalWidth, rect.height / img.naturalHeight),
+        zoom: 1, tx: 0, ty: 0, frameW: rect.width, frameH: rect.height
+      };
+      cropImgEl.src = url;
+      recenterCrop();
+      cropOverlayEl.classList.add('show');
+
+      const cleanup = (result) => {
+        cropOverlayEl.classList.remove('show');
+        URL.revokeObjectURL(url);
+        cropState = null;
+        cropConfirmBtn.onclick = null;
+        cropSkipBtn.onclick = null;
+        cropRecenterBtn.onclick = null;
+        resolve(result);
+      };
+
+      cropConfirmBtn.onclick = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = CROP_OUTPUT_W;
+        canvas.height = CROP_OUTPUT_H;
+        const ctx = canvas.getContext('2d');
+        const effScale = cropState.baseScale * cropState.zoom;
+        const sx = -cropState.tx / effScale;
+        const sy = -cropState.ty / effScale;
+        const sW = cropState.frameW / effScale;
+        const sH = cropState.frameH / effScale;
+        ctx.drawImage(img, sx, sy, sW, sH, 0, 0, CROP_OUTPUT_W, CROP_OUTPUT_H);
+        canvas.toBlob(blob => {
+          if(!blob){ cleanup(null); return; }
+          const baseName = (file.name || 'photo').replace(/\.[a-zA-Z0-9]+$/, '');
+          cleanup(new File([blob], `${baseName}-crop.jpg`, {type: 'image/jpeg'}));
+        }, 'image/jpeg', 0.85);
+      };
+      cropSkipBtn.onclick = () => cleanup(null);
+      cropRecenterBtn.onclick = () => recenterCrop();
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
   });
-  renderPendingPhotos();
+}
+
+let cropDragActive = false, cropDragStartX = 0, cropDragStartY = 0, cropDragOrigTx = 0, cropDragOrigTy = 0;
+cropFrameEl.addEventListener('pointerdown', e => {
+  if(!cropState) return;
+  cropDragActive = true;
+  cropFrameEl.classList.add('dragging');
+  cropFrameEl.setPointerCapture(e.pointerId);
+  cropDragStartX = e.clientX; cropDragStartY = e.clientY;
+  cropDragOrigTx = cropState.tx; cropDragOrigTy = cropState.ty;
+});
+cropFrameEl.addEventListener('pointermove', e => {
+  if(!cropDragActive || !cropState) return;
+  cropState.tx = cropDragOrigTx + (e.clientX - cropDragStartX);
+  cropState.ty = cropDragOrigTy + (e.clientY - cropDragStartY);
+  clampCropTranslate();
+  applyCropTransform();
+});
+function endCropDrag(){
+  cropDragActive = false;
+  cropFrameEl.classList.remove('dragging');
+}
+cropFrameEl.addEventListener('pointerup', endCropDrag);
+cropFrameEl.addEventListener('pointercancel', endCropDrag);
+cropFrameEl.addEventListener('wheel', e => {
+  if(!cropState) return;
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? -0.05 : 0.05;
+  cropZoomEl.value = Math.min(3, Math.max(1, parseFloat(cropZoomEl.value) + delta));
+  cropZoomEl.dispatchEvent(new Event('input'));
+}, {passive:false});
+cropZoomEl.addEventListener('input', () => {
+  if(!cropState) return;
+  cropState.zoom = parseFloat(cropZoomEl.value);
+  clampCropTranslate();
+  applyCropTransform();
+});
+
+async function processCropQueue(){
+  const total = cropQueue.length;
+  let done = 0;
+  while(cropQueue.length){
+    const file = cropQueue.shift();
+    done++;
+    cropCountEl.textContent = cropQueue.length || total > 1 ? `Photo ${done} of ${done + cropQueue.length}` : '';
+    const cropped = await openCropper(file);
+    const finalFile = cropped || file; // skipped — fall back to the original, uncropped
+    pendingPhotos.push({file: finalFile, previewUrl: URL.createObjectURL(finalFile)});
+    renderPendingPhotos();
+  }
 }
 function renderPendingPhotos(){
   pendingPhotosEl.innerHTML = '';
@@ -566,23 +999,19 @@ function renderPendingPhotos(){
   pendingPhotosEl.appendChild(row);
   const hint = document.createElement('div');
   hint.className = 'photo-hint';
-  hint.textContent = `${pendingPhotos.length} new photo${pendingPhotos.length > 1 ? 's' : ''} ready — will be named from the place + visit date and saved into images/ when you submit.`;
+  hint.textContent = `${pendingPhotos.length} new photo${pendingPhotos.length > 1 ? 's' : ''} cropped and ready — will be named from the place + visit date and saved into images/ when you submit.`;
   pendingPhotosEl.appendChild(hint);
 }
 
-dropzoneEl.onclick = () => {
-  if(!imagesDirHandle){ photoStatusEl.textContent = 'Choose a site folder above first.'; return; }
-  photoFileInput.click();
-};
+dropzoneEl.onclick = () => photoFileInput.click();
 dropzoneEl.addEventListener('dragover', e => {
   e.preventDefault();
-  if(imagesDirHandle) dropzoneEl.classList.add('drag');
+  dropzoneEl.classList.add('drag');
 });
 dropzoneEl.addEventListener('dragleave', () => dropzoneEl.classList.remove('drag'));
 dropzoneEl.addEventListener('drop', e => {
   e.preventDefault();
   dropzoneEl.classList.remove('drag');
-  if(!imagesDirHandle){ photoStatusEl.textContent = 'Choose a site folder above first.'; return; }
   addPendingFiles(e.dataTransfer.files);
 });
 photoFileInput.addEventListener('change', e => {
@@ -625,8 +1054,9 @@ async function refreshExistingPhotosPreview(){
 }
 document.getElementById('name').addEventListener('change', refreshExistingPhotosPreview);
 
-// ---- building the entry from the form (shared by all three output buttons) ----
-async function buildUpdatedJson(){
+// ---- collecting/populating the form (shared by the draft export/import and
+// the three output buttons) ----
+function collectFormEntry(){
   const type = document.getElementById('type').value.trim() || 'coffee';
   const name = document.getElementById('name').value.trim();
   const area = document.getElementById('area').value.trim();
@@ -642,8 +1072,7 @@ async function buildUpdatedJson(){
   const tags = document.getElementById('tags').value.split(',').map(t=>t.trim()).filter(Boolean);
 
   if(!name || isNaN(lat) || isNaN(lng) || isNaN(overall)){
-    document.getElementById('status').textContent = 'Name, latitude, longitude, and overall rating are required.';
-    return null;
+    return {error: 'Name, latitude, longitude, and overall rating are required.'};
   }
 
   const ratings = {};
@@ -657,6 +1086,47 @@ async function buildUpdatedJson(){
   if(story) entry.story = story;
   if(mapsUrl) entry.mapsUrl = mapsUrl;
   if(visited.length) entry.visited = visited;
+  if(isUSCountry(country) && stateSelectEl.value) entry.state = stateSelectEl.value;
+
+  return {entry, visited};
+}
+
+// Fill the form from a plain entry object (used when importing a draft
+// saved from the phone). Doesn't touch pendingPhotos — the caller adds those.
+function populateFormFromEntry(entry){
+  document.getElementById('type').value = entry.type || 'coffee';
+  document.getElementById('name').value = entry.name || '';
+  document.getElementById('area').value = entry.area || '';
+  document.getElementById('country').value = entry.country || '';
+  syncStateVisibility();
+  stateSelectEl.value = entry.state || '';
+  document.getElementById('lat').value = entry.lat ?? '';
+  document.getElementById('lng').value = entry.lng ?? '';
+  document.getElementById('mapsUrl').value = entry.mapsUrl || '';
+  document.getElementById('price').value = entry.price || '';
+  document.getElementById('visited').value = (entry.visited || []).join('; ');
+  document.getElementById('overall').value = entry.overall ?? '';
+  document.getElementById('note').value = entry.note || '';
+  document.getElementById('story').value = entry.story || '';
+  setTagsArray(entry.tags || []);
+  syncTagChips();
+  const ratings = entry.ratings || {};
+  document.getElementById('cat-depth').value = ratings.depth ?? '';
+  document.getElementById('cat-craft').value = ratings.craft ?? '';
+  document.getElementById('cat-ambiance').value = ratings.ambiance ?? '';
+  document.getElementById('cat-character').value = ratings.character ?? '';
+  document.getElementById('cat-value').value = ratings.value ?? '';
+}
+
+// ---- building the merged JSON (shared by all three output buttons) ----
+async function buildUpdatedJson(){
+  const collected = collectFormEntry();
+  if(collected.error){
+    document.getElementById('status').textContent = collected.error;
+    return null;
+  }
+  const {entry, visited} = collected;
+  const name = entry.name;
 
   // If this place is already in the list, merge into it instead of creating
   // a duplicate — visit dates and photos accumulate, everything else reflects
@@ -670,7 +1140,7 @@ async function buildUpdatedJson(){
   let newPhotoEntries = [];
   if(pendingPhotos.length){
     if(!imagesDirHandle){
-      photoStatusEl.textContent = `Choose a site folder above before adding photos — the ${pendingPhotos.length} photo(s) here were not saved.`;
+      photoStatusEl.textContent = `No site folder loaded — the ${pendingPhotos.length} photo(s) here weren't written to images/. Use "Save draft (.zip)" below instead if you're on your phone.`;
     }else{
       const visitInfo = latestVisitEntry();
       for(const p of pendingPhotos){
@@ -699,6 +1169,7 @@ async function buildUpdatedJson(){
     if(!entry.price && prev.price) entry.price = prev.price;
     if(!entry.story && prev.story) entry.story = prev.story;
     if(!entry.mapsUrl && prev.mapsUrl) entry.mapsUrl = prev.mapsUrl;
+    if(!entry.state && prev.state) entry.state = prev.state;
     if(!entry.note && prev.note) entry.note = prev.note;
     if(!entry.tags.length && prev.tags && prev.tags.length) entry.tags = prev.tags;
     if(prev.ratings) entry.ratings = {...prev.ratings, ...entry.ratings};
@@ -783,6 +1254,89 @@ document.getElementById('copy-json').onclick = async () => {
     document.getElementById('status').textContent = 'Could not copy automatically — select the text below and copy it manually.';
   }
 };
+
+// ---- 4. Save draft (.zip) — for when there's no folder access (phones) ----
+// Bundles this one entry, as typed, plus its (already-cropped) pending
+// photos into a .zip. On iPhone/Android this hands off through the native
+// share sheet so it can go straight to Files/iCloud Drive/AirDrop/etc.;
+// otherwise it just downloads. Bring the .zip to your laptop and use
+// "Import draft from phone…" above to pull it back into the form.
+document.getElementById('save-draft').onclick = async () => {
+  const collected = collectFormEntry();
+  if(collected.error){
+    document.getElementById('status').textContent = collected.error;
+    return;
+  }
+  if(typeof JSZip === 'undefined'){
+    document.getElementById('status').textContent = 'Could not load the zip helper (needs an internet connection the first time) — try again.';
+    return;
+  }
+  const { entry } = collected;
+  const zip = new JSZip();
+  zip.file('entry.json', JSON.stringify(entry, null, 2));
+  const photosFolder = zip.folder('photos');
+  pendingPhotos.forEach((p, i) => {
+    photosFolder.file(`${i + 1}-${p.file.name || 'photo.jpg'}`, p.file);
+  });
+
+  const blob = await zip.generateAsync({type: 'blob'});
+  const filename = `coffee-draft-${slugify(entry.name)}-${new Date().toISOString().slice(0, 10)}.zip`;
+  const statusEl = document.getElementById('status');
+
+  const shareFile = new File([blob], filename, {type: 'application/zip'});
+  if(navigator.canShare && navigator.canShare({files: [shareFile]})){
+    try{
+      await navigator.share({files: [shareFile], title: filename});
+      statusEl.textContent = `Draft for "${entry.name}" saved via the share sheet — bring it to your laptop and use "Import draft from phone…" there.`;
+      return;
+    }catch(err){
+      if(err.name === 'AbortError'){ statusEl.textContent = 'Share cancelled — nothing saved.'; return; }
+      // fall through to a plain download if sharing failed for some other reason
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  statusEl.textContent = `Downloaded ${filename} — get it to your laptop (AirDrop, cable, email, etc.), then use "Import draft from phone…" there to finish adding it.`;
+};
+
+// ---- Import draft (.zip) — the laptop side of the above ----
+document.getElementById('import-draft-btn').onclick = () => document.getElementById('import-draft-input').click();
+document.getElementById('import-draft-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(!file) return;
+  const statusEl = document.getElementById('import-draft-status');
+  if(typeof JSZip === 'undefined'){
+    statusEl.textContent = 'Could not load the zip helper (needs an internet connection the first time) — try again.';
+    return;
+  }
+  try{
+    const zip = await JSZip.loadAsync(file);
+    const entryFile = zip.file('entry.json');
+    if(!entryFile){
+      statusEl.textContent = "That doesn't look like a draft — no entry.json found inside.";
+      return;
+    }
+    const entry = JSON.parse(await entryFile.async('string'));
+    populateFormFromEntry(entry);
+
+    const photoPaths = Object.keys(zip.files).filter(p => p.startsWith('photos/') && !zip.files[p].dir);
+    for(const path of photoPaths){
+      const blob = await zip.files[path].async('blob');
+      const name = path.split('/').pop();
+      const f = new File([blob], name, {type: blob.type || 'image/jpeg'});
+      pendingPhotos.push({file: f, previewUrl: URL.createObjectURL(f)});
+    }
+    renderPendingPhotos();
+    refreshExistingPhotosPreview();
+    statusEl.textContent = `Loaded draft for "${entry.name}" with ${photoPaths.length} photo(s) — review below, then "Save to existing file" (or Download).`;
+  }catch(err){
+    statusEl.textContent = "Could not read that file — make sure it's the .zip saved from your phone, unmodified.";
+  }
+});
 </script>
 </body>
 </html>
