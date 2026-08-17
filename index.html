@@ -141,7 +141,7 @@
 
   .stats-card{
     position:fixed; top:calc(66px + var(--safe-t)); left:calc(20px + var(--safe-l)); z-index:500;
-    width:188px;
+    width:220px;
     max-height:calc(100vh - 100px - var(--safe-t) - var(--safe-b));
     overflow-y:auto;
     background:#fff; border:none; border-radius:14px;
@@ -614,12 +614,16 @@
     border:none; border-radius:8px; cursor:pointer;
   }
 
+  .switch-block{ border-bottom:1px solid var(--line); }
+  .switch-block:last-child{ border-bottom:none; }
   .switch-row{
     display:flex; align-items:center; justify-content:space-between;
     font-size:12.5px; color:var(--ink); padding:9px 0;
-    border-bottom:1px solid var(--line);
   }
-  .switch-row:last-child{ border-bottom:none; }
+  .switch-caption{
+    font-size:10.5px; line-height:1.45; color:var(--dim);
+    margin:0 0 9px;
+  }
   .switch{
     position:relative; flex:none;
     width:34px; height:20px; border-radius:999px;
@@ -691,6 +695,7 @@
   <div class="stats-fun-title">Just for fun</div>
   <div class="stats-row"><span>Cups had</span><b id="s-cups"></b></div>
   <div class="stats-row"><span>Est. caffeine</span><b id="s-caffeine"></b></div>
+  <div class="stats-row"><span>≈ Red Bulls</span><b id="s-redbulls"></b></div>
   <div class="stats-row"><span>Est. spent</span><b id="s-spent"></b></div>
   <div class="stats-row">
     <span>Price↔rating <button class="mini-help" id="corr-help-btn" type="button" aria-label="What does this mean?">?</button></span>
@@ -698,6 +703,7 @@
   </div>
   <div class="mini-desc" id="corr-desc">Pearson correlation between price and rating (&minus;1 to +1). Higher means you rate pricier spots better.</div>
   <div class="stats-row"><span>Crawl distance</span><b id="s-distance"></b></div>
+  <div class="stats-row"><span>≈ Earth laps</span><b id="s-earthlaps"></b></div>
   <div class="stats-row stack"><span>Most visited</span><b id="s-mostvisited"></b></div>
   <div class="stats-row stack"><span>Most beloved</span><b id="s-beloved"></b></div>
 </div>
@@ -772,13 +778,19 @@
 
   <div class="filter-card" id="settings-card">
     <div class="filter-label">Map settings</div>
-    <div class="switch-row">
-      <span>Clustering</span>
-      <div class="switch on" id="switch-clustering"><div class="switch-knob"></div></div>
+    <div class="switch-block">
+      <div class="switch-row">
+        <span>Clustering</span>
+        <div class="switch on" id="switch-clustering"><div class="switch-knob"></div></div>
+      </div>
+      <p class="switch-caption">Groups nearby pins into a single bubble until you zoom in.</p>
     </div>
-    <div class="switch-row">
-      <span>Trail</span>
-      <div class="switch on" id="switch-trail"><div class="switch-knob"></div></div>
+    <div class="switch-block">
+      <div class="switch-row">
+        <span>Trail</span>
+        <div class="switch on" id="switch-trail"><div class="switch-knob"></div></div>
+      </div>
+      <p class="switch-caption">Draws a line connecting your visits in chronological order.</p>
     </div>
   </div>
 
@@ -1176,7 +1188,7 @@ function renderStats(list){
   // front of this text.
   document.getElementById('count').textContent = stats ? `${stats.n} in view ${stats.avg.toFixed(1)} avg` : '0 in view';
   if(!stats){
-    ['s-count','s-avg','s-median','s-stddev','s-range','s-cups','s-caffeine','s-spent','s-corr','s-beloved','s-distance','s-mostvisited']
+    ['s-count','s-avg','s-median','s-stddev','s-range','s-cups','s-caffeine','s-redbulls','s-spent','s-corr','s-beloved','s-distance','s-earthlaps','s-mostvisited']
       .forEach(id => document.getElementById(id).textContent = '—');
     document.getElementById('stats-hist').innerHTML = '';
     const emptyFilterHist = document.getElementById('filter-rating-hist');
@@ -1202,6 +1214,7 @@ function renderStats(list){
   document.getElementById('s-caffeine').textContent = fun.caffeineMg >= 1000
     ? (fun.caffeineMg/1000).toFixed(2) + 'g'
     : fun.caffeineMg + 'mg';
+  document.getElementById('s-redbulls').textContent = fun.redBulls.toFixed(1) + '×';
   document.getElementById('s-spent').textContent = '~$' + fun.spent.toFixed(0);
   document.getElementById('s-corr').textContent = fun.corr === null
     ? '—' : (fun.corr >= 0 ? '+' : '') + fun.corr.toFixed(2);
@@ -1209,6 +1222,8 @@ function renderStats(list){
     ? `${fun.mostBeloved.name} (${fun.mostBeloved.overall.toFixed(1)})` : '—';
   document.getElementById('s-distance').textContent = fun.distanceMiles > 0
     ? fun.distanceMiles.toFixed(1) + ' mi' : '—';
+  document.getElementById('s-earthlaps').textContent = fun.distanceMiles > 0
+    ? fun.earthLaps.toFixed(3) : '—';
   document.getElementById('s-mostvisited').textContent = fun.mostVisited
     ? `${fun.mostVisited.name} (×${fun.mostVisited.count})` : '—';
 }
@@ -1218,6 +1233,8 @@ const PRICE_ESTIMATE = { '$': 3.5, '$$': 5.5, '$$$': 8 };
 const PRICE_RANK = { '$': 1, '$$': 2, '$$$': 3 };
 const MG_CAFFEINE_PER_CUP = 95;
 const EARTH_RADIUS_MILES = 3958.8;
+const EARTH_CIRCUMFERENCE_MILES = 2 * Math.PI * EARTH_RADIUS_MILES; // ~24,881 mi, equatorial
+const MG_CAFFEINE_PER_REDBULL = 80; // one 8.4oz can
 
 function haversineMiles(lat1, lng1, lat2, lng2){
   const toRad = d => d * Math.PI / 180;
@@ -1284,7 +1301,12 @@ function computeFunStats(list){
   });
   if(mostVisited && mostVisited.count <= 1) mostVisited = null;
 
-  return { cups, spent, caffeineMg: cups * MG_CAFFEINE_PER_CUP, corr, mostBeloved, distanceMiles, mostVisited };
+  const caffeineMg = cups * MG_CAFFEINE_PER_CUP;
+  return {
+    cups, spent, caffeineMg, corr, mostBeloved, distanceMiles, mostVisited,
+    redBulls: caffeineMg / MG_CAFFEINE_PER_REDBULL,
+    earthLaps: distanceMiles / EARTH_CIRCUMFERENCE_MILES
+  };
 }
 
 // Returns this shop's photos newest-first, whether it uses the new `photos`
@@ -2067,14 +2089,31 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
   compareB.onchange = renderCompare;
   renderCompare();
 
+  // Filter / compare / settings share one "slot" — opening one should close
+  // whichever of the other two is currently open, rather than stacking.
+  function closeOtherSidePanels(exceptCardId){
+    [['filter-card','toggle-filter'], ['compare-card','toggle-compare'], ['settings-card','toggle-settings']]
+      .forEach(([cardId, toggleId]) => {
+        if(cardId === exceptCardId) return;
+        document.getElementById(cardId).classList.remove('show');
+        document.getElementById(toggleId).classList.remove('on');
+      });
+  }
+
   document.getElementById('toggle-compare').onclick = (e) => {
-    document.getElementById('compare-card').classList.toggle('show');
-    e.currentTarget.classList.toggle('on');
+    const card = document.getElementById('compare-card');
+    const opening = !card.classList.contains('show');
+    closeOtherSidePanels('compare-card');
+    card.classList.toggle('show', opening);
+    e.currentTarget.classList.toggle('on', opening);
   };
 
   document.getElementById('toggle-settings').onclick = (e) => {
-    document.getElementById('settings-card').classList.toggle('show');
-    e.currentTarget.classList.toggle('on');
+    const card = document.getElementById('settings-card');
+    const opening = !card.classList.contains('show');
+    closeOtherSidePanels('settings-card');
+    card.classList.toggle('show', opening);
+    e.currentTarget.classList.toggle('on', opening);
   };
 
   document.getElementById('switch-clustering').onclick = (e) => {
@@ -2298,8 +2337,11 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
   replayMarkerPopIn = popInVisibleMarkers;
 
   document.getElementById('toggle-filter').onclick = (e) => {
-    document.getElementById('filter-card').classList.toggle('show');
-    e.currentTarget.classList.toggle('on');
+    const card = document.getElementById('filter-card');
+    const opening = !card.classList.contains('show');
+    closeOtherSidePanels('filter-card');
+    card.classList.toggle('show', opening);
+    e.currentTarget.classList.toggle('on', opening);
     updateFilterScrollbar();
   };
 

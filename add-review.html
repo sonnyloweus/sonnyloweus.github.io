@@ -144,6 +144,11 @@
     border-radius:50%; background:rgba(0,0,0,0.6); color:#fff;
     font-size:11px; line-height:16px; text-align:center; cursor:pointer;
   }
+  .photo-thumb-item{ display:flex; flex-direction:column; align-items:center; gap:4px; width:76px; }
+  .photo-date-input{
+    width:100%; font-size:9.5px; padding:3px 2px; border-radius:6px;
+    border:1px solid var(--line); background:#fff; color:var(--dim);
+  }
   .photo-hint{ font-size:11px; color:var(--dim); margin-top:6px; }
   .existing-photos-label{ font-size:11px; color:var(--dim); margin-bottom:6px; }
 
@@ -238,9 +243,11 @@
   </div>
   <div>
     <label>Name</label>
-    <input id="name" placeholder="Devoción">
+    <input id="name" placeholder="Devoción" list="known-places" autocomplete="off">
+    <datalist id="known-places"></datalist>
   </div>
 </div>
+<div id="name-match-status" style="font-size:11px; color:var(--dim); margin-top:4px;"></div>
 
 <label>Neighborhood</label>
 <input id="area" placeholder="Williamsburg">
@@ -690,6 +697,21 @@ const existingPhotosEl = document.getElementById('existing-photos');
 const existingPhotosLabelEl = document.getElementById('existing-photos-label');
 const existingPhotosRowEl = document.getElementById('existing-photos-row');
 
+// Keeps the Name field's autocomplete list in sync with whatever places are
+// currently loaded — called after loading a folder/file, and again after
+// each save, so a spot you just added suggests itself for next time too.
+function refreshKnownPlacesDatalist(){
+  const datalist = document.getElementById('known-places');
+  datalist.innerHTML = '';
+  const names = Array.from(new Set(existingData.map(s => (s.name || '').trim()).filter(Boolean)))
+    .sort((a, b) => a.localeCompare(b));
+  names.forEach(n => {
+    const opt = document.createElement('option');
+    opt.value = n;
+    datalist.appendChild(opt);
+  });
+}
+
 async function loadFromFolder(handle){
   const jsonHandle = await handle.getFileHandle('coffee.json', {create:false}).catch(() => null);
   if(!jsonHandle){
@@ -706,6 +728,7 @@ async function loadFromFolder(handle){
   dropzoneEl.textContent = 'Drag photos here, or click to choose files';
   photoStatusEl.textContent = '';
   refreshExistingPhotosPreview();
+  refreshKnownPlacesDatalist();
 }
 
 // On page load, see if we remember a folder from last time. If permission is
@@ -770,6 +793,7 @@ document.getElementById('existing-fallback').addEventListener('change', async (e
     folderHandle = null; // classic file input never gives a writable handle
     imagesDirHandle = null;
     existingStatusEl.textContent = `Loaded ${existingData.length} existing entries. Your browser doesn't support saving straight back or adding photos (needs Chrome or Edge) — use Download or Copy instead.`;
+    refreshKnownPlacesDatalist();
   }catch(err){
     existingStatusEl.textContent = 'Could not read that file — check it is valid JSON.';
   }
@@ -791,8 +815,9 @@ function extFromFile(file){
 function todayDisplay(){
   return new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
 }
-// The date this submission's new photos should be tagged with: the latest
-// of the visit dates typed into this form just now, or today if none typed.
+// The date new photos default to (each one's date input can be changed
+// individually after that): the latest of the visit dates typed into this
+// form so far, or today if none typed yet.
 function latestVisitEntry(){
   const raw = document.getElementById('visited').value.split(';').map(s => s.trim()).filter(Boolean);
   let best = null, bestDate = null;
@@ -801,6 +826,20 @@ function latestVisitEntry(){
     if(!isNaN(d) && (!bestDate || d > bestDate)){ bestDate = d; best = s; }
   });
   return best ? {display: best, date: bestDate} : {display: todayDisplay(), date: new Date()};
+}
+// yyyy-mm-dd for an <input type=date>, from a JS Date, using local (not UTC)
+// components — toISOString() would shift the date near midnight in some zones.
+function toInputDateValue(dateObj){
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const d = String(dateObj.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+// The reverse: an <input type=date> value -> the "Aug 9, 2022"-style display
+// string used everywhere else in coffee.json.
+function formatDisplayDateFromInput(isoDate){
+  const [y, m, d] = isoDate.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
 }
 async function uniqueImageFilename(dirHandle, name, dateObj, file){
   const slug = slugify(name);
@@ -880,6 +919,10 @@ function openCropper(file){
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
+      // Show the overlay (and let it lay out) BEFORE measuring the frame —
+      // it starts as display:none, so measuring first gave a 0x0 rect and
+      // the image was scaled down to nothing (invisible crop preview).
+      cropOverlayEl.classList.add('show');
       const rect = cropFrameEl.getBoundingClientRect();
       cropState = {
         naturalW: img.naturalWidth, naturalH: img.naturalHeight,
@@ -888,7 +931,6 @@ function openCropper(file){
       };
       cropImgEl.src = url;
       recenterCrop();
-      cropOverlayEl.classList.add('show');
 
       const cleanup = (result) => {
         cropOverlayEl.classList.remove('show');
@@ -970,7 +1012,13 @@ async function processCropQueue(){
     cropCountEl.textContent = cropQueue.length || total > 1 ? `Photo ${done} of ${done + cropQueue.length}` : '';
     const cropped = await openCropper(file);
     const finalFile = cropped || file; // skipped — fall back to the original, uncropped
-    pendingPhotos.push({file: finalFile, previewUrl: URL.createObjectURL(finalFile)});
+    const defaultDate = latestVisitEntry();
+    pendingPhotos.push({
+      file: finalFile,
+      previewUrl: URL.createObjectURL(finalFile),
+      dateValue: toInputDateValue(defaultDate.date), // yyyy-mm-dd, backs the date input
+      date: defaultDate.display                      // "Aug 9, 2022"-style, what actually gets saved
+    });
     renderPendingPhotos();
   }
 }
@@ -980,6 +1028,9 @@ function renderPendingPhotos(){
   const row = document.createElement('div');
   row.className = 'photo-thumb-row';
   pendingPhotos.forEach((p, i) => {
+    const item = document.createElement('div');
+    item.className = 'photo-thumb-item';
+
     const thumb = document.createElement('div');
     thumb.className = 'photo-thumb';
     const img = document.createElement('img');
@@ -994,12 +1045,25 @@ function renderPendingPhotos(){
     };
     thumb.appendChild(img);
     thumb.appendChild(remove);
-    row.appendChild(thumb);
+
+    const dateInput = document.createElement('input');
+    dateInput.type = 'date';
+    dateInput.className = 'photo-date-input';
+    dateInput.title = 'Date this photo was taken';
+    dateInput.value = p.dateValue || toInputDateValue(latestVisitEntry().date);
+    dateInput.onchange = () => {
+      p.dateValue = dateInput.value;
+      p.date = dateInput.value ? formatDisplayDateFromInput(dateInput.value) : p.date;
+    };
+
+    item.appendChild(thumb);
+    item.appendChild(dateInput);
+    row.appendChild(item);
   });
   pendingPhotosEl.appendChild(row);
   const hint = document.createElement('div');
   hint.className = 'photo-hint';
-  hint.textContent = `${pendingPhotos.length} new photo${pendingPhotos.length > 1 ? 's' : ''} cropped and ready — will be named from the place + visit date and saved into images/ when you submit.`;
+  hint.textContent = `${pendingPhotos.length} new photo${pendingPhotos.length > 1 ? 's' : ''} cropped and ready — each defaults to the latest visit date above, but you can set the date per photo. Named from the place + that date and saved into images/ when you submit.`;
   pendingPhotosEl.appendChild(hint);
 }
 
@@ -1052,7 +1116,29 @@ async function refreshExistingPhotosPreview(){
   }
   existingPhotosEl.style.display = 'block';
 }
-document.getElementById('name').addEventListener('change', refreshExistingPhotosPreview);
+
+// If the typed name exactly matches a spot already in coffee.json, pull in
+// everything on file for it — neighborhood, coordinates, price, ratings,
+// notes, tags, all of it — so adding a photo (or touching up one field)
+// doesn't mean re-typing a review you already wrote. Doesn't touch
+// pendingPhotos, so anything already dropped into the Photos section stays.
+function handleNameChange(){
+  const nameEl = document.getElementById('name');
+  const name = nameEl.value.trim();
+  const statusEl = document.getElementById('name-match-status');
+  if(!name){ statusEl.textContent = ''; refreshExistingPhotosPreview(); return; }
+
+  const match = existingData.find(s => (s.name || '').trim().toLowerCase() === name.toLowerCase());
+  if(match){
+    populateFormFromEntry(match);
+    nameEl.value = match.name; // normalize to the saved spelling/casing
+    statusEl.textContent = `Loaded everything on file for "${match.name}" — edit whatever you're changing, then save.`;
+  }else{
+    statusEl.textContent = '';
+  }
+  refreshExistingPhotosPreview();
+}
+document.getElementById('name').addEventListener('change', handleNameChange);
 
 // ---- collecting/populating the form (shared by the draft export/import and
 // the three output buttons) ----
@@ -1135,18 +1221,21 @@ async function buildUpdatedJson(){
   const prev = existingIndex > -1 ? existingData[existingIndex] : null;
   const prevPhotos = prev ? (prev.photos || (prev.photo ? [{src: prev.photo}] : [])) : [];
 
-  // Write any newly dropped photos to disk now, named from the place + the
-  // latest visit date entered this submission.
+  // Write any newly dropped photos to disk now, named from the place + each
+  // photo's own date (set per-photo in the Photos section, defaulting to the
+  // latest visit date typed above).
   let newPhotoEntries = [];
   if(pendingPhotos.length){
     if(!imagesDirHandle){
       photoStatusEl.textContent = `No site folder loaded — the ${pendingPhotos.length} photo(s) here weren't written to images/. Use "Save draft (.zip)" below instead if you're on your phone.`;
     }else{
-      const visitInfo = latestVisitEntry();
+      const fallback = latestVisitEntry();
       for(const p of pendingPhotos){
-        const filename = await uniqueImageFilename(imagesDirHandle, name, visitInfo.date, p.file);
+        const photoDateObj = p.dateValue ? new Date(p.dateValue + 'T00:00:00') : fallback.date;
+        const photoDisplay = p.date || fallback.display;
+        const filename = await uniqueImageFilename(imagesDirHandle, name, photoDateObj, p.file);
         await writeImageFile(imagesDirHandle, filename, p.file);
-        newPhotoEntries.push({src: `images/${filename}`, date: visitInfo.display});
+        newPhotoEntries.push({src: `images/${filename}`, date: photoDisplay});
         URL.revokeObjectURL(p.previewUrl);
       }
       pendingPhotos = [];
@@ -1182,6 +1271,7 @@ async function buildUpdatedJson(){
   }
 
   refreshExistingPhotosPreview();
+  refreshKnownPlacesDatalist();
 
   const json = JSON.stringify(existingData, null, 2);
   const preview = document.getElementById('preview');
@@ -1275,9 +1365,13 @@ document.getElementById('save-draft').onclick = async () => {
   const zip = new JSZip();
   zip.file('entry.json', JSON.stringify(entry, null, 2));
   const photosFolder = zip.folder('photos');
+  const photoManifest = [];
   pendingPhotos.forEach((p, i) => {
-    photosFolder.file(`${i + 1}-${p.file.name || 'photo.jpg'}`, p.file);
+    const filename = `${i + 1}-${p.file.name || 'photo.jpg'}`;
+    photosFolder.file(filename, p.file);
+    photoManifest.push({file: filename, date: p.date || null});
   });
+  zip.file('photos.json', JSON.stringify(photoManifest, null, 2));
 
   const blob = await zip.generateAsync({type: 'blob'});
   const filename = `coffee-draft-${slugify(entry.name)}-${new Date().toISOString().slice(0, 10)}.zip`;
@@ -1323,12 +1417,29 @@ document.getElementById('import-draft-input').addEventListener('change', async (
     const entry = JSON.parse(await entryFile.async('string'));
     populateFormFromEntry(entry);
 
+    let manifest = [];
+    const manifestFile = zip.file('photos.json');
+    if(manifestFile){
+      try{ manifest = JSON.parse(await manifestFile.async('string')); }catch(err){ manifest = []; }
+    }
+
     const photoPaths = Object.keys(zip.files).filter(p => p.startsWith('photos/') && !zip.files[p].dir);
     for(const path of photoPaths){
       const blob = await zip.files[path].async('blob');
       const name = path.split('/').pop();
       const f = new File([blob], name, {type: blob.type || 'image/jpeg'});
-      pendingPhotos.push({file: f, previewUrl: URL.createObjectURL(f)});
+      const manifestEntry = manifest.find(m => m.file === name);
+      const parsedDate = manifestEntry && manifestEntry.date ? new Date(manifestEntry.date) : null;
+      const pending = {file: f, previewUrl: URL.createObjectURL(f)};
+      if(parsedDate && !isNaN(parsedDate)){
+        pending.dateValue = toInputDateValue(parsedDate);
+        pending.date = manifestEntry.date;
+      }else{
+        const fallback = latestVisitEntry();
+        pending.dateValue = toInputDateValue(fallback.date);
+        pending.date = fallback.display;
+      }
+      pendingPhotos.push(pending);
     }
     renderPendingPhotos();
     refreshExistingPhotosPreview();

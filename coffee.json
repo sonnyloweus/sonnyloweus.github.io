@@ -150,6 +150,16 @@
       "May 19, 2026",
       "May 20, 2026",
       "May 21, 2026"
+    ],
+    "photos": [
+      {
+        "src": "images/mame-seefeld_2026-05-21.jpg",
+        "date": "May 21, 2026"
+      },
+      {
+        "src": "images/mame-seefeld_2026-05-21-2.jpg",
+        "date": "May 21, 2026"
+      }
     ]
   },
   {
@@ -202,6 +212,12 @@
     "mapsUrl": "https://maps.app.goo.gl/Z1sLMZARFGypVy368",
     "visited": [
       "Jun 10, 2025"
+    ],
+    "photos": [
+      {
+        "src": "images/noir-coffee-shop_2025-06-10.jpg",
+        "date": "Jun 10, 2025"
+      }
     ]
   },
   {
@@ -228,6 +244,12 @@
     "mapsUrl": "https://maps.app.goo.gl/Tu3CA2cePxM9ji7b6",
     "visited": [
       "Jun 12, 2025"
+    ],
+    "photos": [
+      {
+        "src": "images/frappe-coffee-shop_2025-06-12.jpg",
+        "date": "Jun 12, 2025"
+      }
     ]
   },
   {
@@ -254,6 +276,12 @@
     "mapsUrl": "https://maps.app.goo.gl/VYvUu1DgzYGrYH717",
     "visited": [
       "Jun 12, 2025"
+    ],
+    "photos": [
+      {
+        "src": "images/shakespeare-and-company-cafe_2025-06-12.jpg",
+        "date": "Jun 12, 2025"
+      }
     ]
   },
   {
@@ -284,6 +312,16 @@
       "Mar 1, 2026",
       "Mar 29, 2026",
       "May 17, 2026"
+    ],
+    "photos": [
+      {
+        "src": "images/backerei-konditorei-hausammann-zollikon_2026-05-17.jpg",
+        "date": "May 17, 2026"
+      },
+      {
+        "src": "images/backerei-konditorei-hausammann-zollikon_2026-05-17-2.jpg",
+        "date": "May 17, 2026"
+      }
     ]
   },
   {
@@ -301,7 +339,7 @@
       "character": 4,
       "value": 3.9
     },
-    "note": "Decent coffee and tasty cakes at this relatively famous spot.",
+    "note": "Decent coffee and tasty cakes at this relatively famous spot. Matcha was alright too.",
     "tags": [
       "pastries",
       "modern",
@@ -312,6 +350,16 @@
     "mapsUrl": "https://maps.app.goo.gl/w9WTeXvNTtAvQPJK9",
     "visited": [
       "May 16, 2026"
+    ],
+    "photos": [
+      {
+        "src": "images/babu-s-bakery-coffeehouse_2026-05-16.jpg",
+        "date": "May 16, 2026"
+      },
+      {
+        "src": "images/babu-s-bakery-coffeehouse_2026-05-16-2.jpg",
+        "date": "May 16, 2026"
+      }
     ]
   },
   {
@@ -342,6 +390,12 @@
       "Mar 18, 2026",
       "Apr 29, 2026",
       "May 18, 2026"
+    ],
+    "photos": [
+      {
+        "src": "images/einstein-zweistein_2026-05-18.jpg",
+        "date": "May 18, 2026"
+      }
     ]
   },
   {
@@ -373,6 +427,16 @@
     "mapsUrl": "https://maps.app.goo.gl/UZurJpiZmbp9QVAcA",
     "visited": [
       "Mar 19, 2026"
+    ],
+    "photos": [
+      {
+        "src": "images/kraftwerk_2026-03-19.jpg",
+        "date": "Mar 19, 2026"
+      },
+      {
+        "src": "images/kraftwerk_2026-03-19-2.jpg",
+        "date": "Mar 19, 2026"
+      }
     ]
   },
   {
@@ -401,6 +465,12 @@
     "visited": [
       "Mar 28, 2026",
       "May 3, 2026"
+    ],
+    "photos": [
+      {
+        "src": "images/spheres_2026-05-03.jpg",
+        "date": "May 3, 2026"
+      }
     ]
   },
   {
@@ -431,6 +501,16 @@
     "visited": [
       "May 6, 2026",
       "May 9, 2026"
+    ],
+    "photos": [
+      {
+        "src": "images/vicafe-rosterei-kaffeebar_2026-05-09.jpg",
+        "date": "May 9, 2026"
+      },
+      {
+        "src": "images/vicafe-rosterei-kaffeebar_2026-05-09-2.jpg",
+        "date": "May 9, 2026"
+      }
     ]
   },
   {
@@ -458,6 +538,12 @@
     "mapsUrl": "https://maps.app.goo.gl/4PZuBzWyXTyoYshm8",
     "visited": [
       "April 10, 2026"
+    ],
+    "photos": [
+      {
+        "src": "images/cafe-het-paleis_2026-04-10.jpg",
+        "date": "April 10, 2026"
+      }
     ]
   },
   {
@@ -485,6 +571,12 @@
     "mapsUrl": "https://maps.app.goo.gl/NdLHszhJFj3SBwCG8",
     "visited": [
       "April 11, 2026"
+    ],
+    "photos": [
+      {
+        "src": "images/strudel-cafe-kroll_2026-04-11.jpg",
+        "date": "April 11, 2026"
+      }
     ]
   },
   {
@@ -511,6 +603,12 @@
     "mapsUrl": "https://maps.app.goo.gl/Njfbw8TTWW75pw5e9",
     "visited": [
       "Apr 19, 2026"
+    ],
+    "photos": [
+      {
+        "src": "images/restaurant-charivari-in-der-vitalwelt-schliersee_2026-04-19.jpg",
+        "date": "Apr 19, 2026"
+      }
     ]
   },
   {
@@ -544,6 +642,12 @@
       "Apr 14, 2026",
       "Apr 21, 2026",
       "May 12, 2026"
+    ],
+    "photos": [
+      {
+        "src": "images/alumni-quattro-lounge_2026-05-12.jpg",
+        "date": "May 12, 2026"
+      }
     ]
   },
   {
@@ -571,6 +675,16 @@
     "mapsUrl": "https://maps.app.goo.gl/fug1GNVbBaAit79r5",
     "visited": [
       "Apr 7, 2026"
+    ],
+    "photos": [
+      {
+        "src": "images/kolacherie-kampus-hybernska_2026-04-07.jpg",
+        "date": "Apr 7, 2026"
+      },
+      {
+        "src": "images/kolacherie-kampus-hybernska_2026-04-07-2.jpg",
+        "date": "Apr 7, 2026"
+      }
     ]
   },
   {
@@ -598,6 +712,12 @@
     "mapsUrl": "https://www.google.com/maps/place/Sweet+%26+Pepper+DAYS/@50.0765174,14.4335883,20z/data=!4m6!3m5!1s0x470b948ef4d8ca55:0x30b0ae554241a557!8m2!3d50.0765174!4d14.4339102!16s%2Fg%2F1q6kk8t68?entry=ttu&g_ep=EgoyMDI2MDgwNS4xIKXMDSoASAFQAw%3D%3D",
     "visited": [
       "Apr 7, 2026"
+    ],
+    "photos": [
+      {
+        "src": "images/sweet-pepper-days_2026-04-07.jpg",
+        "date": "Apr 7, 2026"
+      }
     ]
   },
   {
@@ -669,10 +789,10 @@
     "type": "coffee",
     "lat": 30.191532,
     "lng": 120.070428,
-    "overall": 4.6,
+    "overall": 4.7,
     "ratings": {
       "depth": 4.6,
-      "craft": 4.7,
+      "craft": 4.8,
       "ambiance": 4.3,
       "character": 4.5,
       "value": 4.6
@@ -693,6 +813,20 @@
     "visited": [
       "May 28, 2025",
       "Feb 3, 2026"
+    ],
+    "photos": [
+      {
+        "src": "images/33-coffee-qinggu-shop_2026-02-03.jpg",
+        "date": "Feb 3, 2026"
+      },
+      {
+        "src": "images/33-coffee-qinggu-shop_2026-02-03-2.jpg",
+        "date": "Feb 3, 2026"
+      },
+      {
+        "src": "images/33-coffee-qinggu-shop_2026-02-03-3.jpg",
+        "date": "Feb 3, 2026"
+      }
     ]
   },
   {
@@ -810,6 +944,12 @@
     "mapsUrl": "https://maps.app.goo.gl/WgYXPdMVdDPp844F7",
     "visited": [
       "Mar 2, 2026"
+    ],
+    "photos": [
+      {
+        "src": "images/einstein-au-jardin_2026-03-02.jpg",
+        "date": "Mar 2, 2026"
+      }
     ]
   },
   {
@@ -837,6 +977,71 @@
     "mapsUrl": "https://maps.app.goo.gl/oFH898Tn6FmDrxT17",
     "visited": [
       "Mar 22, 2026"
+    ]
+  },
+  {
+    "name": "Noir Coffee Shop - Ile Saint-Louis",
+    "area": "Paris",
+    "country": "France",
+    "type": "coffee",
+    "lat": 48.852405,
+    "lng": 2.3547252,
+    "overall": 4.2,
+    "ratings": {
+      "depth": 3.9,
+      "craft": 4,
+      "ambiance": 4.5,
+      "character": 4.2,
+      "value": 4.2
+    },
+    "note": "Cafe along the beautiful streets of Ile Saint-Louis with an underground cellar (but the coffee is just okay).",
+    "tags": [
+      "modern",
+      "lively",
+      "scenic"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/pMfuzn71MuGPu7tz6",
+    "visited": [
+      "Jun 11, 2025"
+    ],
+    "photos": [
+      {
+        "src": "images/noir-coffee-shop-ile-saint-louis_2025-06-11.jpg",
+        "date": "Jun 11, 2025"
+      }
+    ]
+  },
+  {
+    "name": "BO&MIE Montmartre",
+    "area": "Paris",
+    "country": "France",
+    "type": "coffee",
+    "lat": 48.8717,
+    "lng": 2.3418,
+    "overall": 3.4,
+    "ratings": {
+      "depth": 3.6,
+      "craft": 3.5,
+      "ambiance": 4,
+      "character": 3.9,
+      "value": 4
+    },
+    "note": "Average coffee to drink while people-watching.",
+    "tags": [
+      "laptop-friendly",
+      "pastries"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/2eoH31tKjtbGqAJZA",
+    "visited": [
+      "Jun 11, 2025"
+    ],
+    "photos": [
+      {
+        "src": "images/bo-mie-montmartre_2025-06-11.jpg",
+        "date": "Jun 11, 2025"
+      }
     ]
   }
 ]
