@@ -314,8 +314,8 @@
 
 <div class="cat-inputs">
   <div>
-    <label>Depth</label>
-    <input id="cat-depth" placeholder="4.2">
+    <label>Richness</label>
+    <input id="cat-richness" placeholder="4.2">
   </div>
   <div>
     <label>Craft</label>
@@ -453,7 +453,7 @@ const supportsFileSystemAccess = 'showDirectoryPicker' in window;
 
 const PRESET_TAGS = [
   'cozy','modern','minimal','lively','quiet','unique','laptop-friendly','study',
-  'experimental','crowded','expensive','hidden-gem','pastries','outdoor',
+  'experimental','crowded','expensive','hidden-gem','pastries','outdoor-seating',
   'specialty-coffee','no-seating','scenic'
 ];
 
@@ -1162,7 +1162,7 @@ function collectFormEntry(){
   }
 
   const ratings = {};
-  [['depth','cat-depth'],['craft','cat-craft'],['ambiance','cat-ambiance'],['character','cat-character'],['value','cat-value']].forEach(([key, id]) => {
+  [['richness','cat-richness'],['craft','cat-craft'],['ambiance','cat-ambiance'],['character','cat-character'],['value','cat-value']].forEach(([key, id]) => {
     const val = parseFloat(document.getElementById(id).value);
     if(!isNaN(val)) ratings[key] = val;
   });
@@ -1197,7 +1197,7 @@ function populateFormFromEntry(entry){
   setTagsArray(entry.tags || []);
   syncTagChips();
   const ratings = entry.ratings || {};
-  document.getElementById('cat-depth').value = ratings.depth ?? '';
+  document.getElementById('cat-richness').value = ratings.richness ?? '';
   document.getElementById('cat-craft').value = ratings.craft ?? '';
   document.getElementById('cat-ambiance').value = ratings.ambiance ?? '';
   document.getElementById('cat-character').value = ratings.character ?? '';

@@ -3,14 +3,13 @@
     "name": "Small World Coffee",
     "area": "Princeton",
     "country": "USA",
-    "state": "New Jersey",
     "type": "coffee",
     "lat": 40.3501239,
     "lng": -74.6602256,
-    "overall": 4.4,
+    "overall": 4.5,
     "ratings": {
-      "depth": 4.1,
-      "craft": 4,
+      "richness": 4.2,
+      "craft": 4.2,
       "ambiance": 4.7,
       "character": 4.5,
       "value": 4
@@ -98,6 +97,17 @@
       "Dec 3, 2025",
       "Dec 6, 2025",
       "Dec 8, 2025"
+    ],
+    "state": "New Jersey",
+    "photos": [
+      {
+        "src": "images/small-world-coffee_2025-12-08.jpg",
+        "date": "Dec 8, 2025"
+      },
+      {
+        "src": "images/small-world-coffee_2025-12-08-2.jpg",
+        "date": "Dec 8, 2025"
+      }
     ]
   },
   {
@@ -109,7 +119,7 @@
     "lng": 8.5494766,
     "overall": 4.7,
     "ratings": {
-      "depth": 4.6,
+      "richness": 4.6,
       "craft": 4.7,
       "ambiance": 4.6,
       "character": 4.2,
@@ -121,7 +131,8 @@
       "lively",
       "laptop-friendly",
       "specialty-coffee",
-      "expensive"
+      "expensive",
+      "outdoor-seating"
     ],
     "price": "$$$",
     "story": "The birthplace of my Junior Paper on quantum superconducting circuits and symplectic geometry.",
@@ -171,7 +182,7 @@
     "lng": 2.33779,
     "overall": 4.4,
     "ratings": {
-      "depth": 4.3,
+      "richness": 4.3,
       "craft": 4.2,
       "ambiance": 4.3,
       "character": 4.5,
@@ -197,7 +208,7 @@
     "lng": 2.3416204,
     "overall": 4.3,
     "ratings": {
-      "depth": 4.2,
+      "richness": 4.2,
       "craft": 4.3,
       "ambiance": 4.4,
       "character": 4.3,
@@ -229,7 +240,7 @@
     "lng": 2.3500495,
     "overall": 3.4,
     "ratings": {
-      "depth": 3.3,
+      "richness": 3.3,
       "craft": 3.7,
       "ambiance": 2.8,
       "character": 3.3,
@@ -261,7 +272,7 @@
     "lng": 2.3472507,
     "overall": 3.7,
     "ratings": {
-      "depth": 3.1,
+      "richness": 3.1,
       "craft": 3.6,
       "ambiance": 4,
       "character": 4.1,
@@ -293,7 +304,7 @@
     "lng": 8.5757258,
     "overall": 2.9,
     "ratings": {
-      "depth": 1.9,
+      "richness": 1.9,
       "craft": 2.2,
       "ambiance": 4,
       "character": 3.1,
@@ -304,7 +315,8 @@
       "quiet",
       "laptop-friendly",
       "study",
-      "pastries"
+      "pastries",
+      "outdoor-seating"
     ],
     "price": "$$",
     "mapsUrl": "https://maps.app.goo.gl/ZMQA2u8pkwaagEfJA",
@@ -333,7 +345,7 @@
     "lng": 8.5475507,
     "overall": 4.1,
     "ratings": {
-      "depth": 4.3,
+      "richness": 4.3,
       "craft": 4.2,
       "ambiance": 3.9,
       "character": 4,
@@ -371,7 +383,7 @@
     "lng": 8.5466052,
     "overall": 3.2,
     "ratings": {
-      "depth": 1.4,
+      "richness": 1.4,
       "craft": 1.3,
       "ambiance": 3.6,
       "character": 2.7,
@@ -381,7 +393,8 @@
     "tags": [
       "quiet",
       "laptop-friendly",
-      "study"
+      "study",
+      "outdoor-seating"
     ],
     "price": "$",
     "mapsUrl": "https://maps.app.goo.gl/42JXB7fWB9hcCmCy9",
@@ -407,7 +420,7 @@
     "lng": 8.5319335,
     "overall": 4.5,
     "ratings": {
-      "depth": 4.2,
+      "richness": 4.2,
       "craft": 4.3,
       "ambiance": 4.7,
       "character": 4.8,
@@ -420,7 +433,8 @@
       "unique",
       "laptop-friendly",
       "study",
-      "expensive"
+      "expensive",
+      "outdoor-seating"
     ],
     "price": "$$$",
     "story": "Apparently this place turns into a bar at night?",
@@ -448,7 +462,7 @@
     "lng": 8.5188165,
     "overall": 4.6,
     "ratings": {
-      "depth": 4.4,
+      "richness": 4.4,
       "craft": 4.5,
       "ambiance": 4.7,
       "character": 4.2,
@@ -458,7 +472,7 @@
     "tags": [
       "lively",
       "laptop-friendly",
-      "outdoor"
+      "outdoor-seating"
     ],
     "price": "$$",
     "mapsUrl": "https://maps.app.goo.gl/dUSBNjFrWW9eBy7Y9",
@@ -482,7 +496,7 @@
     "lng": 8.5016196,
     "overall": 4.7,
     "ratings": {
-      "depth": 4.6,
+      "richness": 4.6,
       "craft": 4.7,
       "ambiance": 4.6,
       "character": 4.4,
@@ -493,7 +507,8 @@
       "modern",
       "unique",
       "laptop-friendly",
-      "specialty-coffee"
+      "specialty-coffee",
+      "outdoor-seating"
     ],
     "price": "$$$",
     "story": "Went on a private roastery tour here.",
@@ -522,7 +537,7 @@
     "lng": 4.8889866,
     "overall": 4.2,
     "ratings": {
-      "depth": 4,
+      "richness": 4,
       "craft": 3.9,
       "ambiance": 4.4,
       "character": 4.2,
@@ -532,7 +547,8 @@
     "tags": [
       "cozy",
       "pastries",
-      "scenic"
+      "scenic",
+      "outdoor-seating"
     ],
     "price": "$$",
     "mapsUrl": "https://maps.app.goo.gl/4PZuBzWyXTyoYshm8",
@@ -555,7 +571,7 @@
     "lng": 11.3940355,
     "overall": 4.1,
     "ratings": {
-      "depth": 3.8,
+      "richness": 3.8,
       "craft": 3.9,
       "ambiance": 4.2,
       "character": 4.1,
@@ -565,7 +581,8 @@
     "tags": [
       "cozy",
       "pastries",
-      "scenic"
+      "scenic",
+      "outdoor-seating"
     ],
     "price": "$$",
     "mapsUrl": "https://maps.app.goo.gl/NdLHszhJFj3SBwCG8",
@@ -588,7 +605,7 @@
     "lng": 11.8599695,
     "overall": 3.4,
     "ratings": {
-      "depth": 3.3,
+      "richness": 3.3,
       "craft": 3.4,
       "ambiance": 4.2,
       "character": 2.9,
@@ -596,7 +613,7 @@
     },
     "note": "Okay coffee with good eats and an amazing view.",
     "tags": [
-      "outdoor",
+      "outdoor-seating",
       "scenic"
     ],
     "price": "$$",
@@ -620,7 +637,7 @@
     "lng": 8.506749,
     "overall": 3.8,
     "ratings": {
-      "depth": 3.7,
+      "richness": 3.7,
       "craft": 3.3,
       "ambiance": 4.2,
       "character": 3.7,
@@ -630,7 +647,8 @@
     "tags": [
       "lively",
       "laptop-friendly",
-      "study"
+      "study",
+      "outdoor-seating"
     ],
     "price": "$",
     "mapsUrl": "https://maps.app.goo.gl/rUeRfPGPnyenwuJT8",
@@ -659,7 +677,7 @@
     "lng": 14.429897,
     "overall": 4.4,
     "ratings": {
-      "depth": 4.2,
+      "richness": 4.2,
       "craft": 4.3,
       "ambiance": 4.3,
       "character": 4.2,
@@ -696,7 +714,7 @@
     "lng": 14.4339102,
     "overall": 4.1,
     "ratings": {
-      "depth": 4,
+      "richness": 4,
       "craft": 4.5,
       "ambiance": 4.2,
       "character": 3.9,
@@ -706,7 +724,8 @@
     "tags": [
       "modern",
       "lively",
-      "food"
+      "food",
+      "outdoor-seating"
     ],
     "price": "$$",
     "mapsUrl": "https://www.google.com/maps/place/Sweet+%26+Pepper+DAYS/@50.0765174,14.4335883,20z/data=!4m6!3m5!1s0x470b948ef4d8ca55:0x30b0ae554241a557!8m2!3d50.0765174!4d14.4339102!16s%2Fg%2F1q6kk8t68?entry=ttu&g_ep=EgoyMDI2MDgwNS4xIKXMDSoASAFQAw%3D%3D",
@@ -730,7 +749,7 @@
     "lng": -122.0104416,
     "overall": 4.5,
     "ratings": {
-      "depth": 4.6,
+      "richness": 4.6,
       "craft": 4.1,
       "ambiance": 4.2,
       "character": 4.3,
@@ -741,7 +760,7 @@
       "lively",
       "crowded",
       "laptop-friendly",
-      "outdoor",
+      "outdoor-seating",
       "cozy"
     ],
     "price": "$$",
@@ -764,7 +783,7 @@
     "lng": -122.0383091,
     "overall": 3.8,
     "ratings": {
-      "depth": 3.5,
+      "richness": 3.5,
       "craft": 3.9,
       "ambiance": 4.3,
       "character": 4,
@@ -791,7 +810,7 @@
     "lng": 120.070428,
     "overall": 4.7,
     "ratings": {
-      "depth": 4.6,
+      "richness": 4.6,
       "craft": 4.8,
       "ambiance": 4.3,
       "character": 4.5,
@@ -804,7 +823,7 @@
       "laptop-friendly",
       "hidden-gem",
       "scenic",
-      "outdoor",
+      "outdoor-seating",
       "unique"
     ],
     "price": "$",
@@ -839,7 +858,7 @@
     "lng": -88.1165158,
     "overall": 3.9,
     "ratings": {
-      "depth": 3.8,
+      "richness": 3.8,
       "craft": 3.7,
       "ambiance": 4.4,
       "character": 4.1,
@@ -849,7 +868,8 @@
     "tags": [
       "study",
       "laptop-friendly",
-      "cozy"
+      "cozy",
+      "outdoor-seating"
     ],
     "price": "$$",
     "story": "Some unnamed individual spilled there entire coffee on the table here.",
@@ -868,7 +888,7 @@
     "lng": -87.9833323,
     "overall": 4.1,
     "ratings": {
-      "depth": 4.1,
+      "richness": 4.1,
       "craft": 4.1,
       "ambiance": 4.3,
       "character": 4,
@@ -880,7 +900,7 @@
       "lively",
       "laptop-friendly",
       "study",
-      "outdoor"
+      "outdoor-seating"
     ],
     "price": "$$",
     "mapsUrl": "https://maps.app.goo.gl/6rpBRNQYzuP4wWcw7",
@@ -892,13 +912,12 @@
     "name": "Colectivo Coffee Wicker Park",
     "area": "Chicago",
     "country": "USA",
-    "state": "Illinois",
     "type": "coffee",
     "lat": 41.9036121,
     "lng": -87.6770481,
     "overall": 4.3,
     "ratings": {
-      "depth": 4.1,
+      "richness": 4.1,
       "craft": 4.1,
       "ambiance": 4.5,
       "character": 4.2,
@@ -909,12 +928,20 @@
       "cozy",
       "modern",
       "lively",
-      "unique"
+      "unique",
+      "outdoor-seating"
     ],
     "price": "$$",
     "mapsUrl": "https://maps.app.goo.gl/6KcCP9W1Zo6v4wsEA",
     "visited": [
       "Aug 16, 2025"
+    ],
+    "state": "Illinois",
+    "photos": [
+      {
+        "src": "images/colectivo-coffee-wicker-park_2025-08-16.jpg",
+        "date": "Aug 16, 2025"
+      }
     ]
   },
   {
@@ -926,7 +953,7 @@
     "lng": 7.4524479,
     "overall": 4.4,
     "ratings": {
-      "depth": 4.3,
+      "richness": 4.3,
       "craft": 4.2,
       "ambiance": 4.7,
       "character": 4.2,
@@ -936,7 +963,7 @@
     "tags": [
       "lively",
       "unique",
-      "outdoor",
+      "outdoor-seating",
       "scenic"
     ],
     "price": "$$",
@@ -961,7 +988,7 @@
     "lng": 6.8723405,
     "overall": 4.3,
     "ratings": {
-      "depth": 4.4,
+      "richness": 4.4,
       "craft": 4.5,
       "ambiance": 3.8,
       "character": 4,
@@ -988,7 +1015,7 @@
     "lng": 2.3547252,
     "overall": 4.2,
     "ratings": {
-      "depth": 3.9,
+      "richness": 3.9,
       "craft": 4,
       "ambiance": 4.5,
       "character": 4.2,
@@ -1021,7 +1048,7 @@
     "lng": 2.3418,
     "overall": 3.4,
     "ratings": {
-      "depth": 3.6,
+      "richness": 3.6,
       "craft": 3.5,
       "ambiance": 4,
       "character": 3.9,
@@ -1041,6 +1068,305 @@
       {
         "src": "images/bo-mie-montmartre_2025-06-11.jpg",
         "date": "Jun 11, 2025"
+      }
+    ]
+  },
+  {
+    "name": "Big Shoulders Coffee - Board of Trade",
+    "area": "Chicago",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 41.877256,
+    "lng": -87.6323276,
+    "overall": 3.4,
+    "ratings": {
+      "richness": 3.7,
+      "craft": 3.6,
+      "ambiance": 1.5,
+      "character": 3.5,
+      "value": 3.5
+    },
+    "note": "Moreso a place to go for a quick coffee if you work at the Board of Trade. Otherwise, just a plain coffee.",
+    "tags": [],
+    "price": "$$",
+    "mapsUrl": "https://www.google.com/maps/place/Big+Shoulders+Coffee/@41.8809901,-87.6473006,14.9z/data=!4m10!1m2!2m1!1sBig+Shoulders+Coffee!3m6!1s0x880e2d04a3063a5d:0x163a9ac2a3dbf654!8m2!3d41.877256!4d-87.6323276!15sChRCaWcgU2hvdWxkZXJzIENvZmZlZSIDiAEBWhYiFGJpZyBzaG91bGRlcnMgY29mZmVlkgELY29mZmVlX3Nob3DgAQA!16s%2Fg%2F11g0jy_0dl?entry=ttu&g_ep=EgoyMDI2MDgxMi4wIKXMDSoASAFQAw%3D%3D",
+    "visited": [
+      "Jul 28, 2025"
+    ],
+    "state": "Illinois",
+    "photos": [
+      {
+        "src": "images/big-shoulders-coffee-board-of-trade_2025-07-28.jpg",
+        "date": "Jul 28, 2025"
+      }
+    ]
+  },
+  {
+    "name": "Capital One Café",
+    "area": "Chicago",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 41.8805444,
+    "lng": -87.6280832,
+    "overall": 3.7,
+    "ratings": {
+      "richness": 3.8,
+      "craft": 3.7,
+      "ambiance": 3.9,
+      "character": 3.2,
+      "value": 4
+    },
+    "note": "Nice place to work and get 50% off verve coffee if you use Capital One.",
+    "tags": [
+      "laptop-friendly",
+      "study"
+    ],
+    "mapsUrl": "https://maps.app.goo.gl/gZnHiwfHQhJxr3aPA",
+    "visited": [
+      "Jul 20, 2025"
+    ],
+    "state": "Illinois",
+    "photos": [
+      {
+        "src": "images/capital-one-cafe_2025-07-20.jpg",
+        "date": "Jul 20, 2025"
+      },
+      {
+        "src": "images/capital-one-cafe_2025-07-20-2.jpg",
+        "date": "Jul 20, 2025"
+      }
+    ]
+  },
+  {
+    "name": "Starbucks Reserve Roastery",
+    "area": "Chicago",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 41.893924,
+    "lng": -87.6245973,
+    "overall": 4.2,
+    "ratings": {
+      "richness": 4.3,
+      "craft": 4.4,
+      "ambiance": 4.3,
+      "character": 4,
+      "value": 3.9
+    },
+    "note": "Crowded touristy starbucks reserve with beautiful design and architecture - just go here once in your life.",
+    "tags": [
+      "modern",
+      "lively",
+      "crowded"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/kgccdHXmGoXHc1257",
+    "visited": [
+      "Aug 2, 2025"
+    ],
+    "state": "Illinois",
+    "photos": [
+      {
+        "src": "images/starbucks-reserve-roastery_2025-08-02.jpg",
+        "date": "Aug 2, 2025"
+      },
+      {
+        "src": "images/starbucks-reserve-roastery_2025-08-02-2.jpg",
+        "date": "Aug 2, 2025"
+      }
+    ]
+  },
+  {
+    "name": "85°C Bakery Cafe - Cupertino",
+    "area": "Cupertino",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.323904,
+    "lng": -122.011104,
+    "overall": 3.8,
+    "ratings": {
+      "richness": 3.8,
+      "craft": 3.8,
+      "ambiance": 3.5,
+      "character": 3.4,
+      "value": 3.8
+    },
+    "note": "The pastries here are decent (although fallen off over the years), and the coffee is fine.",
+    "tags": [
+      "pastries",
+      "outdoor-seating"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/q74Nbiyc3xJzM3ebA",
+    "visited": [
+      "May 15, 2025"
+    ],
+    "state": "California",
+    "photos": [
+      {
+        "src": "images/85-c-bakery-cafe-cupertino_2025-05-15.jpg",
+        "date": "May 15, 2025"
+      }
+    ]
+  },
+  {
+    "name": "Caffè Macs - Apple Park",
+    "area": "Cupertino",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.3325545,
+    "lng": -122.0053756,
+    "overall": 4.6,
+    "ratings": {
+      "richness": 4.4,
+      "craft": 4.5,
+      "ambiance": 4.7,
+      "character": 4.5,
+      "value": 4
+    },
+    "note": "A part of the Apple ecosystem I didn't know I needed. Unironically one of the most beautiful cafes in the world.",
+    "tags": [
+      "modern",
+      "lively",
+      "laptop-friendly",
+      "unique",
+      "outdoor-seating"
+    ],
+    "price": "$$",
+    "story": "Attached to the Apple park exclusive store, so it might end up being your most expensive cup of coffee.",
+    "mapsUrl": "https://maps.app.goo.gl/Wu7THTP4gHpxnw4u9",
+    "visited": [
+      "May 30, 2024",
+      "Jun 1, 2024"
+    ],
+    "state": "California",
+    "photos": [
+      {
+        "src": "images/caffe-macs-apple-park_2024-06-01.jpg",
+        "date": "Jun 1, 2024"
+      },
+      {
+        "src": "images/caffe-macs-apple-park_2024-06-01-2.jpg",
+        "date": "Jun 1, 2024"
+      },
+      {
+        "src": "images/caffe-macs-apple-park_2024-06-01-3.jpg",
+        "date": "Jun 1, 2024"
+      },
+      {
+        "src": "images/caffe-macs-apple-park_2024-06-01-4.jpg",
+        "date": "Jun 1, 2024"
+      }
+    ]
+  },
+  {
+    "name": "Bitter + Sweet",
+    "area": "Cupertino",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.3182355,
+    "lng": -122.031511,
+    "overall": 4.3,
+    "ratings": {
+      "richness": 4.3,
+      "craft": 4.4,
+      "ambiance": 4.5,
+      "character": 4.5,
+      "value": 4
+    },
+    "note": "Local hidden-gem with great coffee, famous red-velvet latte, and unique design (they sometimes have pho coffee).",
+    "tags": [
+      "cozy",
+      "lively",
+      "unique",
+      "laptop-friendly",
+      "experimental",
+      "hidden-gem"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/SFXWRqjNM4HwqjjLA",
+    "visited": [
+      "Nov 22, 2025"
+    ],
+    "state": "California",
+    "photos": [
+      {
+        "src": "images/bitter-sweet_2026-08-17.jpg",
+        "date": "Aug 17, 2026"
+      }
+    ]
+  },
+  {
+    "name": "CAFE BANDÚ",
+    "area": "Granada",
+    "country": "Spain",
+    "type": "coffee",
+    "lat": 37.0055529,
+    "lng": -3.9912992,
+    "overall": 4,
+    "ratings": {
+      "richness": 4.2,
+      "craft": 3.9,
+      "ambiance": 4,
+      "character": 4.1,
+      "value": 4
+    },
+    "note": "Good food and good coffee, but seems like a hit or miss based on the reviews.",
+    "tags": [
+      "quiet",
+      "outdoor-seating",
+      "pastries"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/NThvu7UVoAg77jcQ6",
+    "visited": [
+      "Dec 27, 2023"
+    ],
+    "photos": [
+      {
+        "src": "images/cafe-bandu_2023-12-27.jpg",
+        "date": "Dec 27, 2023"
+      }
+    ]
+  },
+  {
+    "name": "Voyager Craft Coffee - CoDa Stanford",
+    "area": "Stanford",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.4299562,
+    "lng": -122.1716588,
+    "overall": 4.1,
+    "ratings": {
+      "richness": 4.1,
+      "craft": 3.9,
+      "ambiance": 4.1,
+      "character": 4.3,
+      "value": 4
+    },
+    "note": "Cafe in the Computing and Data Science building with lots of study spots. Interesting international themed coffee menu and decent matcha too.",
+    "tags": [
+      "modern",
+      "lively",
+      "laptop-friendly",
+      "study",
+      "crowded",
+      "outdoor-seating"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/GgFY81XMo5H6Ak6B6",
+    "visited": [
+      "Mar 12, 2025",
+      "Aug 17, 2026"
+    ],
+    "state": "California",
+    "photos": [
+      {
+        "src": "images/voyager-craft-coffee-coda-stanford_2026-08-17.jpg",
+        "date": "Aug 17, 2026"
+      },
+      {
+        "src": "images/voyager-craft-coffee-coda-stanford_2026-08-17-2.jpg",
+        "date": "Aug 17, 2026"
       }
     ]
   }

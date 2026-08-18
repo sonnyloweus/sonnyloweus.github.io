@@ -32,6 +32,13 @@
     --coffee-dark:#3A2712;
     --ceramic:#FBF8F2;
     --ceramic-edge:#DDD5C5;
+    /* Compare-feature colors for "shop A" / "shop B" — a translucent white
+       and a translucent tan, drawn as two overlapping foam traces on the
+       same coffee cup radar. Reused for every paired compare element
+       (search dots, name dots, radar) so the two shops are always the
+       same color everywhere in the panel. */
+    --compare-a:#FFFFFF;
+    --compare-b:#B9863E;
     /* Safe-area insets — 0px on devices without a notch/home-indicator,
        and the real inset (with viewport-fit=cover) on ones that have it. */
     --safe-t: env(safe-area-inset-top, 0px);
@@ -86,6 +93,18 @@
   /* #count no longer needs its own leading margin — the .brand-gap either
      side of it now owns that spacing (and centers the dot within it). */
   .brand #count{ margin-left:0; }
+  /* Shown in place of the "N in view · avg" text while that count is stale
+     or not yet known — the initial data fetch, and the staggered marker
+     pop-in that follows it (see revealMarkers/showCountSpinner in the
+     script below). Sized to sit on the text baseline like a lowercase
+     letter would. */
+  .count-spinner{
+    display:inline-block; width:9px; height:9px; vertical-align:-1.5px;
+    border:1.5px solid rgba(255,255,255,0.32); border-top-color:#fff;
+    border-radius:50%;
+    animation:count-spin 0.7s linear infinite;
+  }
+  @keyframes count-spin{ to{ transform:rotate(360deg); } }
   /* The title needs to always render on a single line — left as a bare
      text node it was an anonymous flex item with no flex-shrink/min-width
      override, so at narrow widths the flexbox shrink algorithm would wrap
@@ -119,6 +138,7 @@
     display:inline-flex; margin-left:0; color:rgba(255,255,255,0.62); flex:none;
     transition:color 0.2s ease;
   }
+  .brand-sigma svg{ width:13px; height:13px; }
   .brand.open .brand-sigma{ color:#fff; }
   .brand-chevron{
     display:inline-flex; margin-left:7px; color:rgba(255,255,255,0.62); flex:none;
@@ -176,6 +196,9 @@
   .stats-row.stack b{ text-align:left; font-size:11.5px; }
   .stats-hist{ display:flex; align-items:flex-end; gap:2px; height:26px; margin-top:10px; }
   .stats-bar{ flex:1; background:rgba(59,42,30,0.25); border-radius:2px 2px 0 0; min-height:2px; }
+  .stats-curve{ margin-top:10px; height:44px; }
+  .stats-curve svg{ width:100%; height:100%; display:block; overflow:visible; }
+  .stats-axis-label{ font-size:8px; fill:var(--dim); font-family:'Inter',sans-serif; }
   .stats-divider{ height:1px; background:var(--line); margin:11px 0 9px; }
   .stats-fun-title{
     font-size:9.5px; font-weight:600; text-transform:uppercase;
@@ -187,9 +210,9 @@
      #settings-card — so this base rule set has to stay generic (padding,
      scroll, sizing all included) and match what compare/settings actually
      need. The custom-scrollbar treatment below is scoped to #filter-card
-     specifically via ID (which outranks the shared class), so compare and
-     settings keep their original plain padded/auto-scroll behavior instead
-     of losing their padding to it. */
+     and #settings-card specifically via ID (which outranks the shared
+     class), so compare keeps its original plain padded/auto-scroll
+     behavior instead of losing its padding to it. */
   .filter-card{
     width:210px;
     max-height:0;
@@ -217,15 +240,15 @@
     padding:14px 16px 20px;
     box-shadow:0 24px 60px rgba(21,18,16,0.32);
   }
-  /* ---- #filter-card only: swaps the native scroll above for a custom,
-     always-visible, light-brown one (see the JS-driven #filter-scrollbar-*
-     elements). Native scrollbars can't be reliably clipped to a rounded
-     container across browsers, and current Chrome (~121+) ignores a styled
-     ::-webkit-scrollbar for its auto-hiding overlay scrollbar anyway, so
-     this panel gets its own inner scroller instead of relying on the
-     shared .filter-card.show behavior above. ---- */
-  #filter-card{ position:relative; } /* anchors the custom scrollbar */
-  #filter-card.show{
+  /* ---- #filter-card and #settings-card: swap the native scroll above for
+     a custom, always-visible, light-brown one (see the JS-driven
+     #*-scrollbar-* elements, one pair per panel). Native scrollbars can't
+     be reliably clipped to a rounded container across browsers, and current
+     Chrome (~121+) ignores a styled ::-webkit-scrollbar for its auto-hiding
+     overlay scrollbar anyway, so these panels get their own inner scroller
+     instead of relying on the shared .filter-card.show behavior above. ---- */
+  #filter-card, #settings-card{ position:relative; } /* anchors the custom scrollbar */
+  #filter-card.show, #settings-card.show{
     /* Outer just clips to the rounded corners now; the real scroll cap
        lives on .filter-scroll below. 34px = .filter-scroll's own
        top+bottom padding, so the outer stays tall enough not to clip it. */
@@ -267,8 +290,10 @@
   .filter-range-value{ font-size:11px; color:var(--dim); text-align:center; margin-bottom:8px; }
   .filter-range-value b{ color:var(--ink); font-weight:600; }
   /* Same bars as the stats panel's rating histogram, just sized to sit
-     snugly between the lo–hi readout and the range slider it previews. */
-  .filter-card .stats-hist{ height:22px; margin:0 0 10px; }
+     snugly between the lo–hi readout and the range slider it previews —
+     just enough bottom margin to keep the bars and the slider track from
+     visually touching. */
+  .filter-card .stats-hist{ height:22px; margin:0 0 3px; }
   .chip-row{ display:flex; gap:6px; flex-wrap:wrap; }
   .chip{
     font-size:11px; padding:5px 10px; border-radius:999px;
@@ -305,6 +330,49 @@
     font-size:10.5px; font-weight:600; text-align:center;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
+  .compare-name-dot{
+    display:inline-block; width:6px; height:6px; border-radius:50%;
+    margin-right:4px; vertical-align:middle;
+    border:1px solid var(--ceramic-edge); /* the white swatch needs an edge to read against a white row */
+  }
+
+  /* ---- Head-to-head: search-with-autocomplete selectors ---- */
+  #compare-card{ width:280px; }
+  .compare-search-row{ position:relative; }
+  .compare-search-dot{
+    position:absolute; left:9px; top:50%; transform:translateY(-50%);
+    width:7px; height:7px; border-radius:50%; pointer-events:none;
+    border:1px solid var(--ceramic-edge);
+  }
+  .compare-search-input{
+    width:100%; font-family:inherit; font-size:12px;
+    padding:8px 10px 8px 22px; margin-bottom:8px;
+    border:1px solid var(--line); border-radius:8px;
+    background:#fff; color:var(--ink);
+  }
+  .compare-search-input:focus{ outline:none; border-color:var(--tier-2); }
+  .compare-suggestions{
+    position:absolute; left:0; right:0; top:calc(100% - 4px); z-index:20;
+    background:#fff; border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 12px 28px rgba(21,18,16,0.18);
+    max-height:190px; overflow-y:auto; display:none;
+  }
+  .compare-suggestions.show{ display:block; }
+  .compare-suggestion{
+    padding:7px 10px; font-size:11.5px; cursor:pointer;
+    display:flex; flex-direction:column; gap:1px;
+  }
+  .compare-suggestion b{ font-weight:600; font-size:12px; }
+  .compare-suggestion span{ color:var(--dim); font-size:10.5px; }
+  .compare-suggestion:hover, .compare-suggestion.active{ background:var(--bg); }
+  .compare-suggestion-empty{ padding:10px; font-size:11px; color:var(--dim); text-align:center; }
+  .compare-radar{ margin:4px auto 8px; max-width:88%; }
+  .compare-radar svg{ display:block; width:100%; height:auto; }
+  .compare-extra-row{
+    font-size:10.5px; color:var(--dim); text-align:center;
+    margin:8px 0 0; line-height:1.5;
+  }
+  .compare-extra-row b{ color:var(--ink); font-weight:600; }
   .filter-dot{
     display:inline-block; width:5px; height:5px; border-radius:50%;
     background:var(--accent); margin-left:5px; vertical-align:middle;
@@ -333,10 +401,16 @@
     width:32px; height:32px; padding:0;
     display:flex; align-items:center; justify-content:center;
   }
+  /* Lucide icons ship as 24x24 with no inline sizing, unlike the hand-drawn
+     SVGs they replaced (which set width/height right on the tag) — so the
+     icon buttons need an explicit desktop size here. Same specificity as
+     the mobile `.toggle-icon svg{ width:17px }` override below, so source
+     order (this rule first) decides which wins at each breakpoint, same as
+     the rest of this file's cascade. */
+  .toggle-icon svg{ width:15px; height:15px; stroke-width:1.75; }
   .toggle-icon .filter-dot{
     position:absolute; top:5px; right:5px; margin-left:0;
   }
-  #help-btn{ font-size:13px; font-weight:600; }
   .search-pill{
     --icon-size:32px;
     width:32px;
@@ -358,6 +432,10 @@
     z-index:1;
     transition:background 0.15s ease, color 0.15s ease, left 0.15s ease, box-shadow 0.15s ease;
   }
+  /* Slightly smaller than the other toggle icons, and needs to win over the
+     shared `.toggle-icon svg` rule above at equal specificity — placed
+     after it in source order for that. */
+  .search-icon-wrap svg{ width:14px; height:14px; stroke-width:1.75; }
   .search-pill.expanded .search-icon-wrap{
     left:calc(var(--icon-size) * -0.2);
     background:var(--accent); color:#fff;
@@ -639,6 +717,17 @@
   .switch.on{ background:var(--accent); }
   .switch.on .switch-knob{ left:16px; }
 
+  .palette-row{ display:flex; gap:8px; padding:2px 0 10px; }
+  .palette-swatch{
+    display:flex; flex:1; height:22px; border-radius:7px; overflow:hidden;
+    cursor:pointer; border:2px solid transparent; transition:border-color 0.15s ease, transform 0.15s ease;
+  }
+  .palette-swatch span{ flex:1; }
+  .palette-swatch:hover{ transform:translateY(-1px); }
+  .palette-swatch.active{ border-color:var(--ink); }
+  .palette-name{ font-size:10.5px; color:var(--dim); text-align:center; flex:1; }
+  .palette-names{ display:flex; gap:8px; margin:-4px 0 9px; }
+
   /* ---- Mobile: bigger touch targets on the toolbar, a little more
      breathing room between stacked buttons, and slightly roomier text
      entry so search doesn't feel cramped under a thumb. ---- */
@@ -668,11 +757,8 @@
 </head>
 <body>
 
-<div class="brand" id="brand"><span class="brand-title">Caffinated Sonny</span><span class="brand-gap"><span class="brand-dot">&middot;</span></span><span id="count"></span><span class="brand-gap"><span class="brand-dot">&middot;</span></span><span class="brand-icons"><span class="brand-sigma" title="Stats">
-    <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-      <rect x="2.5" y="2.5" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/>
-      <path d="M5 5.5H11M5 8H11M5 10.5H8.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-    </svg>
+<div class="brand" id="brand"><span class="brand-title">Caffinated Sonny</span><span class="brand-gap"><span class="brand-dot">&middot;</span></span><span id="count"><span class="count-spinner" aria-hidden="true"></span></span><span class="brand-gap"><span class="brand-dot">&middot;</span></span><span class="brand-icons"><span class="brand-sigma" title="Stats">
+    <i data-lucide="square-function"></i>
   </span>
   <svg class="brand-chevron" width="9" height="9" viewBox="0 0 10 10" fill="none">
     <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
@@ -690,7 +776,7 @@
   <div class="stats-row"><span>Median</span><b id="s-median"></b></div>
   <div class="stats-row"><span>Std dev</span><b id="s-stddev"></b></div>
   <div class="stats-row"><span>Range</span><b id="s-range"></b></div>
-  <div class="stats-hist" id="stats-hist"></div>
+  <div class="stats-curve" id="stats-hist"></div>
   <div class="stats-divider"></div>
   <div class="stats-fun-title">Just for fun</div>
   <div class="stats-row"><span>Cups had</span><b id="s-cups"></b></div>
@@ -711,10 +797,7 @@
 <div class="toggle-group">
   <div class="toggle toggle-icon search-pill" id="toggle-search" title="Search" aria-label="Search shops by name, area, or country">
     <span class="search-icon-wrap">
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-        <circle cx="7" cy="7" r="5.3" stroke="currentColor" stroke-width="1.6"/>
-        <path d="M11.3 11.3L15 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-      </svg>
+      <i data-lucide="search"></i>
     </span>
     <input type="text" class="search-input" id="search-input" placeholder="Search" autocomplete="off">
     <button type="button" class="search-clear" id="search-clear" title="Clear search" aria-label="Clear search">
@@ -725,9 +808,7 @@
   </div>
 
   <div class="toggle toggle-icon" id="toggle-filter" title="Filter" aria-label="Filter shops">
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <path d="M2 3.5H14M4.5 8H11.5M7 12.5H9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-    </svg>
+    <i data-lucide="funnel"></i>
   </div>
 
   <div class="filter-card" id="filter-card">
@@ -756,27 +837,35 @@
   </div>
 
   <div class="toggle toggle-icon" id="toggle-compare" title="Compare" aria-label="Compare shops head to head">
-    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-      <path d="M2 5.5H12.5M12.5 5.5L9.5 2.5M12.5 5.5L9.5 8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M14 10.5H3.5M3.5 10.5L6.5 7.5M3.5 10.5L6.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
+    <i data-lucide="scale"></i>
   </div>
 
   <div class="filter-card" id="compare-card">
     <div class="filter-label">Head to head</div>
-    <select class="compare-select" id="compare-a"></select>
-    <select class="compare-select" id="compare-b"></select>
+
+    <div class="compare-search-row">
+      <span class="compare-search-dot" style="background:var(--compare-a)"></span>
+      <input type="text" class="compare-search-input" id="compare-search-a" placeholder="Search a shop…" autocomplete="off">
+      <div class="compare-suggestions" id="compare-suggestions-a"></div>
+    </div>
+    <div class="compare-search-row">
+      <span class="compare-search-dot" style="background:var(--compare-b)"></span>
+      <input type="text" class="compare-search-input" id="compare-search-b" placeholder="Search a shop…" autocomplete="off">
+      <div class="compare-suggestions" id="compare-suggestions-b"></div>
+    </div>
+
+    <div class="compare-radar" id="compare-radar"></div>
     <div class="compare-results" id="compare-results"></div>
+    <div class="compare-extra-row" id="compare-tags-shared"></div>
+    <div class="compare-extra-row" id="compare-distance"></div>
   </div>
 
   <div class="toggle toggle-icon" id="toggle-settings" title="Settings" aria-label="Map settings">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13.09H2.91a2 2 0 0 1 0-4H3a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
+    <i data-lucide="settings"></i>
   </div>
 
   <div class="filter-card" id="settings-card">
+    <div class="filter-scroll" id="settings-scroll">
     <div class="filter-label">Map settings</div>
     <div class="switch-block">
       <div class="switch-row">
@@ -792,9 +881,42 @@
       </div>
       <p class="switch-caption">Draws a line connecting your visits in chronological order.</p>
     </div>
+    <div class="switch-block">
+      <div class="switch-row">
+        <span>Rating colors</span>
+      </div>
+      <div class="palette-row" id="palette-row">
+        <div class="palette-swatch active" data-palette="roast" title="Roast">
+          <span style="background:#C5AD9B"></span><span style="background:#A67D5E"></span><span style="background:#8F694D"></span><span style="background:#543D2B"></span>
+        </div>
+        <div class="palette-swatch" data-palette="blossom" title="Blossom">
+          <span style="background:#E7C6C0"></span><span style="background:#CD8478"></span><span style="background:#B15E52"></span><span style="background:#652A26"></span>
+        </div>
+        <div class="palette-swatch" data-palette="coldbrew" title="Cold Brew">
+          <span style="background:#C9DCE3"></span><span style="background:#7CA8B9"></span><span style="background:#57879C"></span><span style="background:#2A4A61"></span>
+        </div>
+      </div>
+      <div class="palette-names">
+        <span class="palette-name">Roast</span>
+        <span class="palette-name">Blossom</span>
+        <span class="palette-name">Cold Brew</span>
+      </div>
+      <p class="switch-caption">Sets the color gradient used for rating bubbles, from your lowest tier to your highest.</p>
+    </div>
+    <div class="switch-block">
+      <div class="switch-row">
+        <span>Normalize ratings</span>
+        <div class="switch" id="switch-normalize"><div class="switch-knob"></div></div>
+      </div>
+      <p class="switch-caption">Rescales ratings so your lowest becomes 0 and your highest becomes 5, stretching bubble colors across your full range.</p>
+    </div>
+    </div>
+    <div class="filter-scrollbar-track" id="settings-scrollbar-track">
+      <div class="filter-scrollbar-thumb" id="settings-scrollbar-thumb"></div>
+    </div>
   </div>
 
-  <div class="toggle toggle-icon" id="help-btn" title="Help" aria-label="Help">?</div>
+  <div class="toggle toggle-icon" id="help-btn" title="Help" aria-label="Help"><i data-lucide="info"></i></div>
 </div>
 
 <div class="scrubber" id="scrubber" style="display:none;">
@@ -871,12 +993,19 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 <script>
+// Renders every <i data-lucide="..."> placeholder (toolbar icons, the stats
+// dropdown's icon, the help button) into inline SVG. All of this page's
+// icon markup is static and already in the DOM by the time this script
+// tag runs, so one call up front is enough — nothing here is added later.
+if(window.lucide) lucide.createIcons();
+
 // Fallback sample data used only if coffee.json can't be fetched
 // (e.g. previewing this file directly instead of via a local/deployed server).
 const FALLBACK_DATA = [
   {name:"Devoción", area:"Williamsburg", country:"USA", type:"coffee", lat:40.7145, lng:-73.9575, overall:4.6,
-   ratings:{depth:4.5, craft:4.7, ambiance:4.2, character:4.0, value:3.5},
+   ratings:{richness:4.5, craft:4.7, ambiance:4.2, character:4.0, value:3.5},
    price:"$$", visited:["Aug 9, 2022","Jan 5, 2026","Mar 12, 2026"],
    note:"Single-origin pourover, roasted on-site.", tags:["pourover","quiet","laptop-friendly"],
    story:"This was my regular spot while building this very site.",
@@ -886,63 +1015,63 @@ const FALLBACK_DATA = [
      {src:"https://picsum.photos/seed/devocion3/500/350", date:"Mar 12, 2026"}
    ]},
   {name:"Sey Coffee", area:"Bushwick", country:"USA", type:"coffee", lat:40.7057, lng:-73.9339, overall:4.8,
-   ratings:{depth:4.8, craft:4.9, ambiance:3.0, character:4.3, value:4.5},
+   ratings:{richness:4.8, craft:4.9, ambiance:3.0, character:4.3, value:4.5},
    price:"$", visited:["Feb 2, 2026"],
    note:"Best filter coffee in the city, full stop.", tags:["filter"],
    photo:"https://picsum.photos/seed/sey/500/350"},
   {name:"Cafe Kitsuné", area:"SoHo", country:"USA", type:"coffee", lat:40.7233, lng:-74.0020, overall:3.9,
-   ratings:{depth:3.0, craft:3.3, ambiance:4.8, character:4.2, value:2.5},
+   ratings:{richness:3.0, craft:3.3, ambiance:4.8, character:4.2, value:2.5},
    price:"$$$", visited:["Apr 20, 2026"],
    note:"Beautiful space, come for the matcha.", tags:["aesthetic","laptop-friendly"],
    photo:"https://picsum.photos/seed/kitsune/500/350"},
   {name:"Partners Coffee", area:"Boerum Hill", country:"USA", type:"coffee", lat:40.6838, lng:-73.9836, overall:4.4,
-   ratings:{depth:4.2, craft:4.3, ambiance:4.0, character:3.7, value:4.0},
+   ratings:{richness:4.2, craft:4.3, ambiance:4.0, character:3.7, value:4.0},
    price:"$$", visited:["May 3, 2026"],
    note:"Great espresso, cozy window seats.", tags:["espresso","laptop-friendly"],
    photo:"https://picsum.photos/seed/partners/500/350"},
   {name:"Abraço", area:"East Village", country:"USA", type:"coffee", lat:40.7282, lng:-73.9857, overall:4.9,
-   ratings:{depth:4.9, craft:5.0, ambiance:3.2, character:4.8, value:4.0},
+   ratings:{richness:4.9, craft:5.0, ambiance:3.2, character:4.8, value:4.0},
    price:"$$", visited:["Jun 14, 2026","Jul 1, 2026"],
    note:"Tiny counter, unreal espresso.", tags:["espresso","standing-room"],
    photo:"https://picsum.photos/seed/abraco/500/350"},
   {name:"Culture Espresso", area:"Midtown", country:"USA", type:"coffee", lat:40.7486, lng:-73.9857, overall:4.1,
-   ratings:{depth:3.8, craft:3.9, ambiance:3.5, character:3.3, value:3.5},
+   ratings:{richness:3.8, craft:3.9, ambiance:3.5, character:3.3, value:3.5},
    price:"$$", visited:["Jul 22, 2026"],
    note:"Good for the neighborhood, great croissants.", tags:["pastries"],
    photo:"https://picsum.photos/seed/culture/500/350"},
   {name:"Ludlow Coffee Supply", area:"Lower East Side", country:"USA", type:"coffee", lat:40.7186, lng:-73.9879, overall:3.6,
-   ratings:{depth:3.3, craft:3.4, ambiance:3.8, character:3.2, value:3.5},
+   ratings:{richness:3.3, craft:3.4, ambiance:3.8, character:3.2, value:3.5},
    price:"$$", visited:["Feb 18, 2026"],
    note:"Solid drip, good people-watching from the window.", tags:["cozy"],
    photo:"https://picsum.photos/seed/ludlow/500/350"},
   {name:"Birch Coffee", area:"Flatiron", country:"USA", type:"coffee", lat:40.7410, lng:-73.9897, overall:4.0,
-   ratings:{depth:3.6, craft:3.8, ambiance:3.5, character:3.0, value:3.5},
+   ratings:{richness:3.6, craft:3.8, ambiance:3.5, character:3.0, value:3.5},
    price:"$$", visited:["Mar 3, 2026","May 22, 2026"],
    note:"Dependable, good wifi, gets crowded at lunch.", tags:["wifi","laptop-friendly"],
    photo:"https://picsum.photos/seed/birch/500/350"},
   {name:"Little Canal", area:"Chinatown", country:"USA", type:"coffee", lat:40.7158, lng:-73.9970, overall:3.3,
-   ratings:{depth:3.0, craft:3.0, ambiance:2.8, character:3.8, value:3.5},
+   ratings:{richness:3.0, craft:3.0, ambiance:2.8, character:3.8, value:3.5},
    price:"$", visited:["Jun 8, 2026"],
    note:"Tiny, easy to miss, decent black coffee.", tags:["hidden-gem"],
    story:"Found this by accident while lost looking for dim sum. Worth the detour.",
    photo:"https://picsum.photos/seed/littlecanal/500/350"},
   {name:"Variety Coffee Roasters", area:"Greenpoint", country:"USA", type:"coffee", lat:40.7305, lng:-73.9527, overall:4.7,
-   ratings:{depth:4.5, craft:4.6, ambiance:4.0, character:4.2, value:4.2},
+   ratings:{richness:4.5, craft:4.6, ambiance:4.0, character:4.2, value:4.2},
    price:"$$", visited:["Feb 27, 2026","Apr 9, 2026","Jul 15, 2026"],
    note:"Consistently excellent, my most-visited spot for a reason.", tags:["espresso","quiet"],
    photo:"https://picsum.photos/seed/variety/500/350"},
   {name:"Onibus Coffee", area:"Nakameguro, Tokyo", country:"Japan", type:"coffee", lat:35.6446, lng:139.6989, overall:4.7,
-   ratings:{depth:4.3, craft:4.5, ambiance:4.9, character:4.6, value:3.8},
+   ratings:{richness:4.3, craft:4.5, ambiance:4.9, character:4.6, value:3.8},
    price:"$$", visited:["Sep 4, 2025"],
    note:"Beautiful old house converted into a cafe, upstairs seating is worth it.", tags:["aesthetic","quiet"],
    photo:"https://picsum.photos/seed/onibus/500/350"},
   {name:"Kaffeine", area:"Fitzrovia, London", country:"UK", type:"coffee", lat:51.5178, lng:-0.1414, overall:4.3,
-   ratings:{depth:4.0, craft:4.3, ambiance:3.7, character:3.8, value:3.3},
+   ratings:{richness:4.0, craft:4.3, ambiance:3.7, character:3.8, value:3.3},
    price:"$$", visited:["Nov 11, 2025"],
    note:"Australian-style flat white done right, always busy.", tags:["espresso","laptop-friendly"],
    photo:"https://picsum.photos/seed/kaffeine/500/350"},
   {name:"Café de Flore", area:"Saint-Germain, Paris", country:"France", type:"coffee", lat:48.8540, lng:2.3325, overall:3.8,
-   ratings:{depth:2.5, craft:2.8, ambiance:4.8, character:4.5, value:1.8},
+   ratings:{richness:2.5, craft:2.8, ambiance:4.8, character:4.5, value:1.8},
    price:"$$$", visited:["Oct 2, 2025"],
    note:"You're paying for the history and the people-watching, not the coffee.", tags:["aesthetic","historic"],
    story:"Sat here for three hours pretending to write the great American novel.",
@@ -969,6 +1098,74 @@ function tierClass(rating){
   return 't1';
 }
 
+// ---------- rating color palettes ----------
+// Three 7-step gradients (lowest tier -> highest) that can be swapped onto
+// the --tier-1..7 CSS custom properties driving bubble colors. "Roast" is
+// the original palette and stays the default.
+const RATING_PALETTES = {
+  roast:    { label:'Roast',     colors:['#C5AD9B','#B6957C','#A67D5E','#8F694D','#72533C','#543D2B','#4A2A16'] },
+  blossom:  { label:'Blossom',   colors:['#E7C6C0','#DDA79D','#CD8478','#B15E52','#8B3F36','#652A26','#421A18'] },
+  coldbrew: { label:'Cold Brew', colors:['#C9DCE3','#A8C5D1','#7CA8B9','#57879C','#3C6780','#2A4A61','#1B2F40'] }
+};
+
+function applyPalette(key){
+  const palette = RATING_PALETTES[key] || RATING_PALETTES.roast;
+  palette.colors.forEach((c, i) => {
+    document.documentElement.style.setProperty(`--tier-${i+1}`, c);
+  });
+}
+
+// ---------- normalized rating display ----------
+// Off by default. When on, every displayed rating is rescaled so the
+// lowest-rated shop in the full dataset reads as 0 and the highest reads
+// as 5 — a linear (affine) transform, so it never changes relative
+// ordering, just stretches the visible range for better differentiation.
+let NORMALIZE_RATINGS = false;
+let ratingBoundsMin = 0, ratingBoundsMax = 5;
+
+function computeRatingBounds(){
+  if(!GLOBAL_DATA || !GLOBAL_DATA.length){ ratingBoundsMin = 0; ratingBoundsMax = 5; return; }
+  const vals = GLOBAL_DATA.map(s => s.overall);
+  ratingBoundsMin = Math.min(...vals);
+  ratingBoundsMax = Math.max(...vals);
+}
+
+function displayRating(raw){
+  if(!NORMALIZE_RATINGS) return raw;
+  if(ratingBoundsMax === ratingBoundsMin) return 5;
+  return ((raw - ratingBoundsMin) / (ratingBoundsMax - ratingBoundsMin)) * 5;
+}
+
+// ---------- settings persistence ----------
+// Everything in the settings panel (clustering, trail, rating palette,
+// normalize toggle) is saved to localStorage as one JSON blob and re-applied
+// on the next visit. Wrapped in try/catch like the intro-modal flag above,
+// since localStorage can throw in private-browsing/sandboxed contexts —
+// storage failures just mean settings don't persist, not a broken page.
+const SETTINGS_KEY = 'coffeeMapSettings';
+function loadStoredSettings(){
+  try{
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  }catch(e){ return {}; }
+}
+function saveStoredSetting(key, value){
+  try{
+    const current = loadStoredSettings();
+    current[key] = value;
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(current));
+  }catch(e){ /* storage unavailable, no-op */ }
+}
+const storedSettings = loadStoredSettings();
+
+// Palette and the normalize flag don't depend on the map or the loaded
+// shop data, so they're restored immediately rather than waiting on
+// init() below — clustering/trail default to on and are restored inside
+// init() instead, once the map layers they control actually exist.
+let activePalette = RATING_PALETTES[storedSettings.palette] ? storedSettings.palette : 'roast';
+applyPalette(activePalette);
+NORMALIZE_RATINGS = !!storedSettings.normalize;
+
 function earliestVisit(shop){
   if(!shop.visited || !shop.visited.length) return null;
   return Math.min(...shop.visited.map(d => new Date(d).getTime()));
@@ -981,7 +1178,7 @@ function formatDay(dayNum){
 function computeStats(list){
   const n = list.length;
   if(n === 0) return null;
-  const vals = list.map(s => s.overall);
+  const vals = list.map(s => displayRating(s.overall));
   const avg = vals.reduce((a,b)=>a+b,0) / n;
   const sorted = [...vals].sort((a,b)=>a-b);
   const median = n % 2 ? sorted[(n-1)/2] : (sorted[n/2-1] + sorted[n/2]) / 2;
@@ -1010,6 +1207,65 @@ function smoothClosedPath(pts, tension){
     d += `C ${c1[0]},${c1[1]} ${c2[0]},${c2[1]} ${p2[0]},${p2[1]} `;
   }
   return d + 'Z';
+}
+
+// Same catmull-rom -> cubic-bezier smoothing as smoothClosedPath above, but
+// for an *open* polyline (a line chart rather than a closed blob) — used by
+// the stats panel's rating-distribution curve.
+function smoothOpenPath(pts, tension){
+  tension = tension === undefined ? 0.55 : tension;
+  const p = i => pts[Math.max(0, Math.min(pts.length-1, i))];
+  let d = `M ${p(0)[0]},${p(0)[1]} `;
+  for(let i=0;i<pts.length-1;i++){
+    const p0=p(i-1), p1=p(i), p2=p(i+1), p3=p(i+2);
+    const c1 = [p1[0] + (p2[0]-p0[0])/6*tension, p1[1] + (p2[1]-p0[1])/6*tension];
+    const c2 = [p2[0] - (p3[0]-p1[0])/6*tension, p2[1] - (p3[1]-p1[1])/6*tension];
+    d += `C ${c1[0]},${c1[1]} ${c2[0]},${c2[1]} ${p2[0]},${p2[1]} `;
+  }
+  return d.trim();
+}
+
+// Builds the smoothed-line "rating distribution" chart for the stats panel
+// (replaces the old bar histogram there — the filter panel keeps its bars,
+// rendered separately in renderStats below). buckets are the same 10
+// half-point bins computeStats already produces; avg comes straight off
+// the same stats object so the dashed guide always matches the Average row.
+function buildHistCurveSvg(buckets, avg){
+  const maxBucket = Math.max(1, ...buckets);
+  const centers = buckets.map((c,i) => (i + 0.5) * 0.5);
+  const W = 188, H = 30; // curve drawing area; axis sits just below it
+  const xOf = v => (v/5) * W;
+  const yOf = c => H - (c/maxBucket) * (H-4) - 2;
+
+  // Zero-height anchor points at 0 and 5 so the curve tapers down to the
+  // axis at both ends instead of getting clipped mid-slope.
+  const pts = [[xOf(0), yOf(0.0001)], ...centers.map((c,i) => [xOf(c), yOf(Math.max(buckets[i], 0.0001))]), [xOf(5), yOf(0.0001)]];
+  const linePath = smoothOpenPath(pts, 0.65);
+  const areaPath = linePath + ` L ${xOf(5)},${H} L ${xOf(0)},${H} Z`;
+
+  const peakIdx = buckets.indexOf(Math.max(...buckets));
+  const peakCenter = centers[peakIdx];
+  const avgX = xOf(Math.max(0, Math.min(5, avg)));
+  const axisY = H + 12;
+
+  return `<svg viewBox="0 0 ${W} ${H+14}" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="hist-curve-fill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--tier-3)" stop-opacity="0.55"/>
+        <stop offset="100%" stop-color="var(--tier-3)" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="${areaPath}" fill="url(#hist-curve-fill)"/>
+    <path d="${linePath}" fill="none" stroke="var(--tier-6)" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="${avgX}" y1="0" x2="${avgX}" y2="${H}" stroke="var(--accent)" stroke-width="1" stroke-dasharray="2,2" opacity="0.55"/>
+    <circle cx="${xOf(peakCenter)}" cy="${yOf(buckets[peakIdx])}" r="2.4" fill="var(--accent)"/>
+    <line x1="${xOf(0)}" y1="${H}" x2="${xOf(0)}" y2="${H+3}" stroke="var(--line)" stroke-width="1"/>
+    <line x1="${xOf(2.5)}" y1="${H}" x2="${xOf(2.5)}" y2="${H+3}" stroke="var(--line)" stroke-width="1"/>
+    <line x1="${xOf(5)}" y1="${H}" x2="${xOf(5)}" y2="${H+3}" stroke="var(--line)" stroke-width="1"/>
+    <text x="${xOf(0)}" y="${axisY}" class="stats-axis-label">0</text>
+    <text x="${xOf(2.5)}" y="${axisY}" text-anchor="middle" class="stats-axis-label">2.5</text>
+    <text x="${xOf(5)}" y="${axisY}" text-anchor="end" class="stats-axis-label">5</text>
+  </svg>`;
 }
 
 // A point-by-point directional stretch: only the component of each point
@@ -1045,7 +1301,22 @@ function stadiumPoints(hx, hy, w, h, n){
 // Per-shop taste-profile "coffee cup" radar for the detail panel: the ratings
 // trace a patch of foam on a cup of coffee viewed from directly above, with
 // a half-pill handle, a gloss highlight, and a fused directional shadow.
-const CATEGORY_ORDER = ['depth','craft','ambiance','character','value'];
+const CATEGORY_ORDER = ['richness','craft','ambiance','character','value'];
+// Ratings cluster hard between 3.5 and 4.5 in practice, so a plain linear
+// v/5 mapping makes every shop's radar look nearly identical. This piecewise
+// map stretches that middle band out to the majority of the radius (1–3.5
+// compressed near the center, 3.5–4.5 = most of the line, 4.5–5 moderate)
+// so shops actually differentiate visually. Used by both renderShopRadar
+// and renderCompareRadar below — identical math, same breakpoints.
+const RADIUS_BREAKPOINTS = [[1,0.0], [3.5,0.18], [4.5,0.82], [5,1.0]];
+function ratingToT(r){
+  if(r <= 1) return 0;
+  if(r >= 5) return 1;
+  for(let i=0;i<RADIUS_BREAKPOINTS.length-1;i++){
+    const [r0,t0] = RADIUS_BREAKPOINTS[i], [r1,t1] = RADIUS_BREAKPOINTS[i+1];
+    if(r <= r1) return t0 + (r-r0)/(r1-r0)*(t1-t0);
+  }
+}
 function renderShopRadar(shop){
   if(!shop.ratings) return '';
   const present = Object.keys(shop.ratings);
@@ -1064,7 +1335,7 @@ function renderShopRadar(shop){
   const lightDeg = 315, feather = 2.5, shadowDist = 34, stretch = 1.4;
   const hw = 40, hh = 22, hx = cx + cupR - 3, hy = cy;
 
-  const dataPts = values.map((v,i) => polarPoint(cx, cy, 6 + (v/5)*blobR, i*step));
+  const dataPts = values.map((v,i) => polarPoint(cx, cy, 6 + ratingToT(v)*blobR, i*step));
   const id = 'radar-' + Math.round(values.reduce((s,v)=>s+v,0)*10) + '-' + keys.length;
 
   // Fused cast shadow: rim + handle silhouettes stretched together as one path.
@@ -1180,6 +1451,16 @@ function renderShopRadar(shop){
   </svg>`;
 }
 
+// Swaps the "N in view · avg" readout in the title bar for a spinner —
+// used whenever that count is about to be stale for a noticeable stretch
+// (the initial coffee.json fetch, and the staggered marker pop-in that
+// follows it). renderStats() below always re-sets #count's textContent once
+// real numbers are ready, which naturally clears the spinner back out.
+function showCountSpinner(){
+  const countEl = document.getElementById('count');
+  if(countEl) countEl.innerHTML = '<span class="count-spinner" aria-hidden="true"></span>';
+}
+
 function renderStats(list){
   const stats = computeStats(list);
   // No leading "· " here anymore — that separator now lives in its own
@@ -1201,11 +1482,12 @@ function renderStats(list){
   document.getElementById('s-stddev').textContent = stats.stddev.toFixed(2);
   document.getElementById('s-range').textContent = `${stats.min.toFixed(1)}–${stats.max.toFixed(1)}`;
   const maxBucket = Math.max(1, ...stats.buckets);
-  // Same bars, rendered twice: once in the stats panel, once above the
-  // rating range slider in the filter panel (see filter-rating-hist) — both
-  // read straight off stats.buckets so they never drift out of sync.
+  // Stats panel gets the smoothed rating-distribution curve; the filter
+  // panel keeps the plain bars above its range slider (a quick preview
+  // strip, not the "math" chart) — both still read off stats.buckets so
+  // they never drift out of sync with each other.
+  document.getElementById('stats-hist').innerHTML = buildHistCurveSvg(stats.buckets, stats.avg);
   const histBarsHtml = stats.buckets.map(c => `<div class="stats-bar" style="height:${Math.max(2,(c/maxBucket)*26)}px" title="${c}"></div>`).join('');
-  document.getElementById('stats-hist').innerHTML = histBarsHtml;
   const filterHist = document.getElementById('filter-rating-hist');
   if(filterHist) filterHist.innerHTML = histBarsHtml;
 
@@ -1219,7 +1501,7 @@ function renderStats(list){
   document.getElementById('s-corr').textContent = fun.corr === null
     ? '—' : (fun.corr >= 0 ? '+' : '') + fun.corr.toFixed(2);
   document.getElementById('s-beloved').textContent = fun.mostBeloved
-    ? `${fun.mostBeloved.name} (${fun.mostBeloved.overall.toFixed(1)})` : '—';
+    ? `${fun.mostBeloved.name} (${displayRating(fun.mostBeloved.overall).toFixed(1)})` : '—';
   document.getElementById('s-distance').textContent = fun.distanceMiles > 0
     ? fun.distanceMiles.toFixed(1) + ' mi' : '—';
   document.getElementById('s-earthlaps').textContent = fun.distanceMiles > 0
@@ -1378,7 +1660,28 @@ function renderPanelPhoto(){
   });
 })();
 
+// Pulled out of showPanel so the "Normalize ratings" toggle can refresh just
+// the overall-rating bits of an already-open panel without resetting the
+// photo carousel or anything else showPanel would otherwise re-render.
+function updatePanelRatingFields(shop){
+  const displayOverall = displayRating(shop.overall);
+  document.getElementById('p-num-overall').textContent = displayOverall.toFixed(1);
+  document.getElementById('p-fill-overall').style.width = (displayOverall/5*100) + '%';
+
+  const contextEl = document.getElementById('p-context');
+  if(GLOBAL_AVG_RATING > 0){
+    const displayAvg = displayRating(GLOBAL_AVG_RATING);
+    const diffPct = Math.round(((displayOverall - displayAvg) / displayAvg) * 100);
+    contextEl.textContent = Math.abs(diffPct) < 2
+      ? 'Right at your average'
+      : `${Math.abs(diffPct)}% ${diffPct > 0 ? 'above' : 'below'} your average`;
+  }else{
+    contextEl.textContent = '';
+  }
+}
+
 function showPanel(shop){
+  lastShownShop = shop;
   panelPhotos = getShopPhotos(shop);
   panelPhotoIndex = 0;
   renderPanelPhoto();
@@ -1400,18 +1703,7 @@ function showPanel(shop){
   }
   document.getElementById('p-meta').textContent = metaParts.join('  ·  ');
 
-  document.getElementById('p-num-overall').textContent = shop.overall.toFixed(1);
-  document.getElementById('p-fill-overall').style.width = (shop.overall/5*100) + '%';
-
-  const contextEl = document.getElementById('p-context');
-  if(GLOBAL_AVG_RATING > 0){
-    const diffPct = Math.round(((shop.overall - GLOBAL_AVG_RATING) / GLOBAL_AVG_RATING) * 100);
-    contextEl.textContent = Math.abs(diffPct) < 2
-      ? 'Right at your average'
-      : `${Math.abs(diffPct)}% ${diffPct > 0 ? 'above' : 'below'} your average`;
-  }else{
-    contextEl.textContent = '';
-  }
+  updatePanelRatingFields(shop);
 
   document.getElementById('p-radar').innerHTML = renderShopRadar(shop);
 
@@ -1426,7 +1718,7 @@ function showPanel(shop){
   document.getElementById('p-tags').textContent = shop.tags.join('  ·  ');
   document.getElementById('panel').classList.add('show');
 }
-function hidePanel(){ document.getElementById('panel').classList.remove('show'); }
+function hidePanel(){ document.getElementById('panel').classList.remove('show'); lastShownShop = null; }
 document.getElementById('p-close').onclick = hidePanel;
 
 document.getElementById('brand').onclick = () => {
@@ -1449,6 +1741,7 @@ document.getElementById('onthisday-close').onclick = () => {
 const INTRO_KEY = 'coffeeMapIntroSeen';
 let GLOBAL_DATA = []; // populated once init() loads the real data
 let GLOBAL_AVG_RATING = 0;
+let lastShownShop = null; // whichever shop the detail panel is currently showing, so rating-display toggles can refresh it in place
 
 // Wired up once init() below builds the markers — lets the modal-close
 // handler replay the map's pop-in animation, since a first-time visitor's
@@ -1553,6 +1846,7 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
   const data = await loadData();
   GLOBAL_DATA = data;
   GLOBAL_AVG_RATING = data.length ? data.reduce((sum, s) => sum + s.overall, 0) / data.length : 0;
+  computeRatingBounds();
   if(introIndex === 1) renderIntroSlide(); // refresh the "Loading the tally…" placeholder if still on that slide
 
   // ---- On this day: surface any past visit that lands on today's month/day ----
@@ -1622,16 +1916,21 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     iconCreateFunction: function(cluster){
       const childMarkers = cluster.getAllChildMarkers();
       const avg = childMarkers.reduce((sum, m) => sum + m.shopRating, 0) / childMarkers.length;
-      const tier = tierClass(avg);
+      const displayAvg = displayRating(avg);
+      const tier = tierClass(displayAvg);
       // Bigger hit target on mobile — easier to land a thumb on than a cursor.
       const w = isMobileViewport ? 50 : 42, h = isMobileViewport ? 31 : 26;
       // Clusters always render above individual pins, no matter how low their
       // average rating is — a cluster represents multiple locations, and
       // letting a single low-rated pin hide that (and its count badge) would
       // bury real information. Base offset (10000) clears the highest
-      // possible individual zIndexOffset (rating 5 * 1000 = 5000); avg rating
-      // is added on top only to break ties between two overlapping clusters.
-      cluster.setZIndexOffset(10000 + Math.round(avg * 1000));
+      // possible individual zIndexOffset (rating 5 * 1000 = 5000).
+      // When two clusters overlap, the bigger one (more shops) wins — it's
+      // representing more information, so it shouldn't get buried under a
+      // smaller-but-higher-rated cluster. Each extra child is worth 1000,
+      // which dwarfs the rating term (avg * 10, max 50), so size always
+      // decides first and rating only breaks a tie between same-size clusters.
+      cluster.setZIndexOffset(10000 + childMarkers.length * 1000 + Math.round(avg * 10));
       // iconCreateFunction re-fires (and Leaflet.markercluster swaps in a
       // brand-new icon element) every time this cluster's membership changes
       // — including every extra pin that lands in it during the staggered
@@ -1645,7 +1944,7 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
       const animStyle = justFormed ? '' : 'animation:none;';
       return L.divIcon({
         className: '',
-        html: `<div class="bubble cluster ${tier}" style="width:${w}px;height:${h}px;${animStyle}">${avg.toFixed(1)}<span class="cluster-count">${childMarkers.length}</span></div>`,
+        html: `<div class="bubble cluster ${tier}" style="width:${w}px;height:${h}px;${animStyle}">${displayAvg.toFixed(1)}<span class="cluster-count">${childMarkers.length}</span></div>`,
         iconSize: [w, h],
         iconAnchor: [w/2, h/2]
       });
@@ -1660,12 +1959,14 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
   });
 
   const plainGroup = L.layerGroup(); // used when clustering is toggled off
-  let clusteringOn = true;
+  let clusteringOn = storedSettings.clustering !== false; // stored value only ever disables; unset/anything else defaults on
+  document.getElementById('switch-clustering').classList.toggle('on', clusteringOn);
   function activeGroup(){ return clusteringOn ? clusterGroup : plainGroup; }
-  map.addLayer(clusterGroup);
+  map.addLayer(activeGroup());
 
   let filters = { ratingLow: 0, ratingHigh: 5, prices: new Set(), tags: new Set(), search: '' };
-  let trailOn = true;
+  let trailOn = storedSettings.trail !== false;
+  document.getElementById('switch-trail').classList.toggle('on', trailOn);
   let trailLine = null;
   let currentVisible = [];
 
@@ -1907,7 +2208,7 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     tagChipsEl.appendChild(chip);
   });
 
-  // ---- filter panel's custom scrollbar ----
+  // ---- custom scrollbar, shared by the filter and settings panels ----
   // Built by hand instead of styling the native one: native scrollbars
   // can't be reliably clipped to a rounded container across browsers (the
   // old thumb poked out past the corners at the ends of its travel), and
@@ -1915,58 +2216,72 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
   // auto-hiding overlay scrollbar, so "always visible" isn't achievable by
   // styling the real one there either. This one is fully within our
   // control: sized/positioned in JS off the real scroll state, and
-  // draggable like the site's other custom sliders.
-  const filterScrollEl = document.getElementById('filter-scroll');
-  const filterTrackEl = document.getElementById('filter-scrollbar-track');
-  const filterThumbEl = document.getElementById('filter-scrollbar-thumb');
+  // draggable like the site's other custom sliders. setupCustomScrollbar
+  // wires up one scroll/track/thumb triplet and returns its update function
+  // so callers (e.g. a panel-open handler) can force a resync on demand.
+  function setupCustomScrollbar(scrollEl, trackEl, thumbEl){
+    if(!scrollEl || !trackEl || !thumbEl) return () => {};
 
-  function updateFilterScrollbar(){
-    if(!filterScrollEl || !filterTrackEl || !filterThumbEl) return;
-    const { scrollTop, scrollHeight, clientHeight } = filterScrollEl;
-    const scrollable = scrollHeight - clientHeight > 1;
-    filterTrackEl.classList.toggle('visible', scrollable);
-    if(!scrollable) return;
-    const trackHeight = filterTrackEl.clientHeight;
-    const thumbHeight = Math.max(24, (clientHeight / scrollHeight) * trackHeight);
-    const maxThumbTop = Math.max(0, trackHeight - thumbHeight);
-    const maxScroll = scrollHeight - clientHeight;
-    const thumbTop = maxScroll > 0 ? (scrollTop / maxScroll) * maxThumbTop : 0;
-    filterThumbEl.style.height = thumbHeight + 'px';
-    filterThumbEl.style.top = thumbTop + 'px';
-  }
-  filterScrollEl.addEventListener('scroll', updateFilterScrollbar);
-  // Height depends on viewport (see the min()/calc() in .filter-scroll), so
-  // recompute whenever that can change, not just when content changes.
-  if('ResizeObserver' in window){
-    new ResizeObserver(updateFilterScrollbar).observe(filterScrollEl);
-  }else{
-    window.addEventListener('resize', updateFilterScrollbar);
-  }
-  updateFilterScrollbar();
+    function update(){
+      const { scrollTop, scrollHeight, clientHeight } = scrollEl;
+      const scrollable = scrollHeight - clientHeight > 1;
+      trackEl.classList.toggle('visible', scrollable);
+      if(!scrollable) return;
+      const trackHeight = trackEl.clientHeight;
+      const thumbHeight = Math.max(24, (clientHeight / scrollHeight) * trackHeight);
+      const maxThumbTop = Math.max(0, trackHeight - thumbHeight);
+      const maxScroll = scrollHeight - clientHeight;
+      const thumbTop = maxScroll > 0 ? (scrollTop / maxScroll) * maxThumbTop : 0;
+      thumbEl.style.height = thumbHeight + 'px';
+      thumbEl.style.top = thumbTop + 'px';
+    }
+    scrollEl.addEventListener('scroll', update);
+    // Height depends on viewport (see the min()/calc() in .filter-scroll), so
+    // recompute whenever that can change, not just when content changes.
+    if('ResizeObserver' in window){
+      new ResizeObserver(update).observe(scrollEl);
+    }else{
+      window.addEventListener('resize', update);
+    }
+    update();
 
-  filterThumbEl.addEventListener('pointerdown', e => {
-    e.preventDefault();
-    filterThumbEl.setPointerCapture(e.pointerId);
-    filterThumbEl.classList.add('dragging');
-    const startY = e.clientY;
-    const startScrollTop = filterScrollEl.scrollTop;
-    const trackHeight = filterTrackEl.clientHeight;
-    const thumbHeight = filterThumbEl.clientHeight;
-    const maxThumbTravel = Math.max(1, trackHeight - thumbHeight);
-    const maxScroll = filterScrollEl.scrollHeight - filterScrollEl.clientHeight;
-    const move = ev => {
-      const dy = ev.clientY - startY;
-      const scrollDelta = (dy / maxThumbTravel) * maxScroll;
-      filterScrollEl.scrollTop = Math.min(maxScroll, Math.max(0, startScrollTop + scrollDelta));
-    };
-    const up = () => {
-      filterThumbEl.classList.remove('dragging');
-      filterThumbEl.removeEventListener('pointermove', move);
-      filterThumbEl.removeEventListener('pointerup', up);
-    };
-    filterThumbEl.addEventListener('pointermove', move);
-    filterThumbEl.addEventListener('pointerup', up);
-  });
+    thumbEl.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      thumbEl.setPointerCapture(e.pointerId);
+      thumbEl.classList.add('dragging');
+      const startY = e.clientY;
+      const startScrollTop = scrollEl.scrollTop;
+      const trackHeight = trackEl.clientHeight;
+      const thumbHeight = thumbEl.clientHeight;
+      const maxThumbTravel = Math.max(1, trackHeight - thumbHeight);
+      const maxScroll = scrollEl.scrollHeight - scrollEl.clientHeight;
+      const move = ev => {
+        const dy = ev.clientY - startY;
+        const scrollDelta = (dy / maxThumbTravel) * maxScroll;
+        scrollEl.scrollTop = Math.min(maxScroll, Math.max(0, startScrollTop + scrollDelta));
+      };
+      const up = () => {
+        thumbEl.classList.remove('dragging');
+        thumbEl.removeEventListener('pointermove', move);
+        thumbEl.removeEventListener('pointerup', up);
+      };
+      thumbEl.addEventListener('pointermove', move);
+      thumbEl.addEventListener('pointerup', up);
+    });
+
+    return update;
+  }
+
+  const updateFilterScrollbar = setupCustomScrollbar(
+    document.getElementById('filter-scroll'),
+    document.getElementById('filter-scrollbar-track'),
+    document.getElementById('filter-scrollbar-thumb')
+  );
+  const updateSettingsScrollbar = setupCustomScrollbar(
+    document.getElementById('settings-scroll'),
+    document.getElementById('settings-scrollbar-track'),
+    document.getElementById('settings-scrollbar-thumb')
+  );
 
   function filtersActive(){
     return filters.ratingLow > 0 || filters.ratingHigh < 5 || filters.prices.size > 0 || filters.tags.size > 0;
@@ -2039,17 +2354,98 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
   });
 
   // ---- Head to head compare ----
-  const compareA = document.getElementById('compare-a');
-  const compareB = document.getElementById('compare-b');
-  const sortedNames = [...data].map(s => s.name).sort((x,y) => x.localeCompare(y));
-  sortedNames.forEach(name => {
-    compareA.insertAdjacentHTML('beforeend', `<option value="${name}">${name}</option>`);
-    compareB.insertAdjacentHTML('beforeend', `<option value="${name}">${name}</option>`);
-  });
-  if(sortedNames.length > 1){
-    compareA.value = sortedNames[0];
-    compareB.value = sortedNames[1];
+  const COMPARE_COLOR_A = 'var(--compare-a)';
+  const COMPARE_COLOR_B = 'var(--compare-b)';
+
+  let compareShopA = null, compareShopB = null;
+  const compareSearchInput = which => document.getElementById('compare-search-' + which);
+  const compareSuggEl = which => document.getElementById('compare-suggestions-' + which);
+
+  function hideCompareSuggestions(which){
+    const el = compareSuggEl(which);
+    el.classList.remove('show');
+    el.innerHTML = '';
+    el._matches = [];
+    el.activeIndex = -1;
   }
+
+  function setCompareShop(which, shop, opts){
+    opts = opts || {};
+    if(which === 'a') compareShopA = shop; else compareShopB = shop;
+    compareSearchInput(which).value = shop ? shop.name : '';
+    hideCompareSuggestions(which);
+    if(!opts.skipRender) renderCompare();
+  }
+
+  function renderCompareSuggestions(which, query){
+    const el = compareSuggEl(which);
+    const other = which === 'a' ? compareShopB : compareShopA;
+    const q = query.trim().toLowerCase();
+    let matches = data.filter(s => !other || s.name !== other.name);
+    if(q){
+      matches = matches.filter(s =>
+        s.name.toLowerCase().includes(q) ||
+        (s.area && s.area.toLowerCase().includes(q)) ||
+        (s.country && s.country.toLowerCase().includes(q))
+      );
+    }
+    matches = matches.sort((x,y) => x.name.localeCompare(y)).slice(0, 8);
+    el._matches = matches;
+    el.activeIndex = -1;
+
+    if(!matches.length){
+      el.innerHTML = '<div class="compare-suggestion-empty">No shops match</div>';
+      el.classList.add('show');
+      return;
+    }
+
+    el.innerHTML = matches.map((s,i) => `<div class="compare-suggestion" data-index="${i}">
+        <b>${s.name}</b>
+        <span>${[s.area, s.country].filter(Boolean).join(', ')}</span>
+      </div>`).join('');
+    el.classList.add('show');
+    el.querySelectorAll('.compare-suggestion').forEach(row => {
+      // mousedown (not click) so this fires before the input's blur handler
+      // hides the dropdown out from under it.
+      row.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        const shop = matches[+row.dataset.index];
+        if(shop) setCompareShop(which, shop);
+      });
+    });
+  }
+
+  function moveCompareActive(which, delta){
+    const el = compareSuggEl(which);
+    const rows = el.querySelectorAll('.compare-suggestion');
+    if(!rows.length) return;
+    const idx = Math.max(0, Math.min(rows.length - 1, (el.activeIndex ?? -1) + delta));
+    rows.forEach(r => r.classList.remove('active'));
+    rows[idx].classList.add('active');
+    rows[idx].scrollIntoView({block:'nearest'});
+    el.activeIndex = idx;
+  }
+
+  ['a','b'].forEach(which => {
+    const input = compareSearchInput(which);
+    input.addEventListener('focus', () => renderCompareSuggestions(which, input.value));
+    input.addEventListener('input', () => renderCompareSuggestions(which, input.value));
+    input.addEventListener('blur', () => hideCompareSuggestions(which));
+    input.addEventListener('keydown', (e) => {
+      const el = compareSuggEl(which);
+      if(e.key === 'ArrowDown'){ e.preventDefault(); moveCompareActive(which, 1); }
+      else if(e.key === 'ArrowUp'){ e.preventDefault(); moveCompareActive(which, -1); }
+      else if(e.key === 'Enter'){
+        e.preventDefault();
+        const matches = el._matches || [];
+        const idx = el.activeIndex >= 0 ? el.activeIndex : 0;
+        if(matches[idx]) setCompareShop(which, matches[idx]);
+      }else if(e.key === 'Escape'){
+        hideCompareSuggestions(which);
+        input.blur();
+      }
+    });
+  });
 
   function compareRow(label, aVal, bVal, aDisplay, bDisplay){
     const aWin = aVal != null && bVal != null && aVal > bVal;
@@ -2061,33 +2457,182 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     </div>`;
   }
 
-  function renderCompare(){
-    const a = data.find(s => s.name === compareA.value);
-    const b = data.find(s => s.name === compareB.value);
-    const resultsEl = document.getElementById('compare-results');
-    if(!a || !b){ resultsEl.innerHTML = ''; return; }
+  // Same cup — rim, handle, gloss, cast shadow and all — as the single-shop
+  // radar in the detail panel (see renderShopRadar above), just with two
+  // translucent foam traces poured on top instead of one layered/nested
+  // one. Keeping the full mug drawing (rather than a bare circle) is what
+  // makes this read as "the same coffee radar" instead of a generic chart.
+  // Only axes both shops actually have ratings for are drawn, so a
+  // mismatched pair still renders a fair, apples-to-apples shape.
+  function renderCompareRadar(a, b){
+    if(!a || !b || !a.ratings || !b.ratings) return '';
+    const presentA = Object.keys(a.ratings);
+    const presentB = Object.keys(b.ratings);
+    const shared = CATEGORY_ORDER.filter(k => presentA.includes(k) && presentB.includes(k));
+    if(shared.length < 3) return '';
 
-    let html = `<div class="compare-names"><span></span><span>${a.name}</span><span>${b.name}</span></div>`;
-    html += compareRow('Overall', a.overall, b.overall, a.overall.toFixed(1), b.overall.toFixed(1));
-    html += compareRow('Price', null, null, a.price || '—', b.price || '—');
+    const valuesA = shared.map(k => a.ratings[k]), valuesB = shared.map(k => b.ratings[k]);
+    const labels = shared.map(k => k.charAt(0).toUpperCase() + k.slice(1));
+    const step = 360 / shared.length;
 
-    const catKeys = new Set([
-      ...(a.ratings ? Object.keys(a.ratings) : []),
-      ...(b.ratings ? Object.keys(b.ratings) : [])
-    ]);
-    catKeys.forEach(key => {
-      const av = a.ratings && a.ratings[key];
-      const bv = b.ratings && b.ratings[key];
-      const label = key.charAt(0).toUpperCase() + key.slice(1);
-      html += compareRow(label, av, bv, av !== undefined ? av.toFixed(1) : '—', bv !== undefined ? bv.toFixed(1) : '—');
+    const size = 240, cx = 110, cy = size/2, rimThick = 9, cupR = 78, coffeeR = cupR - rimThick;
+    const blobR = coffeeR * 0.82;
+    const lightDeg = 315, feather = 2.5, shadowDist = 34, stretch = 1.4;
+    const hw = 40, hh = 22, hx = cx + cupR - 3, hy = cy;
+
+    const ptsFor = values => values.map((v,i) => polarPoint(cx, cy, 6 + ratingToT(v)*blobR, i*step));
+    const dataPtsA = ptsFor(valuesA), dataPtsB = ptsFor(valuesB);
+    const id = 'cmp-' + Math.round((valuesA.reduce((s,v)=>s+v,0) + valuesB.reduce((s,v)=>s+v,0)) * 10) + '-' + shared.length;
+
+    // Fused cast shadow: rim + handle silhouettes stretched together as one
+    // path — identical math to renderShopRadar above.
+    const [dirx,diry] = polarPoint(0, 0, 1, lightDeg + 180);
+    const rimPts = Array.from({length:64}, (_,i) => polarPoint(cx, cy, cupR, (i/64)*360));
+    const handlePts = stadiumPoints(hx, hy, hw, hh, 16);
+    const rimShadowPts = rimPts.map(([x,y]) => stretchPoint(x,y,cx,cy,dirx,diry,stretch,shadowDist));
+    const handleShadowPts = handlePts.map(([x,y]) => stretchPoint(x,y,cx,cy,dirx,diry,stretch,shadowDist));
+    const rimShadowPath = smoothClosedPath(rimShadowPts, 0.6);
+    const handleShadowPath = smoothClosedPath(handleShadowPts, 0.6);
+    const shadowReach = shadowDist + cupR*stretch;
+    const shadowFar = polarPoint(cx, cy, shadowReach, lightDeg + 180);
+    const allShadowPts = rimShadowPts.concat(handleShadowPts);
+    const shadowMinX = Math.min(...allShadowPts.map(p=>p[0]));
+    const shadowMaxX = Math.max(...allShadowPts.map(p=>p[0]));
+    const shadowMinY = Math.min(...allShadowPts.map(p=>p[1]));
+    const shadowMaxY = Math.max(...allShadowPts.map(p=>p[1]));
+
+    // Gloss highlight arc on the rim, and the handle's streak, both on the
+    // side facing the light — same as renderShopRadar above.
+    const half = 38;
+    const hlA = polarPoint(cx, cy, cupR-2.5, lightDeg-half), hlB = polarPoint(cx, cy, cupR-2.5, lightDeg+half);
+    const hlMid = polarPoint(cx, cy, cupR-5.5, lightDeg);
+    const lr = (lightDeg-90) * Math.PI/180;
+    const vx = Math.cos(lr), vy = Math.sin(lr);
+    const streakY = hy + vy*hh*0.32, streakX = hx + vx*hw*0.12, streakBow = -vy*hh*0.22;
+
+    const labelBaseR = cupR + 20;
+    const labelPts = shared.map((_,i) => {
+      const deg = i*step, rad = (deg-90)*Math.PI/180, extra = Math.max(0, Math.sin(rad))*11;
+      return polarPoint(cx, cy, labelBaseR+extra, deg);
     });
+    const labelsSvg = shared.map((k,i) => {
+      const [x,y] = labelPts[i];
+      return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle">
+        <tspan x="${x}" dy="0" fill="var(--dim)" font-size="10.5">${labels[i]}</tspan>
+      </text>`;
+    }).join('');
 
-    resultsEl.innerHTML = html;
+    const rawLeft = Math.min(...labelPts.map(p=>p[0]), cx-cupR-4, shadowMinX) - 14;
+    const rawRight = Math.max(...labelPts.map(p=>p[0]), hx+hw, cx+cupR+4, shadowMaxX) + 14;
+    const rawTop = Math.min(...labelPts.map(p=>p[1]), cy-cupR-4, shadowMinY) - 15;
+    const rawBottom = Math.max(...labelPts.map(p=>p[1]), cy+cupR+4, shadowMaxY) + 14;
+    const halfW = Math.max(cx-rawLeft, rawRight-cx);
+    const halfH = Math.max(cy-rawTop, rawBottom-cy);
+    const left = cx-halfW, right = cx+halfW, top = cy-halfH, bottom = cy+halfH;
+
+    return `<svg viewBox="${left} ${top} ${right-left} ${bottom-top}">
+      <defs>
+        <radialGradient id="cmpCoffee-${id}" cx="42%" cy="38%" r="70%">
+          <stop offset="0%" stop-color="var(--coffee-mid)"/>
+          <stop offset="100%" stop-color="var(--coffee-dark)"/>
+        </radialGradient>
+        <radialGradient id="cmpInnerShadow-${id}" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+          <stop offset="78%" stop-color="#000000" stop-opacity="0"/>
+          <stop offset="100%" stop-color="#000000" stop-opacity="0.4"/>
+        </radialGradient>
+        <linearGradient id="cmpShadowFade-${id}" gradientUnits="userSpaceOnUse" x1="${cx}" y1="${cy}" x2="${shadowFar[0]}" y2="${shadowFar[1]}">
+          <stop offset="0%" stop-color="#241608" stop-opacity="0.32"/>
+          <stop offset="100%" stop-color="#241608" stop-opacity="0"/>
+        </linearGradient>
+        <filter id="cmpFoamShadow-${id}" x="-40%" y="-40%" width="180%" height="180%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.35"/>
+        </filter>
+        <filter id="cmpSoftBlur-${id}" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="0.6"/>
+        </filter>
+        <filter id="cmpShadowBlur-${id}" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="${feather}"/>
+        </filter>
+      </defs>
+      <g filter="url(#cmpShadowBlur-${id})">
+        <path d="${rimShadowPath} ${handleShadowPath}" fill="url(#cmpShadowFade-${id})"/>
+      </g>
+      <rect x="${hx-hw/2}" y="${hy-hh/2}" width="${hw}" height="${hh}" rx="${hh/2}" ry="${hh/2}" fill="var(--ceramic)" stroke="var(--ceramic-edge)" stroke-width="1"/>
+      <path d="M ${streakX-hw*0.28},${streakY} Q ${streakX},${streakY+streakBow} ${streakX+hw*0.28},${streakY}" stroke="#FFFFFF" stroke-opacity="0.85" stroke-width="2" fill="none" stroke-linecap="round" filter="url(#cmpSoftBlur-${id})"/>
+      <circle cx="${cx}" cy="${cy}" r="${cupR}" fill="var(--ceramic)" stroke="var(--ceramic-edge)" stroke-width="1"/>
+      <path d="M ${hlA[0]},${hlA[1]} Q ${hlMid[0]},${hlMid[1]} ${hlB[0]},${hlB[1]}" stroke="#FFFFFF" stroke-opacity="0.8" stroke-width="2.6" fill="none" stroke-linecap="round" filter="url(#cmpSoftBlur-${id})"/>
+      <circle cx="${cx}" cy="${cy}" r="${coffeeR}" fill="url(#cmpCoffee-${id})" stroke="#160D04" stroke-width="1"/>
+      <g filter="url(#cmpFoamShadow-${id})">
+        <path d="${smoothClosedPath(dataPtsB)}" fill="${COMPARE_COLOR_B}" fill-opacity="0.45"/>
+        <path d="${smoothClosedPath(dataPtsA)}" fill="${COMPARE_COLOR_A}" fill-opacity="0.45"/>
+        <path d="${smoothClosedPath(dataPtsB)}" fill="none" stroke="${COMPARE_COLOR_B}" stroke-width="2.25"/>
+        <path d="${smoothClosedPath(dataPtsA)}" fill="none" stroke="${COMPARE_COLOR_A}" stroke-width="2.25"/>
+      </g>
+      <circle cx="${cx}" cy="${cy}" r="${coffeeR}" fill="url(#cmpInnerShadow-${id})"/>
+      ${labelsSvg}
+    </svg>`;
   }
 
-  compareA.onchange = renderCompare;
-  compareB.onchange = renderCompare;
-  renderCompare();
+  function renderCompare(){
+    const a = compareShopA, b = compareShopB;
+    const radarEl = document.getElementById('compare-radar');
+    const resultsEl = document.getElementById('compare-results');
+    const tagsEl = document.getElementById('compare-tags-shared');
+    const distEl = document.getElementById('compare-distance');
+
+    if(!a || !b){
+      radarEl.innerHTML = ''; resultsEl.innerHTML = '';
+      tagsEl.textContent = ''; distEl.textContent = '';
+      return;
+    }
+
+    radarEl.innerHTML = renderCompareRadar(a, b);
+
+    const aOverall = displayRating(a.overall), bOverall = displayRating(b.overall);
+
+    // Per-category rows (richness/craft/ambiance/character/value) already
+    // live on the radar above — the table below only carries what the
+    // radar *can't* show: the combined overall score, price, and visits.
+    let html = `<div class="compare-names">
+      <span></span>
+      <span><span class="compare-name-dot" style="background:${COMPARE_COLOR_A}"></span>${a.name}</span>
+      <span><span class="compare-name-dot" style="background:${COMPARE_COLOR_B}"></span>${b.name}</span>
+    </div>`;
+    html += compareRow('Overall', a.overall, b.overall, aOverall.toFixed(1), bOverall.toFixed(1));
+    html += compareRow('Price', null, null, a.price || '—', b.price || '—');
+
+    const visitsA = (a.visited && a.visited.length) || 0;
+    const visitsB = (b.visited && b.visited.length) || 0;
+    html += compareRow('Visits', visitsA, visitsB, visitsA || '—', visitsB || '—');
+
+    resultsEl.innerHTML = html;
+
+    const tagsA = new Set(a.tags || []), tagsB = new Set(b.tags || []);
+    const shared = [...tagsA].filter(t => tagsB.has(t));
+    tagsEl.innerHTML = shared.length
+      ? `Both: <b>${shared.join(', ')}</b>`
+      : (tagsA.size && tagsB.size ? 'No tags in common — total opposites' : '');
+
+    if(a.lat != null && a.lng != null && b.lat != null && b.lng != null){
+      const miles = haversineMiles(a.lat, a.lng, b.lat, b.lng);
+      distEl.innerHTML = miles < 0.5
+        ? 'Practically next door'
+        : `<b>${miles.toFixed(miles < 10 ? 1 : 0)} mi</b> apart`;
+    }else{
+      distEl.textContent = '';
+    }
+  }
+
+  // Initial matchup: the first two shops alphabetically.
+  (function initCompare(){
+    const sortedNames = [...data].map(s => s.name).sort((x,y) => x.localeCompare(y));
+    const initialA = sortedNames.length ? data.find(s => s.name === sortedNames[0]) : null;
+    const initialB = sortedNames.length > 1 ? data.find(s => s.name === sortedNames[1]) : null;
+    if(initialA) setCompareShop('a', initialA, {skipRender:true});
+    if(initialB) setCompareShop('b', initialB, {skipRender:true});
+    renderCompare();
+  })();
 
   // Filter / compare / settings share one "slot" — opening one should close
   // whichever of the other two is currently open, rather than stacking.
@@ -2114,6 +2659,7 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     closeOtherSidePanels('settings-card');
     card.classList.toggle('show', opening);
     e.currentTarget.classList.toggle('on', opening);
+    updateSettingsScrollbar();
   };
 
   document.getElementById('switch-clustering').onclick = (e) => {
@@ -2126,6 +2672,44 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     map.addLayer(newGroup);
 
     e.currentTarget.classList.toggle('on', clusteringOn);
+    saveStoredSetting('clustering', clusteringOn);
+  };
+
+  // ---- rating colors & normalization (settings panel) ----
+  // Re-draws everything whose look depends on shop.overall: every pin icon
+  // (via buildBubbleIcon, which already reads NORMALIZE_RATINGS internally),
+  // any active clusters, the stats panel, the open detail panel (if any),
+  // and the compare card (if open) — same values, just re-rendered.
+  function refreshRatingDependentUI(){
+    shopMarkers.forEach(entry => {
+      entry.marker.setIcon(buildBubbleIcon(entry.shop, entry.badgeCount, { animate: false }));
+    });
+    if(clusterGroup.refreshClusters) clusterGroup.refreshClusters();
+    updateInViewStats();
+    if(lastShownShop) updatePanelRatingFields(lastShownShop);
+    if(document.getElementById('compare-card').classList.contains('show')) renderCompare();
+  }
+
+  // Reflect whatever was restored from localStorage before init() ran
+  // (see activePalette/NORMALIZE_RATINGS above) — the markup's hardcoded
+  // "Roast, active / normalize off" state is just the pre-storage default.
+  document.querySelectorAll('.palette-swatch').forEach(sw => {
+    sw.classList.toggle('active', sw.dataset.palette === activePalette);
+    sw.onclick = () => {
+      document.querySelectorAll('.palette-swatch').forEach(s => s.classList.remove('active'));
+      sw.classList.add('active');
+      activePalette = sw.dataset.palette;
+      applyPalette(activePalette);
+      saveStoredSetting('palette', activePalette);
+    };
+  });
+
+  document.getElementById('switch-normalize').classList.toggle('on', NORMALIZE_RATINGS);
+  document.getElementById('switch-normalize').onclick = (e) => {
+    NORMALIZE_RATINGS = !NORMALIZE_RATINGS;
+    e.currentTarget.classList.toggle('on', NORMALIZE_RATINGS);
+    saveStoredSetting('normalize', NORMALIZE_RATINGS);
+    refreshRatingDependentUI();
   };
 
   function updateInViewStats(){
@@ -2162,30 +2746,30 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     // Bigger on mobile only — desktop's precise cursor doesn't need it, and
     // a larger pin there would just crowd the map unnecessarily.
     const w = isMobileViewport ? 40 : 34, h = isMobileViewport ? 27 : 22;
-    const tier = tierClass(shop.overall);
+    const displayOverall = displayRating(shop.overall);
+    const tier = tierClass(displayOverall);
     const animStyle = opts.animate ? `animation-delay:${opts.delay || 0}s;` : `animation:none;`;
     const visitBadge = badgeCount > 1 ? `<span class="visit-count">×${badgeCount}</span>` : '';
     return L.divIcon({
       className: '',
-      html: `<div class="bubble ${tier}" style="width:${w}px;height:${h}px;${animStyle}">${shop.overall.toFixed(1)}${visitBadge}</div>`,
+      html: `<div class="bubble ${tier}" style="width:${w}px;height:${h}px;${animStyle}">${displayOverall.toFixed(1)}${visitBadge}</div>`,
       iconSize: [w, h],
       iconAnchor: [w/2, h/2]
     });
   }
 
-  // ---- pop-in timing helper: given n items, returns a randomized, eased
-  // delay (seconds) per original index so a reveal fills in scattered order
-  // rather than in coffee.json's order or a left-to-right sweep. POP_EASE > 1
-  // means the gap between each successive pop widens as the reveal goes on,
-  // instead of a flat, evenly-spaced tick. ----
+  // ---- pop-in timing helper: given the entries about to be revealed,
+  // returns an eased delay (seconds) per original index, ranked west-to-east
+  // by longitude so the reveal visibly sweeps left to right across the map
+  // instead of popping in scattered or coffee.json order. A touch of random
+  // jitter is layered on top so pins at nearly the same longitude don't feel
+  // robotically synced. POP_EASE > 1 means the gap between each successive
+  // pop widens as the reveal goes on, instead of a flat, evenly-spaced tick. ----
   const POP_EASE = 1.6;
   const POP_IN_BASE_WAIT = 0.6; // pause after page load before the first pop, so the map/tiles settle first
-  function easedPopDelays(n, spread){
-    const order = Array.from({length:n}, (_, i) => i);
-    for(let i = order.length - 1; i > 0; i--){
-      const j = Math.floor(Math.random() * (i + 1));
-      [order[i], order[j]] = [order[j], order[i]];
-    }
+  function easedPopDelays(entries, spread){
+    const n = entries.length;
+    const order = entries.map((_, i) => i).sort((a, b) => entries[a].shop.lng - entries[b].shop.lng);
     const rank = new Array(n);
     order.forEach((originalIdx, pos) => { rank[originalIdx] = pos; });
     return rank.map(pos => {
@@ -2304,8 +2888,13 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     const entries = syncBadgeCountsAndGetActive().filter(e => !activeSet.has(e.marker));
     const n = entries.length;
     if(!n){ refreshDependentUI(); return; }
-    const spread = Math.min(2.4, 0.45 + n * 0.035); // total fill duration, capped for huge lists
-    const delays = easedPopDelays(n, spread);
+    // The "N in view · avg" readout is stale/inaccurate for the whole
+    // stretch of time these pins are staggering onto the map (up to a few
+    // seconds — see the `spread` cap below), so swap it for a spinner until
+    // refreshDependentUI() below fills it back in for real.
+    showCountSpinner();
+    const spread = Math.min(3.4, 0.65 + n * 0.05); // total fill duration, capped for huge lists
+    const delays = easedPopDelays(entries, spread);
     let remaining = n;
     entries.forEach((entry, idx) => {
       const delay = (baseWaitSec || 0) + delays[idx];
@@ -2348,6 +2937,7 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
   document.getElementById('switch-trail').onclick = (e) => {
     trailOn = !trailOn;
     e.currentTarget.classList.toggle('on', trailOn);
+    saveStoredSetting('trail', trailOn);
     updateTrail();
   };
 
