@@ -107,6 +107,10 @@
       {
         "src": "images/small-world-coffee_2025-12-08-2.jpg",
         "date": "Dec 8, 2025"
+      },
+      {
+        "src": "images/small-world-coffee_2025-12-08-3.jpg",
+        "date": "Dec 8, 2025"
       }
     ]
   },
@@ -1292,6 +1296,14 @@
       {
         "src": "images/bitter-sweet_2026-08-17.jpg",
         "date": "Aug 17, 2026"
+      },
+      {
+        "src": "images/bitter-sweet_2025-11-22.jpg",
+        "date": "Nov 22, 2025"
+      },
+      {
+        "src": "images/bitter-sweet_2025-11-22-2.jpg",
+        "date": "Nov 22, 2025"
       }
     ]
   },
@@ -1369,5 +1381,271 @@
         "date": "Aug 17, 2026"
       }
     ]
+  },
+  {
+    "name": "Blend",
+    "area": "Stanford",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.4304268,
+    "lng": -122.1724564,
+    "overall": 4,
+    "ratings": {
+      "richness": 4.2,
+      "craft": 3.8,
+      "ambiance": 3.8,
+      "character": 3.7,
+      "value": 4.1
+    },
+    "note": "Decent premade iced-coffees to go with a fantastic slop bowl.",
+    "tags": [
+      "lively",
+      "crowded",
+      "outdoor-seating"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/reEzHfZNJ6gvRoPu7",
+    "visited": [
+      "Jul 1, 2024"
+    ],
+    "state": "California",
+    "photos": [
+      {
+        "src": "images/blend_2024-07-01.jpg",
+        "date": "Jul 1, 2024"
+      }
+    ]
+  },
+  {
+    "name": "Lutticken's Deli (CSSR cafe)",
+    "area": "Stanford",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.4321483,
+    "lng": -122.1772972,
+    "overall": 3.7,
+    "ratings": {
+      "richness": 3.8,
+      "craft": 3.6,
+      "ambiance": 3.7,
+      "character": 3.8,
+      "value": 4.1
+    },
+    "note": "Okay coffee, better bagels.",
+    "tags": [
+      "minimal",
+      "outdoor-seating"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/L1kBPmJWEooFZ3rE7",
+    "visited": [
+      "Jun 28, 2024",
+      "Jul 12, 2024",
+      "Aug 6, 2024"
+    ],
+    "state": "California",
+    "photos": [
+      {
+        "src": "images/lutticken-s-deli-cssr-cafe_2024-08-06.jpg",
+        "date": "Aug 6, 2024"
+      }
+    ]
+  },
+  {
+    "name": "Goddess and the Baker, Corners of Brookfield",
+    "area": "Brookfield",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 43.0351482,
+    "lng": -88.1635568,
+    "overall": 4.2,
+    "ratings": {
+      "richness": 4.2,
+      "craft": 4.3,
+      "ambiance": 3.9,
+      "character": 3.9,
+      "value": 4
+    },
+    "note": "Really good coffee but not the biggest fan of the outback steakhouse type vibe.",
+    "tags": [
+      "modern",
+      "lively",
+      "laptop-friendly",
+      "pastries"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/KvrXzZ4DnRsE8eAP9",
+    "visited": [
+      "Nov 27, 2024"
+    ],
+    "state": "Wisconsin",
+    "photos": [
+      {
+        "src": "images/goddess-and-the-baker-corners-of-brookfield_2024-11-27.jpg",
+        "date": "Nov 27, 2024"
+      }
+    ]
+  },
+  {
+    "name": "Beckman Bistro",
+    "area": "Stanford",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.4318753,
+    "lng": -122.1763953,
+    "overall": 2.9,
+    "ratings": {
+      "richness": 3.2,
+      "craft": 2.9,
+      "ambiance": 1.1,
+      "character": 3.7,
+      "value": 3.8
+    },
+    "note": "Go here when you're in a rush only, there are so many better options.",
+    "tags": [
+      "outdoor-seating"
+    ],
+    "price": "$",
+    "mapsUrl": "https://maps.app.goo.gl/adsvHF5pqx8Jsxvu5",
+    "visited": [
+      "Jul 16, 2024"
+    ],
+    "state": "California",
+    "photos": [
+      {
+        "src": "images/beckman-bistro_2026-08-17.jpg",
+        "date": "Aug 17, 2026"
+      }
+    ]
+  },
+  {
+    "name": "Bytes Cafe",
+    "area": "Stanford",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.4293243,
+    "lng": -122.1735554,
+    "overall": 3.6,
+    "ratings": {
+      "richness": 3.9,
+      "craft": 3.7,
+      "ambiance": 2.5,
+      "character": 3.1,
+      "value": 3.6
+    },
+    "note": "The quick cafe spot for academics, but the coffee honestly isn't too great. Visited before the remodel.",
+    "tags": [
+      "laptop-friendly",
+      "outdoor-seating"
+    ],
+    "price": "$",
+    "mapsUrl": "https://maps.app.goo.gl/uFaVarNrLsV8rYXs6",
+    "visited": [
+      "Jul 28, 2024"
+    ],
+    "state": "California",
+    "photos": [
+      {
+        "src": "images/bytes-cafe_2024-07-28.jpg",
+        "date": "Jul 28, 2024"
+      }
+    ]
+  },
+  {
+    "name": "Verve Coffee Roasters",
+    "area": "",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.4442151,
+    "lng": -122.1630528,
+    "overall": 4.2,
+    "ratings": {
+      "richness": 4.2,
+      "craft": 4.2,
+      "ambiance": 4.3,
+      "character": 4,
+      "value": 3.9
+    },
+    "note": "Packed verve cafe full of students studying - don't expect to find a seat here.",
+    "tags": [
+      "modern",
+      "lively",
+      "crowded",
+      "study",
+      "laptop-friendly",
+      "outdoor-seating"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/1S6fYzem8Xb73AUT9",
+    "visited": [
+      "Jan 4, 2025"
+    ],
+    "state": "California",
+    "photos": [
+      {
+        "src": "images/verve-coffee-roasters_2025-01-04.jpg",
+        "date": "Jan 4, 2025"
+      }
+    ]
+  },
+  {
+    "name": "Coupa Cafe - Green Library",
+    "area": "Stanford",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.426204,
+    "lng": -122.166995,
+    "overall": 4.2,
+    "ratings": {
+      "richness": 4.3,
+      "craft": 4.2,
+      "ambiance": 3.9,
+      "character": 4,
+      "value": 4.1
+    },
+    "note": "Classic Stanford meetup and coffee chat spot with valid coffee.",
+    "tags": [
+      "outdoor-seating",
+      "laptop-friendly",
+      "pastries"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://www.google.com/maps/place/Coupa+Cafe+-+Green+Library/@37.4283004,-122.1826039,15.66z/data=!4m10!1m2!2m1!1scoupa!3m6!1s0x808fbad658893ecf:0xfd09c179117559b8!8m2!3d37.426204!4d-122.166995!15sCgVjb3VwYSIDiAEBWgciBWNvdXBhkgEEY2FmZZoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQyeE5lVXhVWkhWTlJHeHlWREJTYW1FelVrbGFSV2gzVVRGa1ZsTXhSUkFC4AEA-gEECCgQQQ!16s%2Fg%2F1tlbpcx2?entry=ttu&g_ep=EgoyMDI2MDgxMi4wIKXMDSoASAFQAw%3D%3D",
+    "visited": [
+      "Aug 14, 2024",
+      "Oct 15, 2025"
+    ],
+    "state": "California"
+  },
+  {
+    "name": "CoHo",
+    "area": "Stanford",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.4241104,
+    "lng": -122.1709061,
+    "overall": 3.4,
+    "ratings": {
+      "richness": 3.4,
+      "craft": 3.3,
+      "ambiance": 4.2,
+      "character": 4.1,
+      "value": 3.6
+    },
+    "note": "Coffee is not on par, the food is decent. Known for its late night music performances.",
+    "tags": [
+      "cozy",
+      "lively",
+      "crowded",
+      "laptop-friendly",
+      "study",
+      "outdoor-seating"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://www.google.com/maps/place/CoHo/@37.4241146,-122.173481,17z/data=!3m2!4b1!5s0x808fbad1079c7755:0x4a117d28b56a30a9!4m6!3m5!1s0x808fbad44156aa59:0xd0ff925e957aab14!8m2!3d37.4241104!4d-122.1709061!16s%2Fg%2F1tdhf757?entry=ttu&g_ep=EgoyMDI2MDgxMi4wIKXMDSoASAFQAw%3D%3D",
+    "visited": [
+      "Aug 6, 2024"
+    ],
+    "state": "California"
   }
 ]

@@ -209,10 +209,9 @@
   /* .filter-card is shared by three panels — #filter-card, #compare-card,
      #settings-card — so this base rule set has to stay generic (padding,
      scroll, sizing all included) and match what compare/settings actually
-     need. The custom-scrollbar treatment below is scoped to #filter-card
-     and #settings-card specifically via ID (which outranks the shared
-     class), so compare keeps its original plain padded/auto-scroll
-     behavior instead of losing its padding to it. */
+     need. The custom-scrollbar treatment below is scoped to all three IDs
+     (which outrank the shared class), so filter, compare, and settings all
+     get the same always-visible custom scrollbar instead of a native one. */
   .filter-card{
     width:210px;
     max-height:0;
@@ -240,15 +239,16 @@
     padding:14px 16px 20px;
     box-shadow:0 24px 60px rgba(21,18,16,0.32);
   }
-  /* ---- #filter-card and #settings-card: swap the native scroll above for
-     a custom, always-visible, light-brown one (see the JS-driven
-     #*-scrollbar-* elements, one pair per panel). Native scrollbars can't
-     be reliably clipped to a rounded container across browsers, and current
-     Chrome (~121+) ignores a styled ::-webkit-scrollbar for its auto-hiding
-     overlay scrollbar anyway, so these panels get their own inner scroller
-     instead of relying on the shared .filter-card.show behavior above. ---- */
-  #filter-card, #settings-card{ position:relative; } /* anchors the custom scrollbar */
-  #filter-card.show, #settings-card.show{
+  /* ---- #filter-card, #compare-card and #settings-card: swap the native
+     scroll above for a custom, always-visible, light-brown one (see the
+     JS-driven #*-scrollbar-* elements, one pair per panel). Native
+     scrollbars can't be reliably clipped to a rounded container across
+     browsers, and current Chrome (~121+) ignores a styled
+     ::-webkit-scrollbar for its auto-hiding overlay scrollbar anyway, so
+     these panels get their own inner scroller instead of relying on the
+     shared .filter-card.show behavior above. ---- */
+  #filter-card, #compare-card, #settings-card{ position:relative; } /* anchors the custom scrollbar */
+  #filter-card.show, #compare-card.show, #settings-card.show{
     /* Outer just clips to the rounded corners now; the real scroll cap
        lives on .filter-scroll below. 34px = .filter-scroll's own
        top+bottom padding, so the outer stays tall enough not to clip it. */
@@ -589,7 +589,11 @@
   .panel{
     position:fixed; left:calc(20px + var(--safe-l)); bottom:calc(20px + var(--safe-b)); z-index:600; width:300px;
     max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
-    max-height:calc(100vh - 40px - var(--safe-t) - var(--safe-b)); overflow-y:auto;
+    /* Outer is just an overall safety cap now (should rarely bind) — the
+       real scroll boundary is .panel-scroll below, which kicks in right
+       after the date-visited line so a long note/story/tags list scrolls
+       in place instead of growing the whole card off-screen. */
+    max-height:calc(100vh - 40px - var(--safe-t) - var(--safe-b)); overflow:hidden;
     background:#fff; border:none; border-radius:14px;
     box-shadow:0 24px 60px rgba(21,18,16,0.32);
     opacity:0; transform:translateY(8px); pointer-events:none;
@@ -610,8 +614,8 @@
     transition:width 0.15s ease, background 0.15s ease;
   }
   .panel-photo-dots .dot.active{ background:#fff; width:14px; }
-  .panel-body{ padding:16px 20px 18px; }
-  .panel-body.no-photo{ padding-top:20px; }
+  .panel-header{ padding:16px 20px 0; }
+  .panel-header.no-photo{ padding-top:20px; }
   .panel-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px; }
   .panel-name{ font-size:16px; font-weight:600; margin:0; }
   .panel-area{ font-size:12px; color:var(--dim); margin:2px 0 0; }
@@ -643,6 +647,23 @@
     margin:0 0 12px; padding-left:10px; border-left:2px solid var(--line);
   }
   .panel-tags{ font-size:11px; color:var(--dim); }
+  /* Everything from the overall-rating bar down (ratings, radar, note,
+     story, tags) lives in its own scroller below the fixed photo+header, so
+     a long note/story doesn't push the close button and visit dates off
+     the top of the card, and doesn't grow the panel past a sane height on
+     a short phone screen. Same custom-scrollbar treatment as
+     #filter-card/#compare-card/#settings-card below, on its own track/thumb
+     pair since it sits under a header instead of starting flush at the
+     card's top. Desktop/laptop gets a lenient flat cap; the
+     max-width:640px override below tightens it for phones. */
+  .panel-scroll-wrap{ position:relative; }
+  .panel-scroll{
+    max-height:min(calc(100vh - 280px - var(--safe-t) - var(--safe-b)), 460px);
+    overflow-y:auto; overflow-x:hidden;
+    padding:4px 24px 18px 20px;
+    scrollbar-width:none;
+  }
+  .panel-scroll::-webkit-scrollbar{ width:0; height:0; display:none; }
 
   /* intro modal */
   .modal-overlay{
@@ -752,6 +773,10 @@
     .toggle-icon svg{ width:17px; height:17px; }
     .search-clear{ width:20px; height:20px; }
     .search-clear svg{ width:12px; height:12px; }
+    /* Tighter cap than the desktop/laptop rule above — phone screens don't
+       have the vertical room to let a long note/story stretch the card, so
+       the scrollable region below the date-visited line kicks in sooner. */
+    .panel-scroll{ max-height:min(calc(100vh - 280px - var(--safe-t) - var(--safe-b)), 280px); }
   }
 </style>
 </head>
@@ -841,23 +866,28 @@
   </div>
 
   <div class="filter-card" id="compare-card">
-    <div class="filter-label">Head to head</div>
+    <div class="filter-scroll" id="compare-scroll">
+      <div class="filter-label">Head to head</div>
 
-    <div class="compare-search-row">
-      <span class="compare-search-dot" style="background:var(--compare-a)"></span>
-      <input type="text" class="compare-search-input" id="compare-search-a" placeholder="Search a shop…" autocomplete="off">
-      <div class="compare-suggestions" id="compare-suggestions-a"></div>
-    </div>
-    <div class="compare-search-row">
-      <span class="compare-search-dot" style="background:var(--compare-b)"></span>
-      <input type="text" class="compare-search-input" id="compare-search-b" placeholder="Search a shop…" autocomplete="off">
-      <div class="compare-suggestions" id="compare-suggestions-b"></div>
-    </div>
+      <div class="compare-search-row">
+        <span class="compare-search-dot" style="background:var(--compare-a)"></span>
+        <input type="text" class="compare-search-input" id="compare-search-a" placeholder="Search a shop…" autocomplete="off">
+        <div class="compare-suggestions" id="compare-suggestions-a"></div>
+      </div>
+      <div class="compare-search-row">
+        <span class="compare-search-dot" style="background:var(--compare-b)"></span>
+        <input type="text" class="compare-search-input" id="compare-search-b" placeholder="Search a shop…" autocomplete="off">
+        <div class="compare-suggestions" id="compare-suggestions-b"></div>
+      </div>
 
-    <div class="compare-radar" id="compare-radar"></div>
-    <div class="compare-results" id="compare-results"></div>
-    <div class="compare-extra-row" id="compare-tags-shared"></div>
-    <div class="compare-extra-row" id="compare-distance"></div>
+      <div class="compare-radar" id="compare-radar"></div>
+      <div class="compare-results" id="compare-results"></div>
+      <div class="compare-extra-row" id="compare-tags-shared"></div>
+      <div class="compare-extra-row" id="compare-distance"></div>
+    </div>
+    <div class="filter-scrollbar-track" id="compare-scrollbar-track">
+      <div class="filter-scrollbar-thumb" id="compare-scrollbar-thumb"></div>
+    </div>
   </div>
 
   <div class="toggle toggle-icon" id="toggle-settings" title="Settings" aria-label="Map settings">
@@ -962,32 +992,41 @@
     <div class="panel-photo-dots" id="p-photo-dots"></div>
   </div>
   <div class="panel-body">
-    <div class="panel-top">
-      <div>
-        <p class="panel-name" id="p-name"></p>
-        <p class="panel-area" id="p-area"></p>
-        <p class="panel-meta" id="p-meta"></p>
-      </div>
-      <div class="panel-actions">
-        <a class="panel-icon-btn" id="p-maps-link" href="#" target="_blank" rel="noopener" title="Open in Google Maps">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
-            <path d="M12 21s7-7.58 7-12a7 7 0 10-14 0c0 4.42 7 12 7 12z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-            <circle cx="12" cy="9" r="2.4" stroke="currentColor" stroke-width="1.8"/>
-          </svg>
-        </a>
-        <div class="panel-close" id="p-close">&times;</div>
+    <div class="panel-header" id="panel-header">
+      <div class="panel-top">
+        <div>
+          <p class="panel-name" id="p-name"></p>
+          <p class="panel-area" id="p-area"></p>
+          <p class="panel-meta" id="p-meta"></p>
+        </div>
+        <div class="panel-actions">
+          <a class="panel-icon-btn" id="p-maps-link" href="#" target="_blank" rel="noopener" title="Open in Google Maps">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
+              <path d="M12 21s7-7.58 7-12a7 7 0 10-14 0c0 4.42 7 12 7 12z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              <circle cx="12" cy="9" r="2.4" stroke="currentColor" stroke-width="1.8"/>
+            </svg>
+          </a>
+          <div class="panel-close" id="p-close">&times;</div>
+        </div>
       </div>
     </div>
-    <div class="rating-row overall">
-      <span class="rating-label">Overall</span>
-      <div class="rating-bar"><div class="rating-fill" id="p-fill-overall"></div></div>
-      <span class="rating-num" id="p-num-overall"></span>
+    <div class="panel-scroll-wrap">
+      <div class="panel-scroll" id="panel-scroll">
+        <div class="rating-row overall">
+          <span class="rating-label">Overall</span>
+          <div class="rating-bar"><div class="rating-fill" id="p-fill-overall"></div></div>
+          <span class="rating-num" id="p-num-overall"></span>
+        </div>
+        <p class="panel-context" id="p-context"></p>
+        <div class="panel-radar" id="p-radar"></div>
+        <p class="panel-note" id="p-note"></p>
+        <p class="panel-story" id="p-story" style="display:none;"></p>
+        <div class="panel-tags" id="p-tags"></div>
+      </div>
+      <div class="filter-scrollbar-track" id="panel-scrollbar-track">
+        <div class="filter-scrollbar-thumb" id="panel-scrollbar-thumb"></div>
+      </div>
     </div>
-    <p class="panel-context" id="p-context"></p>
-    <div class="panel-radar" id="p-radar"></div>
-    <p class="panel-note" id="p-note"></p>
-    <p class="panel-story" id="p-story" style="display:none;"></p>
-    <div class="panel-tags" id="p-tags"></div>
   </div>
 </div>
 
@@ -1680,13 +1719,19 @@ function updatePanelRatingFields(shop){
   }
 }
 
+// Reassigned once setupCustomScrollbar wires up #panel-scroll inside the
+// init IIFE below (showPanel lives outside that closure, so it can't see a
+// const declared in there directly — this outer binding is what lets it
+// resync the thumb after every re-render without restructuring init()).
+let updatePanelScrollbar = () => {};
+
 function showPanel(shop){
   lastShownShop = shop;
   panelPhotos = getShopPhotos(shop);
   panelPhotoIndex = 0;
   renderPanelPhoto();
   document.getElementById('p-photo-wrap').style.display = panelPhotos.length ? 'block' : 'none';
-  document.querySelector('.panel-body').classList.toggle('no-photo', !panelPhotos.length);
+  document.getElementById('panel-header').classList.toggle('no-photo', !panelPhotos.length);
   document.getElementById('p-name').textContent = shop.name;
   document.getElementById('p-area').textContent = shop.country ? `${shop.area} · ${shop.country}` : shop.area;
   document.getElementById('p-maps-link').href = shop.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${shop.lat},${shop.lng}`;
@@ -1717,6 +1762,11 @@ function showPanel(shop){
   }
   document.getElementById('p-tags').textContent = shop.tags.join('  ·  ');
   document.getElementById('panel').classList.add('show');
+  // New shop's content is a different length every time — start scrolled to
+  // the top and resync the thumb to match, rather than carrying over the
+  // last shop's scroll position/thumb size.
+  document.getElementById('panel-scroll').scrollTop = 0;
+  updatePanelScrollbar();
 }
 function hidePanel(){ document.getElementById('panel').classList.remove('show'); lastShownShop = null; }
 document.getElementById('p-close').onclick = hidePanel;
@@ -2282,6 +2332,18 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     document.getElementById('settings-scrollbar-track'),
     document.getElementById('settings-scrollbar-thumb')
   );
+  const updateCompareScrollbar = setupCustomScrollbar(
+    document.getElementById('compare-scroll'),
+    document.getElementById('compare-scrollbar-track'),
+    document.getElementById('compare-scrollbar-thumb')
+  );
+  // showPanel (outside this IIFE) reassigns the outer `updatePanelScrollbar`
+  // binding to this real updater — see the comment above its declaration.
+  updatePanelScrollbar = setupCustomScrollbar(
+    document.getElementById('panel-scroll'),
+    document.getElementById('panel-scrollbar-track'),
+    document.getElementById('panel-scrollbar-thumb')
+  );
 
   function filtersActive(){
     return filters.ratingLow > 0 || filters.ratingHigh < 5 || filters.prices.size > 0 || filters.tags.size > 0;
@@ -2584,6 +2646,7 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     if(!a || !b){
       radarEl.innerHTML = ''; resultsEl.innerHTML = '';
       tagsEl.textContent = ''; distEl.textContent = '';
+      updateCompareScrollbar();
       return;
     }
 
@@ -2622,6 +2685,8 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     }else{
       distEl.textContent = '';
     }
+
+    updateCompareScrollbar();
   }
 
   // Initial matchup: the first two shops alphabetically.
