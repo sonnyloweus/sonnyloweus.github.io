@@ -123,11 +123,11 @@
     "lng": 8.5494766,
     "overall": 4.7,
     "ratings": {
-      "richness": 4.6,
+      "richness": 4.7,
       "craft": 4.7,
       "ambiance": 4.6,
       "character": 4.2,
-      "value": 4.1
+      "value": 4.2
     },
     "note": "Amazing specialty coffee in Zürich with a wide selection of beans, commitment to craft, and workspace.",
     "tags": [
@@ -1379,6 +1379,10 @@
       {
         "src": "images/voyager-craft-coffee-coda-stanford_2026-08-17-2.jpg",
         "date": "Aug 17, 2026"
+      },
+      {
+        "src": "images/voyager-craft-coffee-coda-stanford_2026-08-17-3.jpg",
+        "date": "Aug 17, 2026"
       }
     ]
   },
@@ -1647,5 +1651,520 @@
       "Aug 6, 2024"
     ],
     "state": "California"
+  },
+  {
+    "name": "Blue Bottle Coffee - Ferry Building",
+    "area": "San Francisco",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.7961181,
+    "lng": -122.3939851,
+    "overall": 4.2,
+    "ratings": {
+      "richness": 4.2,
+      "craft": 4.1,
+      "ambiance": 4.5,
+      "character": 4.4,
+      "value": 4
+    },
+    "note": "Tasty coffee chain and reliable NOLA. Perfect for strolling around in the Ferry Building and around the pier.",
+    "tags": [
+      "lively",
+      "crowded",
+      "outdoor-seating",
+      "scenic"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/CEpGYR1yDRhiQz699",
+    "visited": [
+      "Aug 25, 2025"
+    ],
+    "state": "California"
+  },
+  {
+    "name": "Caffe Central",
+    "area": "San Francisco",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.7864178,
+    "lng": -122.4073043,
+    "overall": 3.9,
+    "ratings": {
+      "richness": 4,
+      "craft": 4.1,
+      "ambiance": 4.1,
+      "character": 3.9,
+      "value": 3.5
+    },
+    "note": "Popular spot whose coffee is sometimes not worth the long wait - solid overall.",
+    "tags": [
+      "lively",
+      "crowded",
+      "outdoor-seating",
+      "pastries"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/HV1paHbBKzwcN4ZdA",
+    "visited": [
+      "May 27, 2024"
+    ],
+    "state": "California",
+    "photos": [
+      {
+        "src": "images/caffe-central_2024-05-27.jpg",
+        "date": "May 27, 2024"
+      },
+      {
+        "src": "images/caffe-central_2024-05-27-2.jpg",
+        "date": "May 27, 2024"
+      }
+    ]
+  },
+  {
+    "name": "JOE & THE JUICE - Montgomery",
+    "area": "San Francisco",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.7917743,
+    "lng": -122.4027062,
+    "overall": 3.8,
+    "ratings": {
+      "richness": 3.7,
+      "craft": 3.7,
+      "ambiance": 4.2,
+      "character": 3.9,
+      "value": 3
+    },
+    "note": "Quite an overpriced coffee and juice chain, but consistently has a good working environment.",
+    "tags": [
+      "modern",
+      "lively",
+      "laptop-friendly",
+      "study"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/GhSsMoEXVeuVYwpL7",
+    "visited": [
+      "Jan 4, 2025"
+    ],
+    "state": "California"
+  },
+  {
+    "name": "maman",
+    "area": "",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 40.3507834,
+    "lng": -74.6624086,
+    "overall": 4.3,
+    "ratings": {
+      "richness": 4.2,
+      "craft": 4.3,
+      "ambiance": 4.4,
+      "character": 4.1,
+      "value": 4
+    },
+    "note": "Lively brunch and coffee spot with a great secret and seasonal coffee menu.",
+    "tags": [
+      "lively",
+      "laptop-friendly",
+      "crowded",
+      "outdoor-seating",
+      "pastries"
+    ],
+    "price": "$$",
+    "story": "Normally not into sweet coffees but their seasonal blueberry latte was fantastic.",
+    "mapsUrl": "https://maps.app.goo.gl/Da9rufQCef2D9GgT8",
+    "visited": [
+      "Sep 1, 2025",
+      "Sep 13, 2025"
+    ],
+    "state": "New Jersey",
+    "photos": [
+      {
+        "src": "images/maman_2026-08-18.jpg",
+        "date": "Aug 18, 2026"
+      },
+      {
+        "src": "images/maman_2026-08-18-2.jpg",
+        "date": "Aug 18, 2026"
+      },
+      {
+        "src": "images/maman_2025-09-13.jpg",
+        "date": "Sep 13, 2025"
+      }
+    ]
+  },
+  {
+    "name": "Sakrid Coffee Roasters",
+    "area": "Princeton",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 40.3490224,
+    "lng": -74.6626041,
+    "overall": 3.9,
+    "ratings": {
+      "richness": 3.9,
+      "craft": 4,
+      "ambiance": 4.1,
+      "character": 3.9,
+      "value": 3.7
+    },
+    "note": "Small, somewhat pricey spot whose coffee is overshadowed by its neighbors.",
+    "tags": [
+      "modern",
+      "minimal",
+      "lively",
+      "laptop-friendly",
+      "crowded"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/2V6YTspXpL8chwqG9",
+    "visited": [
+      "Nov 12, 2024",
+      "Mar 29, 2025",
+      "Sep 6, 2025"
+    ],
+    "state": "New Jersey"
+  },
+  {
+    "name": "Rojo's Roastery",
+    "area": "",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 40.3498069,
+    "lng": -74.6618987,
+    "overall": 4.1,
+    "ratings": {
+      "richness": 4.1,
+      "craft": 4,
+      "ambiance": 3.9,
+      "character": 4.1,
+      "value": 4
+    },
+    "note": "Small lesser-known coffee spot in the area with good service and solid coffee. Great location next to Palmer square.",
+    "tags": [
+      "hidden-gem",
+      "cozy",
+      "laptop-friendly",
+      "outdoor-seating"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/nNMjao3QVUqxHBh68",
+    "visited": [
+      "Apr 8, 2024"
+    ],
+    "state": "New Jersey",
+    "photos": [
+      {
+        "src": "images/rojo-s-roastery_2024-04-08.jpg",
+        "date": "Apr 8, 2024"
+      }
+    ]
+  },
+  {
+    "name": "Small World Coffee (Equad)",
+    "area": "Princeton",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 40.3523683,
+    "lng": -74.6511651,
+    "overall": 4,
+    "ratings": {
+      "richness": 4.1,
+      "craft": 4.1,
+      "ambiance": 4,
+      "character": 3.9,
+      "value": 4
+    },
+    "note": "Smaller sibling to their main Witherspoon location; less packed and good for a faster coffee to-go.",
+    "tags": [
+      "minimal",
+      "pastries"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/xRBKwuJjnyzMDr267",
+    "visited": [
+      "Apr 4, 2025"
+    ],
+    "state": "New Jersey"
+  },
+  {
+    "name": "La Cabra",
+    "area": "New York City",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 40.72431,
+    "lng": -73.9962,
+    "overall": 4.2,
+    "ratings": {
+      "richness": 4.3,
+      "craft": 4.4,
+      "ambiance": 4.2,
+      "character": 4,
+      "value": 3.7
+    },
+    "note": "One of the most popular coffee spots in the city, consistently ranked first... worth a visit but doesn't live up to the hype.",
+    "tags": [
+      "modern",
+      "minimal",
+      "lively",
+      "crowded",
+      "expensive",
+      "pastries",
+      "unique"
+    ],
+    "price": "$$$",
+    "mapsUrl": "https://maps.app.goo.gl/W4waZBYTa6r3pxP16",
+    "visited": [
+      "Aug 2, 2026"
+    ],
+    "state": "New York",
+    "photos": [
+      {
+        "src": "images/la-cabra_2026-08-02.jpg",
+        "date": "Aug 2, 2026"
+      }
+    ]
+  },
+  {
+    "name": "Justin's Salt Bread",
+    "area": "New York City",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 40.7256492,
+    "lng": -73.9893805,
+    "overall": 4.4,
+    "ratings": {
+      "richness": 4.3,
+      "craft": 4.4,
+      "ambiance": 4.3,
+      "character": 4.5,
+      "value": 4.2
+    },
+    "note": "Enjoy a good coffee and even better soft bread rolls on tatami mats.",
+    "tags": [
+      "modern",
+      "lively",
+      "unique",
+      "pastries"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/WCBnWtx7iQhhNcQs7",
+    "visited": [
+      "Aug 9, 2026"
+    ],
+    "state": "New York",
+    "photos": [
+      {
+        "src": "images/justin-s-salt-bread_2026-08-09.jpg",
+        "date": "Aug 9, 2026"
+      }
+    ]
+  },
+  {
+    "name": "Blank Street - NOHO",
+    "area": "New York City",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 40.7280888,
+    "lng": -73.9943549,
+    "overall": 3.7,
+    "ratings": {
+      "richness": 3.8,
+      "craft": 3.7,
+      "ambiance": 3.9,
+      "character": 3.5,
+      "value": 4
+    },
+    "note": "Popular coffee chain in new york whose matcha outshines their mediocre coffee.",
+    "tags": [
+      "modern",
+      "minimal"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/zAX5B77mKNcUS8GJ6",
+    "visited": [
+      "Jun 19, 2026"
+    ],
+    "state": "New York",
+    "photos": [
+      {
+        "src": "images/blank-street-noho_2026-06-19.jpg",
+        "date": "Jun 19, 2026"
+      }
+    ]
+  },
+  {
+    "name": "787 Coffee - Tribecca",
+    "area": "New York City",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 40.7165872,
+    "lng": -74.0048064,
+    "overall": 4.5,
+    "ratings": {
+      "richness": 4.5,
+      "craft": 4.4,
+      "ambiance": 4.3,
+      "character": 4.8,
+      "value": 4
+    },
+    "note": "Favorite coffee chain in NYC, full of character. They serve iced coffee in bags and have a Puerto Rican-inspired specialty menu.",
+    "tags": [
+      "lively",
+      "unique",
+      "laptop-friendly",
+      "experimental",
+      "expensive"
+    ],
+    "price": "$$$",
+    "story": "Some may say this place is a little too hip and performative with their \"interesting\" decor.",
+    "mapsUrl": "https://maps.app.goo.gl/H28DNzJN44QWzVdA7",
+    "visited": [
+      "May 30, 2026",
+      "Jun 13, 2026",
+      "Jun 28, 2026",
+      "Jul 18, 2026",
+      "Aug 1, 2026",
+      "Aug 22, 2026"
+    ],
+    "state": "New York",
+    "photos": [
+      {
+        "src": "images/787-coffee-tribecca_2026-08-22.jpg",
+        "date": "Aug 22, 2026"
+      }
+    ]
+  },
+  {
+    "name": "787 Coffee - Chelsea",
+    "area": "New York City",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 40.7400325,
+    "lng": -74.0015893,
+    "overall": 4.3,
+    "ratings": {
+      "richness": 4.4,
+      "craft": 4.3,
+      "ambiance": 4.3,
+      "character": 4.5,
+      "value": 4
+    },
+    "note": "Unique and hip coffee spot that can fulfill your performative desire to carry a bag filled with coffee.",
+    "tags": [
+      "unique",
+      "laptop-friendly",
+      "study"
+    ],
+    "price": "$$$",
+    "mapsUrl": "https://maps.app.goo.gl/BysAKC9319EgyZpZ6",
+    "visited": [
+      "Jul 26, 2026"
+    ],
+    "state": "New York",
+    "photos": [
+      {
+        "src": "images/787-coffee-chelsea_2026-07-26.jpg",
+        "date": "Jul 26, 2026"
+      }
+    ]
+  },
+  {
+    "name": "787 Coffee - Fidi",
+    "area": "New York City",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 40.7034852,
+    "lng": -74.0108313,
+    "overall": 4.2,
+    "ratings": {
+      "richness": 4.4,
+      "craft": 4.3,
+      "ambiance": 4.2,
+      "character": 4.5,
+      "value": 4
+    },
+    "note": "Local-favorite and personal favorite NYC coffee chain.",
+    "tags": [
+      "lively",
+      "unique",
+      "laptop-friendly"
+    ],
+    "price": "$$$",
+    "mapsUrl": "https://maps.app.goo.gl/gbvCgKAAF8TKucwa7",
+    "visited": [
+      "Jul 20, 2026"
+    ],
+    "state": "New York"
+  },
+  {
+    "name": "Blue Bottle Coffee - SOHO",
+    "area": "New York City",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 40.7184835,
+    "lng": -74.002449,
+    "overall": 4.1,
+    "ratings": {
+      "richness": 4.2,
+      "craft": 4,
+      "ambiance": 4.2,
+      "character": 4.1,
+      "value": 4
+    },
+    "note": "Connected to a nearby hotel lounge space; solid NOLA to enjoy while watching the Canal Street fake vendors.",
+    "tags": [
+      "modern",
+      "minimal",
+      "lively",
+      "laptop-friendly",
+      "study"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/CK9W8AKSN2UMVjqJ9",
+    "visited": [
+      "Jun 3, 2026",
+      "Aug 2, 2026",
+      "Aug 15, 2026"
+    ],
+    "state": "New York"
+  },
+  {
+    "name": "Blue Bottle Coffee - Santana Row",
+    "area": "San Jose",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.3202302,
+    "lng": -121.9478553,
+    "overall": 4.2,
+    "ratings": {
+      "richness": 4.2,
+      "craft": 4,
+      "ambiance": 4.4,
+      "character": 4.2,
+      "value": 4
+    },
+    "note": "Vibey outdoor Blue Bottle with occasional farmer's markets and outdoor music performances.",
+    "tags": [
+      "lively",
+      "outdoor-seating",
+      "crowded"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/yFngaAR9YRq5UMgXA",
+    "visited": [
+      "Jun 24, 2024",
+      "Jan 20, 2025",
+      "Aug 20, 2026"
+    ],
+    "state": "California",
+    "photos": [
+      {
+        "src": "images/blue-bottle-coffee-santana-row_2026-08-20.jpg",
+        "date": "Aug 20, 2026"
+      }
+    ]
   }
 ]

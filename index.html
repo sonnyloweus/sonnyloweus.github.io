@@ -72,7 +72,9 @@
   .brand{
     position:fixed; top:calc(20px + var(--safe-t)); left:calc(20px + var(--safe-l)); z-index:500;
     font-size:13px; font-weight:500; letter-spacing:0.02em;
-    background:var(--accent); color:#fff;
+    background:rgba(74,42,22,0.86); color:#fff;
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
     /* Fixed height (matching .toggle-icon's 32px — see the mobile override
        below for the 40px pairing) instead of a padding-driven height, so
        the pill is exactly as tall as the toolbar buttons. Vertical
@@ -149,10 +151,12 @@
   .onthisday-banner{
     position:fixed; top:calc(64px + var(--safe-t)); left:50%; transform:translateX(-50%); z-index:500;
     display:flex; align-items:center; gap:10px;
-    background:#fff; border:none; border-radius:20px;
+    background:rgba(255,255,255,0.38); border:none; border-radius:20px;
     padding:8px 10px 8px 14px; font-size:12px; color:var(--ink);
     box-shadow:0 24px 60px rgba(21,18,16,0.32);
     max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
   }
   .onthisday-close{
     color:var(--dim); cursor:pointer; font-size:15px; line-height:1; padding:2px 4px;
@@ -160,15 +164,20 @@
   .onthisday-close:hover{ color:var(--ink); }
 
   .stats-card{
-    position:fixed; top:calc(66px + var(--safe-t)); left:calc(20px + var(--safe-l)); z-index:500;
+    /* Same reasoning as .toggle-group: above .scrubber (500) so this panel
+       stays on top if it ever grows tall enough to reach the bottom
+       time-range card on a short/mobile viewport. */
+    position:fixed; top:calc(66px + var(--safe-t)); left:calc(20px + var(--safe-l)); z-index:510;
     width:220px;
     max-height:calc(100vh - 100px - var(--safe-t) - var(--safe-b));
     overflow-y:auto;
-    background:#fff; border:none; border-radius:14px;
+    background:rgba(255,255,255,0.38); border:none; border-radius:14px;
     box-shadow:0 24px 60px rgba(21,18,16,0.32);
     padding:14px 16px 16px;
     opacity:0; transform:translateY(-6px); pointer-events:none;
     transition:opacity .18s ease, transform .18s ease;
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
   }
   .stats-card.show{ opacity:1; transform:translateY(0); pointer-events:auto; }
   .stats-title{
@@ -218,10 +227,12 @@
     overflow:hidden;
     opacity:0;
     margin-bottom:0;
-    background:#fff; border:none; border-radius:14px;
+    background:rgba(255,255,255,0.38); border:none; border-radius:14px;
     box-shadow:0 0 0 rgba(21,18,16,0);
     padding:0 16px;
     transition:max-height .25s ease, opacity .2s ease, padding .25s ease, box-shadow .2s ease, margin-bottom .25s ease;
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
   }
   .filter-card.show{
     /* Capped to whatever room is actually left below the card's own
@@ -383,19 +394,32 @@
        the search bar, once expanded, opens underneath the title with some
        breathing room instead of sliding left and covering it. Same offset
        on mobile and laptop, per request. */
-    position:fixed; top:calc(70px + var(--safe-t)); right:calc(20px + var(--safe-r)); z-index:500;
+    /* z-index sits above .scrubber (500) — on mobile the filter/compare/
+       settings panels below grow tall enough to reach the bottom time-range
+       card, and since they're both fixed-position siblings at the same
+       z-index, DOM order alone would let the scrubber (which comes later in
+       the markup) paint on top and cover them. Bumping the whole group above
+       it keeps the panels on top wherever they're tall enough to overlap. */
+    position:fixed; top:calc(70px + var(--safe-t)); right:calc(20px + var(--safe-r)); z-index:510;
     display:flex; flex-direction:column; align-items:flex-end;
   }
   .toggle{
-    font-size:12px; background:#fff; padding:8px 14px;
+    font-size:12px; background:rgba(255,255,255,0.38); padding:8px 14px;
     border:none; border-radius:20px;
     box-shadow:0 4px 14px rgba(21,18,16,0.16);
     cursor:pointer; user-select:none; color:var(--dim);
     margin-bottom:8px;
     transition:box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease;
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
   }
   .toggle:hover{ box-shadow:0 6px 18px rgba(21,18,16,0.22); }
-  .toggle.on{ color:#fff; background:var(--accent); box-shadow:0 4px 14px rgba(59,42,30,0.4); }
+  .toggle.on{ color:#fff; background:rgba(74,42,22,0.55); box-shadow:0 4px 14px rgba(59,42,30,0.4); }
+  /* Game button — matches the "Caffinated Sonny" brand pill exactly (same
+     espresso color/translucency, same backdrop-blur, white icon) instead of
+     the default white toggle look, so it reads as the other fixed pill on
+     the map rather than just another toolbar icon. */
+  #toggle-game{ background:rgba(74,42,22,0.86); color:#fff; }
   .toggle-icon{
     position:relative;
     width:32px; height:32px; padding:0;
@@ -438,8 +462,10 @@
   .search-icon-wrap svg{ width:14px; height:14px; stroke-width:1.75; }
   .search-pill.expanded .search-icon-wrap{
     left:calc(var(--icon-size) * -0.2);
-    background:var(--accent); color:#fff;
+    background:rgba(74,42,22,0.55); color:#fff;
     box-shadow:0 2px 8px rgba(59,42,30,0.35);
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
   }
   .search-pill:not(.expanded) .search-icon-wrap{ cursor:pointer; }
   .search-pill .search-input{
@@ -468,9 +494,11 @@
     position:fixed; bottom:calc(20px + var(--safe-b)); left:50%; transform:translateX(-50%); z-index:500;
     width:300px;
     max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
-    background:#fff; border:none; border-radius:16px;
+    background:rgba(255,255,255,0.38); border:none; border-radius:16px;
     box-shadow:0 24px 60px rgba(21,18,16,0.32);
     padding:10px 18px 14px;
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
   }
   .scrubber-label{ font-size:11px; color:var(--dim); text-align:center; margin-bottom:9px; }
   .scrubber-label b{ color:var(--ink); font-weight:600; }
@@ -528,6 +556,10 @@
   .bubble.t6{ background:var(--tier-6); color:#fff; }
   .bubble.t7{ background:var(--tier-7); color:#fff; }
   .bubble.small{ font-size:9px !important; }
+
+  /* hotspot heatmap (see heatGradientForPalette / updateHeatLayer below)
+     renders to a canvas layer via leaflet.heat, not divIcon/CSS — no
+     bubble-style rules needed here. */
   .bubble.journey-active{
     animation: journeyPulse 1.1s ease-in-out infinite;
     box-shadow: 0 0 0 5px rgba(59,42,30,0.3), 0 3px 10px rgba(21,18,16,.35) !important;
@@ -541,9 +573,11 @@
   .journey-bar{
     position:fixed; bottom:calc(20px + var(--safe-b)); left:50%; transform:translateX(-50%); z-index:550;
     display:flex; align-items:center; gap:14px;
-    background:#fff; border:none; border-radius:20px;
+    background:rgba(255,255,255,0.38); border:none; border-radius:20px;
     padding:10px 16px; box-shadow:0 24px 60px rgba(21,18,16,0.32);
     max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
   }
   .journey-info{ display:flex; flex-direction:column; line-height:1.35; }
   .journey-info b{ font-size:12.5px; font-weight:600; white-space:nowrap; }
@@ -594,10 +628,12 @@
        after the date-visited line so a long note/story/tags list scrolls
        in place instead of growing the whole card off-screen. */
     max-height:calc(100vh - 40px - var(--safe-t) - var(--safe-b)); overflow:hidden;
-    background:#fff; border:none; border-radius:14px;
+    background:rgba(255,255,255,0.38); border:none; border-radius:14px;
     box-shadow:0 24px 60px rgba(21,18,16,0.32);
     opacity:0; transform:translateY(8px); pointer-events:none;
     transition:opacity 0.18s ease, transform 0.18s ease;
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
   }
   .panel.show{ opacity:1; transform:translateY(0); pointer-events:auto; }
   .panel-photo-wrap{ position:relative; width:100%; height:140px; border-radius:14px 14px 0 0; overflow:hidden; background:var(--line); touch-action:pan-y; cursor:pointer; }
@@ -676,11 +712,13 @@
   .modal-overlay.show{ opacity:1; pointer-events:auto; }
   .modal{
     width:320px; max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
-    background:#fff; border-radius:16px;
+    background:rgba(255,255,255,0.82); border-radius:16px;
     padding:24px 24px 20px;
     box-shadow:0 24px 60px rgba(21,18,16,0.32);
     transform:translateY(10px);
     transition:transform 0.2s ease;
+    -webkit-backdrop-filter:blur(16px) saturate(180%) brightness(1.15);
+    backdrop-filter:blur(16px) saturate(180%) brightness(1.15);
   }
   .modal-overlay.show .modal{ transform:translateY(0); }
   .modal-icon{
@@ -689,17 +727,42 @@
   }
   .modal h2{ font-size:16px; font-weight:600; margin:0 0 8px; text-align:center; }
   .modal p{ font-size:13.5px; line-height:1.55; color:var(--ink); margin:0 0 4px; text-align:center; }
-  .modal-stats-grid{
-    display:grid; grid-template-columns:1fr 1fr;
-    gap:14px 10px; margin:4px 0 16px;
+  /* ---- scoreboard slide: condensed label/value list instead of a 2x2
+     grid, so the four totals read at a glance without eating vertical
+     space the name-marquee below needs. ---- */
+  .modal-stats-list{ margin:4px 0 10px; }
+  .modal-stat-row{
+    display:flex; align-items:baseline; justify-content:space-between;
+    padding:4px 2px; border-bottom:1px solid var(--line);
   }
-  .modal-stat{ text-align:center; }
-  .modal-stat b{
-    display:block; font-family:'Inter',sans-serif; font-size:21px;
-    font-weight:700; color:var(--ink); line-height:1.2;
-  }
-  .modal-stat span{
+  .modal-stat-row:last-child{ border-bottom:none; }
+  .modal-stat-label{
     font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:.04em;
+  }
+  .modal-stat-value{
+    font-family:'Inter',sans-serif; font-size:13.5px; font-weight:500; color:var(--ink);
+  }
+  /* ---- scoreboard slide: a slow auto-scrolling list of every spot's
+     name, fading in/out at the top and bottom edges of a fixed box via a
+     mask gradient. Purely ambient/decorative — the track holds the name
+     list twice back-to-back and the keyframe scrolls exactly one copy's
+     height, so the loop seams invisibly. ---- */
+  .modal-marquee{
+    position:relative; height:92px; overflow:hidden; margin:2px 0 14px;
+    -webkit-mask-image:linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+    mask-image:linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+  }
+  .modal-marquee-track{
+    display:flex; flex-direction:column; align-items:center;
+    animation:modalMarqueeScroll linear infinite;
+  }
+  .modal-marquee-item{
+    padding:7px 0; font-size:12.5px; color:var(--ink); text-align:center;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px;
+  }
+  @keyframes modalMarqueeScroll{
+    from{ transform:translateY(0); }
+    to{ transform:translateY(-50%); }
   }
   .modal-dots{ display:flex; justify-content:center; gap:6px; margin:18px 0 18px; }
   .modal-dot{
@@ -709,9 +772,26 @@
   .modal-dot.active{ width:16px; background:var(--accent); }
   .modal-close{
     width:100%; padding:11px; font-size:13px; font-weight:500;
-    font-family:inherit; color:#fff; background:var(--accent);
+    font-family:inherit; color:#fff; background:rgba(74,42,22,0.88);
     border:none; border-radius:8px; cursor:pointer;
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
   }
+  .modal-actions{ display:flex; flex-direction:column; gap:8px; }
+  .modal-btn{
+    width:100%; padding:11px; font-size:13px; font-weight:500;
+    font-family:inherit; border-radius:8px; cursor:pointer; text-align:center;
+  }
+  .modal-btn-primary{
+    color:#fff; background:rgba(74,42,22,0.88); border:none;
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+  }
+  .modal-btn-secondary{
+    background:transparent; color:var(--dim); border:1px solid var(--line);
+  }
+  .modal-btn-secondary span{ font-size:11px; }
+  .modal-btn-secondary:disabled{ cursor:not-allowed; opacity:0.65; }
 
   .switch-block{ border-bottom:1px solid var(--line); }
   .switch-block:last-child{ border-bottom:none; }
@@ -777,7 +857,280 @@
        have the vertical room to let a long note/story stretch the card, so
        the scrollable region below the date-visited line kicks in sooner. */
     .panel-scroll{ max-height:min(calc(100vh - 280px - var(--safe-t) - var(--safe-b)), 280px); }
+    /* Expanded, the HUD spans almost the full width with the same 20px
+       margins everything else on the toolbar uses — collapse it (via the
+       chevron) to get it out of the way of the map underneath. Dropped
+       below the Exit Game button's row (top-left) so the two full-width-ish
+       elements don't overlap. (Extra `body.game-mode` specificity here so
+       this reliably wins over the unconditional `.game-hud` rule defined
+       later in the stylesheet, regardless of source order.) */
+    body.game-mode .game-hud{
+      width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
+      top:calc(70px + var(--safe-t));
+    }
+    /* Same specificity-bump reasoning as .game-hud above — this needs to
+       beat the unconditional .game-streetview-frame rule defined later. */
+    body.game-mode .game-streetview-frame{ height:300px; }
   }
+
+  /* =====================================================================
+     Coffee-guessr — the map-guessing mini-game. Styled with the site's own
+     palette throughout (no separate "game theme") so it reads as a mode of
+     this map, not a bolted-on widget.
+     ===================================================================== */
+
+  /* Extra breathing room around the intro modal's one-liner, between the
+     title above and the Start button below. */
+  .game-intro-text{ margin:6px 0 28px; }
+
+  /* ---- Exit-game button: fixed opposite corner from the HUD, red so it
+     reads as a "leave" action; a second tap is required to actually leave
+     (armed "Confirm" state) so a stray tap mid-round can't boot you out. ---- */
+  .game-exit-btn{
+    display:none;
+    position:fixed; top:calc(20px + var(--safe-t)); left:calc(20px + var(--safe-l)); z-index:610;
+    font-family:inherit; font-size:12px; font-weight:600; letter-spacing:.01em; color:#fff;
+    background:rgba(196,16,16,0.92);
+    border:none; border-radius:20px; padding:9px 16px;
+    cursor:pointer; user-select:none;
+    box-shadow:0 4px 14px rgba(196,16,16,0.4);
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+    transition:background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+  }
+  .game-exit-btn:hover{ box-shadow:0 6px 18px rgba(196,16,16,0.5); }
+  .game-exit-btn.confirm{ background:rgba(230,12,12,1); box-shadow:0 4px 20px rgba(230,12,12,0.65); }
+  .game-exit-btn.confirm:active{ transform:scale(0.97); }
+
+  /* ---- Game HUD: small, same frosted-pill language as .filter-card /
+     .modal — just a compact card, not a differently-themed panel. ---- */
+  .game-hud{
+    display:none;
+    position:fixed; top:calc(20px + var(--safe-t)); right:calc(20px + var(--safe-r)); z-index:610;
+    width:600px; max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
+    max-height:calc(100vh - 40px - var(--safe-t) - var(--safe-b));
+    overflow-y:auto; overscroll-behavior:contain;
+    background:rgba(255,255,255,0.55);
+    border-radius:16px;
+    padding:12px 14px 14px;
+    box-shadow:0 24px 60px rgba(21,18,16,0.32);
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+  }
+  .game-hud.show{ display:block; }
+  /* Collapsible so the map stays reachable underneath it, especially on
+     phones where the HUD's footprint eats a real chunk of the screen. */
+  .game-hud.collapsed{ padding-bottom:12px; overflow:hidden; }
+  .game-hud.collapsed .game-hud-body{ display:none; }
+  .game-hud-header{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+  .game-hud.collapsed .game-hud-header{ margin-bottom:0; }
+  .game-hud-title{ font-size:13px; font-weight:700; color:var(--ink); }
+  .game-hud-timer{ font-size:11px; font-weight:600; color:var(--dim); font-variant-numeric:tabular-nums; }
+  .game-hud-toggle{
+    width:20px; height:20px; flex:none; border-radius:50%; border:none;
+    background:var(--line); color:var(--ink);
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform 0.2s ease;
+  }
+  .game-hud-toggle svg{ width:12px; height:12px; stroke-width:2.25; }
+  .game-hud.collapsed .game-hud-toggle{ transform:rotate(180deg); }
+
+  /* ---- Street View clue: the closest available panorama to the target,
+     shown clear (it's the coffee photos that get blurred, not this) — still
+     fully pannable, drag to look around. Collapses along with the rest of
+     the HUD body. */
+  .game-streetview{ position:relative; margin-bottom:10px; }
+  .game-streetview-frame{
+    position:relative; width:100%; height:340px; border-radius:10px; overflow:hidden;
+    background:var(--line);
+  }
+  .game-streetview-frame iframe{
+    width:100%; height:100%; border:0; display:block;
+  }
+  /* Covers Street View's built-in "location name + view on street view"
+     banner so it can't give the answer away. Google renders that as a
+     horizontal strip flush against the top-LEFT edge of the embed that
+     fades out toward the right (not a floating box) — this matches that
+     shape: flush to the frame's left+top edges, only the top-left corner
+     rounded (to follow the frame's own corner), and a mask/gradient fade
+     on the right side so it reads as a banner sliding in from the side
+     rather than a hard-edged rectangle.
+     TO FINE-TUNE: adjust the --sv-shield-w / --sv-shield-h custom
+     properties below for size, and the % stop in the mask-image /
+     background gradients to move where the fade-out happens. Purely
+     cosmetic (like the photo/name blurs elsewhere in game mode) —
+     pointer-events:none so panning the panorama underneath still works. */
+  .game-streetview-shield {
+    --sv-shield-w: 100%;
+    --sv-shield-h: 55px;
+    position: absolute;
+    top: 10px;
+    left: 0;
+    width: min(72%, var(--sv-shield-w));
+    height: var(--sv-shield-h);
+    border-radius: 0 2px 2px 0;
+    overflow: hidden;
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    background: rgba(20, 16, 12, 0.1);
+    pointer-events: none;
+    z-index: 2;
+  }
+  .game-streetview-placeholder{
+    width:100%; height:100%; padding:10px; box-sizing:border-box;
+    display:flex; align-items:center; justify-content:center;
+    text-align:center; font-size:10px; line-height:1.45; color:var(--dim);
+  }
+  .game-streetview-caption{ font-size:9.5px; color:var(--dim); text-align:center; margin:5px 0 0; line-height:1.4; }
+
+  /* Guesses / clues trackers: small boxes, side by side on one line. */
+  .game-tracker-line{ display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:10px; }
+  .game-tracker-group{ display:flex; align-items:center; gap:5px; }
+  .game-tracker-tag{ font-size:8.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+  .game-tracker-row{ display:flex; gap:3px; }
+  .game-track-box{ width:9px; height:9px; border-radius:2.5px; background:var(--line); transition:background 0.2s ease; }
+  .game-track-box.red{ background:#b23c3c; }
+  .game-track-box.green{ background:#3f7d4f; }
+  .game-track-box.used{ background:var(--accent); }
+
+  .game-result{ text-align:center; font-size:11.5px; font-weight:700; margin:0 0 8px; color:var(--ink); }
+
+  /* ---- Clue slideshow: one clue at a time, arrows + dots, to keep the
+     card small regardless of how many clues are revealed. ---- */
+  .game-slideshow{ margin-bottom:8px; }
+  .game-slide-nav{ display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:4px; }
+  .game-slide-arrow{
+    width:18px; height:18px; flex:none; border-radius:50%; border:none;
+    background:var(--line); color:var(--ink);
+    font-size:12px; line-height:1; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .game-slide-arrow:disabled{ opacity:0.35; cursor:not-allowed; }
+  .game-slide-label{
+    font-size:9.5px; font-weight:600; text-transform:uppercase; letter-spacing:.03em;
+    color:var(--accent); text-align:center; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .game-slide-content{
+    font-size:12px; color:var(--ink); line-height:1.5; text-align:center;
+    min-height:130px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+  .game-slide-content svg{ display:block; width:100%; max-width:190px; height:auto; margin:0 auto; }
+  .game-slide-locked{ font-size:11px; color:var(--dim); font-style:italic; }
+  .game-slide-dots{ display:flex; justify-content:center; gap:4px; margin-top:6px; }
+  .game-slide-dot{ width:5px; height:5px; border-radius:3px; background:var(--line); cursor:pointer; border:none; padding:0; }
+  .game-slide-dot.active{ width:12px; background:var(--accent); }
+  .game-slide-dot.locked{ opacity:0.4; cursor:default; }
+
+  .game-reveal-btn{
+    display:block; width:100%; margin:2px 0 8px; padding:7px; font-family:inherit;
+    font-size:11px; font-weight:600; text-align:center; color:#fff;
+    background:rgba(74,42,22,0.88); border:none; border-radius:8px; cursor:pointer;
+  }
+  .game-reveal-btn:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  .game-guess-list{ margin-top:4px; max-height:90px; overflow-y:auto; }
+  .game-guess-row{
+    display:flex; align-items:center; justify-content:space-between; gap:6px;
+    font-size:10.5px; padding:4px 0; border-top:1px solid var(--line);
+  }
+  .game-guess-row:first-child{ border-top:none; }
+  .game-guess-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .game-guess-status{ font-weight:700; flex:none; }
+  .game-guess-status.correct{ color:#3f7d4f; }
+  .game-guess-status.wrong{ color:#b23c3c; }
+
+  .game-play-again{
+    display:block; width:100%; margin-top:8px; padding:8px; font-family:inherit;
+    font-size:11px; font-weight:600; text-align:center; color:#fff;
+    background:rgba(74,42,22,0.88); border:none; border-radius:8px; cursor:pointer;
+  }
+
+  /* Submit-guess button: lives at the bottom of the stripped-down pin
+     panel, only while a round is active — clicking a pin just previews the
+     spot; this is the actual guess action. Same styling as the site's
+     other primary buttons (.modal-close / .modal-btn-primary). */
+  .game-submit-guess-btn{
+    display:none;
+    width:100%; margin:2px 0 14px; padding:10px; font-family:inherit;
+    font-size:13px; font-weight:500; text-align:center; color:#fff;
+    background:rgba(74,42,22,0.88);
+    border:none; border-radius:8px; cursor:pointer;
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+  }
+  .game-submit-guess-btn:disabled{ opacity:0.55; cursor:not-allowed; }
+  body.game-mode .game-submit-guess-btn{ display:block; }
+
+  /* ---- Everything else drops away while a round is active — same map,
+     same pins, none of the everyday chrome. ---- */
+  body.game-mode .brand,
+  body.game-mode .toggle-group,
+  body.game-mode .scrubber,
+  body.game-mode .stats-card,
+  body.game-mode .onthisday-banner,
+  body.game-mode .journey-bar,
+  body.game-mode .filter-card,
+  body.game-mode .compare-card,
+  body.game-mode .settings-card{ display:none !important; }
+  /* Pin hover tooltips and the panel title both show the shop's name —
+     that's the whole answer, so both are blurred (not hidden) for the
+     duration of a round. Every pin gets this, not just the target —
+     blurring only the target would immediately give it away. Guesses
+     you've already submitted still show their real name in the HUD's
+     guess-history list, since that's your own guess, not a spoiler. */
+  body.game-mode .leaflet-tooltip.mini-tip{ filter:blur(4px); user-select:none; }
+  body.game-mode #p-name{ filter:blur(5px); user-select:none; }
+  /* The photo itself is also a giveaway (storefront signage, etc.) —
+     blurred too, scaled up slightly so the blur's soft edge never peeks
+     past the (overflow-hidden) photo frame. */
+  body.game-mode .panel-photo{ filter:blur(16px); transform:scale(1.15); }
+  /* A little extra air between the (blurred) title and the location line
+     underneath it while playing, so the blur doesn't read as crowding it. */
+  body.game-mode #p-area{ margin-top:10px; }
+
+  /* ---- Stripped-down pin panel while playing: photo (blurred), name
+     (blurred), and the location line survive exactly as they normally
+     look; every rating/price/tag/description field that would hand over
+     the answer (or spoil a clue) is hidden. ---- */
+  body.game-mode .panel-meta,
+  body.game-mode .rating-row,
+  body.game-mode .panel-context,
+  body.game-mode .panel-radar,
+  body.game-mode .panel-note,
+  body.game-mode .panel-story,
+  body.game-mode .panel-tags{ display:none !important; }
+
+  /* ---- End-of-round results modal: same overlay/card language as the
+     welcome modal, with a Wordle-style emoji-square summary. ---- */
+  #game-result-overlay .modal{ width:270px; padding:20px 20px 16px; position:relative; }
+  #game-result-overlay .modal-actions{ gap:6px; }
+  #game-result-overlay .modal-btn{ padding:9px; font-size:12.5px; }
+  #game-result-overlay h2{ margin:0 0 6px; }
+  .game-result-close-x{
+    position:absolute; top:12px; right:14px;
+    font-size:16px; color:var(--dim); cursor:pointer; line-height:1; padding:2px;
+    background:none; border:none; font-family:inherit;
+  }
+  .game-result-close-x:hover{ color:var(--ink); }
+  /* On-screen result squares are real little rounded boxes (not the ⬜🟥🟩
+     emoji glyphs — those render inconsistently across systems/fonts at
+     this size). The copyable share text still uses the emoji, since that
+     needs to be plain text. */
+  .game-result-squares{ margin:10px 0; }
+  .game-result-line{ display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:6px; }
+  .game-result-line:last-child{ margin-bottom:0; }
+  .game-result-line-label{
+    width:80px; flex:none; text-align:right; white-space:nowrap;
+    font-size:9.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--dim);
+  }
+  .game-result-box-row{ display:flex; align-items:center; justify-content:flex-start; gap:5px; }
+  .game-result-box{ width:16px; height:16px; border-radius:4px; background:var(--line); }
+  .game-result-box.red{ background:#b23c3c; }
+  .game-result-box.green{ background:#3f7d4f; }
+  .game-result-box.used{ background:var(--accent); }
+  .game-result-answer{ font-size:11.5px; color:var(--dim); text-align:center; margin:0 0 12px; }
+  .game-result-copied{ color:var(--accent); }
 </style>
 </head>
 <body>
@@ -890,30 +1243,44 @@
     </div>
   </div>
 
-  <div class="toggle toggle-icon" id="toggle-settings" title="Settings" aria-label="Map settings">
-    <i data-lucide="settings"></i>
+  <div class="toggle toggle-icon" id="toggle-settings" title="Customize" aria-label="Map customizations">
+    <i data-lucide="palette"></i>
   </div>
 
   <div class="filter-card" id="settings-card">
     <div class="filter-scroll" id="settings-scroll">
-    <div class="filter-label">Map settings</div>
+    <div class="filter-label">Map customizations</div>
+    <div class="switch-block">
+      <div class="switch-row">
+        <span>Normalize ratings</span>
+        <div class="switch" id="switch-normalize"><div class="switch-knob"></div></div>
+      </div>
+      <p class="switch-caption">Rescales ratings so the lowest becomes 0 and the highest is 5.</p>
+    </div>
     <div class="switch-block">
       <div class="switch-row">
         <span>Clustering</span>
         <div class="switch on" id="switch-clustering"><div class="switch-knob"></div></div>
       </div>
-      <p class="switch-caption">Groups nearby pins into a single bubble until you zoom in.</p>
+      <p class="switch-caption">Groups nearby pins into a single bubble until sufficiently zoomed in.</p>
     </div>
     <div class="switch-block">
       <div class="switch-row">
         <span>Trail</span>
         <div class="switch on" id="switch-trail"><div class="switch-knob"></div></div>
       </div>
-      <p class="switch-caption">Draws a line connecting your visits in chronological order.</p>
+      <p class="switch-caption">Draws the crawl line connecting all visits in chronological order.</p>
     </div>
     <div class="switch-block">
       <div class="switch-row">
-        <span>Rating colors</span>
+        <span>Hotspot heatmap</span>
+        <div class="switch on" id="switch-hotspot"><div class="switch-knob"></div></div>
+      </div>
+      <p class="switch-caption">Renders a heatmap glow for frequently visited areas.</p>
+    </div>
+    <div class="switch-block">
+      <div class="switch-row">
+        <span>Rating theme</span>
       </div>
       <div class="palette-row" id="palette-row">
         <div class="palette-swatch active" data-palette="roast" title="Roast">
@@ -931,14 +1298,7 @@
         <span class="palette-name">Blossom</span>
         <span class="palette-name">Cold Brew</span>
       </div>
-      <p class="switch-caption">Sets the color gradient used for rating bubbles, from your lowest tier to your highest.</p>
-    </div>
-    <div class="switch-block">
-      <div class="switch-row">
-        <span>Normalize ratings</span>
-        <div class="switch" id="switch-normalize"><div class="switch-knob"></div></div>
-      </div>
-      <p class="switch-caption">Rescales ratings so your lowest becomes 0 and your highest becomes 5, stretching bubble colors across your full range.</p>
+      <p class="switch-caption">Sets the color gradient used for rating bubbles.</p>
     </div>
     </div>
     <div class="filter-scrollbar-track" id="settings-scrollbar-track">
@@ -947,6 +1307,8 @@
   </div>
 
   <div class="toggle toggle-icon" id="help-btn" title="Help" aria-label="Help"><i data-lucide="info"></i></div>
+
+  <div class="toggle toggle-icon" id="toggle-game" title="Coffee-guessr" aria-label="Play Coffee-guessr"><i data-lucide="gamepad-2"></i></div>
 </div>
 
 <div class="scrubber" id="scrubber" style="display:none;">
@@ -976,13 +1338,94 @@
   <div class="modal">
     <div class="modal-icon" id="modal-icon"></div>
     <h2 id="modal-title"></h2>
-    <div class="modal-stats-grid" id="modal-stats-grid" style="display:none;"></div>
+    <div class="modal-stats-list" id="modal-stats-list" style="display:none;"></div>
+    <div class="modal-marquee" id="modal-marquee" style="display:none;"></div>
     <p id="modal-text"></p>
     <div class="modal-dots" id="modal-dots">
       <div class="modal-dot" data-i="0"></div>
       <div class="modal-dot" data-i="1"></div>
+      <div class="modal-dot" data-i="2"></div>
     </div>
     <div class="modal-close" id="modal-close">Next</div>
+    <div class="modal-actions" id="modal-actions" style="display:none;">
+      <button class="modal-btn modal-btn-primary" id="modal-explore-btn">Explore</button>
+      <button class="modal-btn modal-btn-secondary" id="modal-play-game-btn">Play Coffee-guessr</button>
+      <button class="modal-btn modal-btn-secondary" id="modal-follow-btn" disabled>Follow Sonny's Journey <span>(Coming soon)</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="game-intro-overlay">
+  <div class="modal">
+    <div class="modal-icon">
+      <svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="6" x2="10" y1="12" y2="12"/>
+        <line x1="8" x2="8" y1="10" y2="14"/>
+        <line x1="15" x2="15.01" y1="13" y2="13"/>
+        <line x1="18" x2="18.01" y1="11" y2="11"/>
+        <path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.544-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/>
+      </svg>
+    </div>
+    <h2>Coffee-guessr</h2>
+    <p class="game-intro-text">You have 3 guesses. Good luck.</p>
+    <div class="modal-close" id="game-start-btn">Start</div>
+  </div>
+</div>
+
+<div class="game-exit-btn" id="game-exit-btn">Exit Game</div>
+
+<div class="game-hud" id="game-hud">
+  <div class="game-hud-header">
+    <span class="game-hud-title">Coffee-guessr</span>
+    <span class="game-hud-timer" id="game-timer">0:00</span>
+    <button type="button" class="game-hud-toggle" id="game-hud-toggle" aria-label="Collapse"><i data-lucide="chevron-down"></i></button>
+  </div>
+
+  <div class="game-hud-body" id="game-hud-body">
+    <div class="game-streetview" id="game-streetview">
+      <div class="game-streetview-frame" id="game-streetview-frame"></div>
+      <div class="game-streetview-shield" id="game-streetview-shield" style="display:none;"></div>
+      <p class="game-streetview-caption">Closest available Street View to these coordinates - not always on the street, and not always close to the spot...</p>
+    </div>
+
+    <div class="game-tracker-line">
+      <div class="game-tracker-group">
+        <span class="game-tracker-tag">Guesses</span>
+        <div class="game-tracker-row" id="game-guess-tracker"></div>
+      </div>
+      <div class="game-tracker-group">
+        <span class="game-tracker-tag">Clues</span>
+        <div class="game-tracker-row" id="game-clue-tracker"></div>
+      </div>
+    </div>
+
+    <div class="game-slideshow">
+      <div class="game-slide-nav">
+        <button type="button" class="game-slide-arrow" id="game-slide-prev" aria-label="Previous clue">‹</button>
+        <span class="game-slide-label" id="game-slide-label"></span>
+        <button type="button" class="game-slide-arrow" id="game-slide-next" aria-label="Next clue">›</button>
+      </div>
+      <div class="game-slide-content" id="game-slide-content"></div>
+      <div class="game-slide-dots" id="game-slide-dots"></div>
+    </div>
+
+    <button type="button" class="game-reveal-btn" id="game-reveal-btn">Reveal next clue</button>
+
+    <div class="game-guess-list" id="game-guess-list"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="game-result-overlay">
+  <div class="modal">
+    <button type="button" class="game-result-close-x" id="game-result-close-btn" aria-label="Close">&times;</button>
+    <h2>Coffee-guessr</h2>
+    <p id="game-result-subtitle"></p>
+    <div class="game-result-squares" id="game-result-squares"></div>
+    <p class="game-result-answer" id="game-result-answer"></p>
+    <div class="modal-actions" style="display:flex;">
+      <button class="modal-btn modal-btn-primary" id="game-result-copy-btn">Copy results</button>
+      <button class="modal-btn modal-btn-secondary" id="game-result-playagain-btn">Play again</button>
+    </div>
   </div>
 </div>
 
@@ -1012,6 +1455,7 @@
     </div>
     <div class="panel-scroll-wrap">
       <div class="panel-scroll" id="panel-scroll">
+        <button type="button" class="game-submit-guess-btn" id="game-submit-guess-btn">Submit guess</button>
         <div class="rating-row overall">
           <span class="rating-label">Overall</span>
           <div class="rating-bar"><div class="rating-fill" id="p-fill-overall"></div></div>
@@ -1032,6 +1476,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script>
 // Renders every <i data-lucide="..."> placeholder (toolbar icons, the stats
@@ -1356,7 +1801,8 @@ function ratingToT(r){
     if(r <= r1) return t0 + (r-r0)/(r1-r0)*(t1-t0);
   }
 }
-function renderShopRadar(shop){
+function renderShopRadar(shop, opts){
+  const showLabels = !opts || opts.showLabels !== false;
   if(!shop.ratings) return '';
   const present = Object.keys(shop.ratings);
   const keys = [
@@ -1425,27 +1871,31 @@ function renderShopRadar(shop){
   // axis (just past the outer ring), pulled outward a bit further on the
   // bottom-leaning axes so they clear the rim.
   const labelBaseR = cupR + 20;
-  const labelPts = keys.map((_,i) => {
+  const labelPts = showLabels ? keys.map((_,i) => {
     const deg = i*step, rad = (deg-90)*Math.PI/180, extra = Math.max(0, Math.sin(rad))*11;
     return polarPoint(cx, cy, labelBaseR+extra, deg);
-  });
-  const labelsSvg = keys.map((k,i) => {
+  }) : [];
+  const labelsSvg = showLabels ? keys.map((k,i) => {
     const [x,y] = labelPts[i];
     return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle">
       <tspan x="${x}" dy="-5.5" fill="var(--dim)" font-size="10.5">${labels[i]}</tspan>
       <tspan x="${x}" dy="13.5" font-weight="700" font-size="12" fill="var(--ink)">${values[i].toFixed(1)}</tspan>
     </text>`;
-  }).join('');
+  }).join('') : '';
 
-  // Tight viewBox around the actual drawn extent — labels, handle, and the
-  // stretched shadow all factor in so nothing gets clipped. Mirrored around
-  // the cup's true center (cx,cy) so the cup itself always sits centered in
-  // the panel, instead of getting pulled off-center by the shadow, which
-  // only extends on one side.
-  const rawLeft = Math.min(...labelPts.map(p=>p[0]), cx-cupR-4, shadowMinX) - 14;
-  const rawRight = Math.max(...labelPts.map(p=>p[0]), hx+hw, cx+cupR+4, shadowMaxX) + 14;
-  const rawTop = Math.min(...labelPts.map(p=>p[1]), cy-cupR-4, shadowMinY) - 15;
-  const rawBottom = Math.max(...labelPts.map(p=>p[1]), cy+cupR+4, shadowMaxY) + 14;
+  // Tight viewBox around the actual drawn extent — labels (when shown),
+  // handle, and the stretched shadow all factor in so nothing gets
+  // clipped. Mirrored around the cup's true center (cx,cy) so the cup
+  // itself always sits centered in the panel, instead of getting pulled
+  // off-center by the shadow, which only extends on one side. Skipping the
+  // label points when they're hidden lets the viewBox hug the cup itself,
+  // which is what makes the label-less radar render noticeably bigger
+  // inside the same container.
+  const labelXs = labelPts.map(p=>p[0]), labelYs = labelPts.map(p=>p[1]);
+  const rawLeft = Math.min(...labelXs, cx-cupR-4, shadowMinX) - 14;
+  const rawRight = Math.max(...labelXs, hx+hw, cx+cupR+4, shadowMaxX) + 14;
+  const rawTop = Math.min(...labelYs, cy-cupR-4, shadowMinY) - 15;
+  const rawBottom = Math.max(...labelYs, cy+cupR+4, shadowMaxY) + 14;
   const halfW = Math.max(cx-rawLeft, rawRight-cx);
   const halfH = Math.max(cy-rawTop, rawBottom-cy);
   const left = cx-halfW, right = cx+halfW, top = cy-halfH, bottom = cy+halfH;
@@ -1767,6 +2217,7 @@ function showPanel(shop){
   // last shop's scroll position/thumb size.
   document.getElementById('panel-scroll').scrollTop = 0;
   updatePanelScrollbar();
+  syncGameSubmitButton();
 }
 function hidePanel(){ document.getElementById('panel').classList.remove('show'); lastShownShop = null; }
 document.getElementById('p-close').onclick = hidePanel;
@@ -1799,6 +2250,24 @@ let lastShownShop = null; // whichever shop the detail panel is currently showin
 let replayMarkerPopIn = null;
 let isFirstRunIntro = false;
 
+// Ambient auto-scrolling list of every spot's name, for the "So Far..."
+// slide. The track renders the name list twice back-to-back and the
+// keyframe (in CSS) translates by exactly one copy's height, so the loop
+// seam is invisible; the mask on the container fades names in/out at the
+// top and bottom edges. Speed scales gently with how many spots there are
+// so it always reads as unhurried regardless of collection size.
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function buildNameMarquee(){
+  if(!GLOBAL_DATA.length) return '';
+  const names = GLOBAL_DATA.map(s => s.name).filter(Boolean);
+  if(names.length < 2) return '';
+  const itemsHtml = names.map(n => `<div class="modal-marquee-item">${escapeHtml(n)}</div>`).join('');
+  const duration = Math.max(names.length * 2.4, 30);
+  return `<div class="modal-marquee-track" style="animation-duration:${duration}s;">${itemsHtml}${itemsHtml}</div>`;
+}
+
 const INTRO_SLIDES = [
   {
     icon: `<svg viewBox="0 0 48 48" fill="none" width="100%" height="100%">
@@ -1808,58 +2277,78 @@ const INTRO_SLIDES = [
       <path d="M22 12c0-1.8 1.8-1.8 1.8-3.6S22 6.8 22 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
     </svg>`,
     title: "Caffinated Sonny",
-    text: "My ongoing, mildly obsessive map of coffee shops around the world."
+    text: "My ongoing coffee exploration from around the world."
   },
   {
-    icon: `<svg viewBox="0 0 48 48" fill="none" width="100%" height="100%">
-      <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="2"/>
-      <ellipse cx="24" cy="24" rx="7.5" ry="18" stroke="currentColor" stroke-width="1.5"/>
-      <line x1="6" y1="24" x2="42" y2="24" stroke="currentColor" stroke-width="1.5"/>
-      <path d="M9 15.5c5 2.8 25 2.8 30 0" stroke="currentColor" stroke-width="1.3"/>
-      <path d="M9 32.5c5-2.8 25-2.8 30 0" stroke="currentColor" stroke-width="1.3"/>
-    </svg>`,
-    title: "The scoreboard so far",
+    title: "So Far...",
     grid: () => {
       if(!GLOBAL_DATA.length) return null;
-      const WORLD_COUNTRIES = 195; // commonly-cited total, UN-recognized + observer states
       const cups = GLOBAL_DATA.reduce((sum, s) => sum + ((s.visited && s.visited.length) || 1), 0);
       const spots = GLOBAL_DATA.length;
       const countries = new Set(GLOBAL_DATA.map(s => s.country).filter(Boolean)).size;
-      const worldPct = countries ? Math.round((countries / WORLD_COUNTRIES) * 100) : 0;
+      const cities = new Set(GLOBAL_DATA.map(s => s.area).filter(Boolean)).size;
       return [
         {value: cups, label: 'cups'},
         {value: spots, label: 'places'},
         {value: countries, label: 'countries'},
-        {value: worldPct + '%', label: 'of the world'}
+        {value: cities, label: 'cities'}
       ];
     },
-    text: () => {
-      if(!GLOBAL_DATA.length) return '';
-      const top = GLOBAL_DATA.reduce((best, s) => (!best || s.overall > best.overall) ? s : best, null);
-      return top ? `${top.name} is still undefeated.` : '';
-    }
+    marquee: () => buildNameMarquee(),
+    text: ''
+  },
+  {
+    title: "Cartography",
+    text: "Click on spots to see a detailed breakdown, find easter egg stories, customize the map to your liking, and search across the coffee catalog."
   }
 ];
 
 let introIndex = 0;
 function renderIntroSlide(){
   const s = INTRO_SLIDES[introIndex];
-  document.getElementById('modal-icon').innerHTML = s.icon;
+  const isLast = introIndex === INTRO_SLIDES.length - 1;
+  const iconEl = document.getElementById('modal-icon');
+  if(s.icon){
+    iconEl.innerHTML = s.icon;
+    iconEl.style.display = '';
+  }else{
+    iconEl.innerHTML = '';
+    iconEl.style.display = 'none';
+  }
   document.getElementById('modal-title').textContent = s.title;
 
-  const gridEl = document.getElementById('modal-stats-grid');
+  const gridEl = document.getElementById('modal-stats-list');
   const gridData = s.grid ? s.grid() : null;
   if(gridData){
-    gridEl.innerHTML = gridData.map(d => `<div class="modal-stat"><b>${d.value}</b><span>${d.label}</span></div>`).join('');
-    gridEl.style.display = 'grid';
+    gridEl.innerHTML = gridData.map(d => `<div class="modal-stat-row"><span class="modal-stat-label">${d.label}</span><span class="modal-stat-value">${d.value}</span></div>`).join('');
+    gridEl.style.display = 'block';
   }else{
     gridEl.innerHTML = '';
     gridEl.style.display = 'none';
   }
 
-  document.getElementById('modal-text').textContent = typeof s.text === 'function' ? s.text() : s.text;
+  const marqueeEl = document.getElementById('modal-marquee');
+  const marqueeHtml = s.marquee ? s.marquee() : '';
+  if(marqueeHtml){
+    marqueeEl.innerHTML = marqueeHtml;
+    marqueeEl.style.display = 'block';
+  }else{
+    marqueeEl.innerHTML = '';
+    marqueeEl.style.display = 'none';
+  }
+
+  const textVal = typeof s.text === 'function' ? s.text() : s.text;
+  const textEl = document.getElementById('modal-text');
+  textEl.textContent = textVal;
+  textEl.style.display = textVal ? '' : 'none';
+
   document.querySelectorAll('.modal-dot').forEach((d,i) => d.classList.toggle('active', i === introIndex));
-  document.getElementById('modal-close').textContent = introIndex === INTRO_SLIDES.length - 1 ? 'Got it' : 'Next';
+
+  // The last slide swaps the single Next/Got it button for the Explore /
+  // Follow Sonny's Journey pair; earlier slides keep the simple advance button.
+  document.getElementById('modal-close').style.display = isLast ? 'none' : 'block';
+  document.getElementById('modal-actions').style.display = isLast ? 'flex' : 'none';
+  if(!isLast) document.getElementById('modal-close').textContent = 'Next';
 }
 document.querySelectorAll('.modal-dot').forEach(dot => {
   dot.onclick = () => { introIndex = parseInt(dot.dataset.i, 10); renderIntroSlide(); };
@@ -1885,6 +2374,11 @@ document.getElementById('modal-close').onclick = () => {
   if(introIndex < INTRO_SLIDES.length - 1){ introIndex++; renderIntroSlide(); }
   else { closeModal(); }
 };
+document.getElementById('modal-explore-btn').onclick = () => { closeModal(); };
+// startGame() is defined further down (Coffee-guessr section) — function
+// declarations are hoisted, so this reference resolves fine regardless of
+// source order; it just can't run until a user actually clicks.
+document.getElementById('modal-play-game-btn').onclick = () => { closeModal(); startGame(); };
 document.getElementById('modal-overlay').onclick = (e) => { if(e.target.id === 'modal-overlay') closeModal(); };
 document.getElementById('help-btn').onclick = openModal;
 
@@ -1949,12 +2443,19 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     subdomains: 'abcd'
   }).addTo(map);
 
+  // The hotspot heatmap lives in its own pane, below Leaflet's default
+  // markerPane (zIndex 600) — so the heat blob can never paint over a
+  // rating pill or cluster bubble, no matter how it's layered.
+  const heatPane = map.createPane('heatPane');
+  heatPane.style.zIndex = 450;
+  heatPane.style.pointerEvents = 'none';
+
   const clusterGroup = L.markerClusterGroup({
     // Was 2 ("basically only cluster pins that visually overlap"), which on
     // a touchscreen left too many near-neighbor pins each demanding a
     // pinpoint-precise tap. Loosened a bit on laptop, and more on mobile
     // since fingers are far less precise than a cursor.
-    maxClusterRadius: isMobileViewport ? 9 : 4,
+    maxClusterRadius: isMobileViewport ? 11 : 6,
     spiderfyOnMaxZoom: true,
     showCoverageOnHover: false,
     // The plugin's built-in zoomToBoundsOnClick often only bumps the zoom by
@@ -2019,6 +2520,31 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
   document.getElementById('switch-trail').classList.toggle('on', trailOn);
   let trailLine = null;
   let currentVisible = [];
+
+  // ---- hotspot heatmap ----
+  // A single continuous leaflet.heat layer (same plugin family behind
+  // weather-radar overlays) instead of one shape per shop. Its point data is
+  // rebuilt from scratch in updateHeatLayer() any time the visible set
+  // changes — see refreshDependentUI() below, the same hook updateTrail()
+  // uses — rather than incrementally added/removed like the pill markers,
+  // since leaflet.heat has no per-point add/remove API worth relying on.
+  // Gradient rides the active rating theme (see RATING_PALETTES) instead of
+  // a fixed color — same 7-step gradient the pills use, just continuous.
+  // Recomputed on the fly (heatGradientForPalette) rather than reading the
+  // --tier-N CSS custom properties, since leaflet.heat renders to canvas and
+  // needs literal color strings, not CSS values.
+  function heatGradientForPalette(key){
+    const palette = RATING_PALETTES[key] || RATING_PALETTES.roast;
+    const stops = {};
+    palette.colors.forEach((c, i) => { stops[(i + 1) / palette.colors.length] = c; });
+    return stops;
+  }
+  let hotspotOn = storedSettings.hotspot !== false; // stored value only ever disables; unset/anything else defaults on
+  document.getElementById('switch-hotspot').classList.toggle('on', hotspotOn);
+  const heatLayer = L.heatLayer([], {
+    pane: 'heatPane', radius: 44, blur: 34, maxZoom: 15, minOpacity: 0.22, gradient: heatGradientForPalette(activePalette)
+  });
+  if(hotspotOn) map.addLayer(heatLayer);
 
   // ---- date range (dual handle) ----
   // visitDays: one entry per shop (its first visit) — used only to decide
@@ -2765,6 +3291,7 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
       sw.classList.add('active');
       activePalette = sw.dataset.palette;
       applyPalette(activePalette);
+      heatLayer.setOptions({ gradient: heatGradientForPalette(activePalette) });
       saveStoredSetting('palette', activePalette);
     };
   });
@@ -2784,14 +3311,46 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     renderVisitHistogram(inView);
   }
 
+  // Walks every recorded visit (not just each shop's earliest) in
+  // chronological order, collapsing only *consecutive* repeats at the same
+  // shop into one "stay" — back-to-back mornings at the same regular are
+  // zero real movement, not a leg of the trip. A shop you left and later
+  // came back to (a non-consecutive repeat) still gets its own stay and
+  // its own segment. See buildTrailPath below for why this matters:
+  // without collapsing, a 30-visit-in-a-row streak at one spot would draw
+  // 29 overlapping zero-length loops on top of it.
+  function buildTrailStays(shops){
+    const events = [];
+    shops.forEach(s => {
+      (s.visited || []).forEach(dateStr => {
+        const t = new Date(dateStr).getTime();
+        if(!isNaN(t)) events.push({t, shop: s});
+      });
+    });
+    events.sort((a,b) => a.t - b.t);
+    const stays = [];
+    events.forEach(e => {
+      if(stays.length && stays[stays.length-1].shop === e.shop) return;
+      stays.push(e);
+    });
+    return stays;
+  }
+
+  // Straight-line pass through every stay, in order. No bowing yet — that's
+  // a follow-up (paths should start straight and only bow once a given
+  // pair of places has been walked more than once — see discussion before
+  // this commit). For now this just fixes the actual bug: every return
+  // trip gets its own segment instead of collapsing to one node per shop.
+  function buildTrailPath(stays){
+    return stays.map(st => [st.shop.lat, st.shop.lng]);
+  }
+
   function updateTrail(){
     if(trailLine){ map.removeLayer(trailLine); trailLine = null; }
     if(trailOn){
-      const ordered = currentVisible
-        .filter(s => earliestVisit(s) !== null)
-        .sort((a,b) => earliestVisit(a) - earliestVisit(b));
-      if(ordered.length > 1){
-        trailLine = L.polyline(ordered.map(s => [s.lat, s.lng]), {
+      const stays = buildTrailStays(currentVisible);
+      if(stays.length > 1){
+        trailLine = L.polyline(buildTrailPath(stays), {
           color: 'rgba(59,42,30,0.4)', weight: 1.5, dashArray: '3 7', lineCap: 'round'
         }).addTo(map);
         trailLine.bringToBack();
@@ -2821,6 +3380,28 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
       iconSize: [w, h],
       iconAnchor: [w/2, h/2]
     });
+  }
+
+  // ---- hotspot heatmap intensity ----
+  // Each shop's heat "weight" is its in-range visit count (badgeCount — the
+  // same number driving the ×N badge) relative to the single most-visited
+  // shop in the *whole* dataset (computed once, not re-derived per filter)
+  // so the scale stays stable as you filter instead of rescaling every time
+  // the visible max shrinks. Floored above 0 so even a single-visit shop
+  // still registers a faint blob rather than vanishing entirely.
+  const MAX_LIFETIME_VISITS = Math.max(1, ...data.map(shop => (shop.visited || []).length));
+  function heatWeight(badgeCount){
+    return Math.min(1, Math.max(0.08, Math.sqrt(Math.max(0, badgeCount) / MAX_LIFETIME_VISITS)));
+  }
+  // Rebuilds the heat layer's point data from whichever shops are currently
+  // active — called from refreshDependentUI() (see below) any time filters,
+  // the date range, or clustering change what's visible, same trigger
+  // updateTrail() uses.
+  function updateHeatLayer(){
+    const points = shopMarkers
+      .filter(e => activeSet.has(e.marker))
+      .map(e => [e.shop.lat, e.shop.lng, heatWeight(e.badgeCount)]);
+    heatLayer.setLatLngs(points);
   }
 
   // ---- pop-in timing helper: given the entries about to be revealed,
@@ -2921,6 +3502,7 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
   function refreshDependentUI(){
     currentVisible = shopMarkers.filter(e => activeSet.has(e.marker)).map(e => e.shop);
     updateTrail();
+    updateHeatLayer();
     updateInViewStats();
   }
 
@@ -2966,6 +3548,7 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
       setTimeout(() => {
         activeGroup().addLayer(entry.marker);
         activeSet.add(entry.marker);
+        updateHeatLayer();
         remaining--;
         if(remaining === 0) refreshDependentUI();
       }, delay * 1000);
@@ -3004,6 +3587,13 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     e.currentTarget.classList.toggle('on', trailOn);
     saveStoredSetting('trail', trailOn);
     updateTrail();
+  };
+
+  document.getElementById('switch-hotspot').onclick = (e) => {
+    hotspotOn = !hotspotOn;
+    e.currentTarget.classList.toggle('on', hotspotOn);
+    saveStoredSetting('hotspot', hotspotOn);
+    if(hotspotOn){ map.addLayer(heatLayer); updateHeatLayer(); } else map.removeLayer(heatLayer);
   };
 
   // ---- Show Journey: an animated dashed line travels between each dated
@@ -3048,6 +3638,7 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
   function populateStop(entry){
     clusterGroup.addLayer(entry.marker);
     activeSet.add(entry.marker);
+    updateHeatLayer();
     const el = entry.marker.getElement();
     const bubble = el && el.querySelector('.bubble');
     if(bubble){
@@ -3132,6 +3723,7 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
 
     clusterGroup.clearLayers();
     activeSet = new Set();
+    updateHeatLayer();
     currentVisible = [];
     if(trailLine){ map.removeLayer(trailLine); trailLine = null; }
     updateInViewStats();
@@ -3161,6 +3753,410 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
   map.on('moveend', updateInViewStats);
   setTimeout(() => map.invalidateSize(), 100);
 })();
+
+// =====================================================================
+// Coffee-guessr
+// A round picks one random spot from GLOBAL_DATA as the target. It opens
+// on a (clear, pannable) Street View panorama of the spot — no other
+// clues yet. The coffee radar and the other 3 clues (price+dates, tags,
+// description) are all hidden until the player taps "Reveal next clue";
+// guessing wrong does NOT auto-reveal anything. Clicking a pin just opens
+// its stripped-down detail panel (name + photo both blurred) to preview
+// it; the "Submit guess" button at the bottom of that panel is the actual
+// guess action. Clues are browsed one at a time in a small slideshow to
+// keep the HUD compact.
+// =====================================================================
+
+// ---- Street View setup ----
+// Paste a Google Maps EMBED API key below to turn on the Street View
+// panel (Google Cloud Console → APIs & Services → Credentials → enable
+// "Maps Embed API"). Leave this blank and Coffee-guessr still works fine
+// — the radar/price/tags/description clues and guessing are unaffected;
+// the Street View panel just shows a short placeholder instead of a live
+// panorama.
+const GOOGLE_STREETVIEW_API_KEY = 'AIzaSyDJS5yx-eZQRro6DxcumF0XNhDfqDHoQnY';
+
+function buildStreetViewEmbedUrl(shop, headingDeg){
+  const params = new URLSearchParams({
+    key: GOOGLE_STREETVIEW_API_KEY,
+    location: `${shop.lat},${shop.lng}`,
+    heading: String(headingDeg),
+    pitch: '0',
+    fov: '90',
+  });
+  return `https://www.google.com/maps/embed/v1/streetview?${params.toString()}`;
+}
+
+// Called once per round, right after a target is picked — builds (or
+// re-placeholders) the Street View iframe. A random heading each round so
+// the panorama isn't always facing the same way.
+function renderGameStreetView(){
+  const frame = document.getElementById('game-streetview-frame');
+  const shield = document.getElementById('game-streetview-shield');
+  if(!frame) return;
+  if(!GOOGLE_STREETVIEW_API_KEY){
+    frame.innerHTML = '<div class="game-streetview-placeholder">Add a Google Maps Embed API key to GOOGLE_STREETVIEW_API_KEY in index.html to turn on the Street View clue.</div>';
+    if(shield) shield.style.display = 'none';
+    return;
+  }
+  const heading = Math.floor(Math.random() * 360);
+  const url = buildStreetViewEmbedUrl(gameTarget, heading);
+  // Deliberately NO allowfullscreen here. The iframe is cross-origin
+  // (Google's document, not ours) — once it goes fullscreen the browser
+  // renders it in the "top layer" where nothing from our page, however high
+  // its z-index, can paint above it, and we have no DOM access inside it to
+  // add our own shield there either. So instead of trying to cover the
+  // banner post-fullscreen, we just disable the fullscreen control itself:
+  // dropping this attribute makes the browser refuse fullscreen requests
+  // from inside the iframe, so the native fullscreen button in the embed's
+  // corner becomes a no-op and the shield above can never be bypassed.
+  frame.innerHTML = `<iframe src="${url}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`;
+  if(shield) shield.style.display = 'block';
+}
+
+// Belt-and-suspenders: if a fullscreen request on the Street View iframe
+// ever somehow succeeds anyway (e.g. a browser quirk around the missing
+// allowfullscreen attribute), immediately kick it back out of fullscreen
+// rather than let the unblurred banner sit exposed.
+document.addEventListener('fullscreenchange', () => {
+  const fs = document.fullscreenElement;
+  if(fs && fs.id === 'game-streetview-frame'){
+    document.exitFullscreen().catch(() => {});
+  }
+  const frame = document.getElementById('game-streetview-frame');
+  if(frame && fs && frame.contains(fs)){
+    document.exitFullscreen().catch(() => {});
+  }
+});
+
+const GAME_MAX_GUESSES = 3;
+const GAME_MAX_CLUES = 4;
+const GAME_CLUE_LABELS = ['Coffee radar', 'Price & dates visited', 'Tags', 'Description'];
+
+window.gameActive = false;
+let gameTarget = null;
+let gameGuesses = []; // [{shop, correct}]
+let gameCluesRevealed = 0;
+let gameSlideIndex = 0; // which revealed clue (0-based) the slideshow is showing
+let gameOver = false;
+let gameExitArmed = false;
+let gameExitTimer = null;
+let gameHudCollapsed = false;
+let gameStartTime = null;
+let gameElapsedSeconds = 0;
+let gameTimerInterval = null;
+
+function formatGameTime(totalSeconds){
+  const m = Math.floor(totalSeconds / 60), s = totalSeconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+function updateGameTimer(){
+  if(!window.gameActive || gameOver) return;
+  gameElapsedSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
+  const el = document.getElementById('game-timer');
+  if(el) el.textContent = formatGameTime(gameElapsedSeconds);
+}
+
+function pickGameTarget(){
+  const pool = GLOBAL_DATA.filter(s => s.ratings && Object.keys(s.ratings).length >= 3 && s.tags && s.tags.length && s.note && s.area);
+  const source = pool.length ? pool : GLOBAL_DATA;
+  return source[Math.floor(Math.random() * source.length)];
+}
+
+function openGameIntro(){
+  document.getElementById('game-intro-overlay').classList.add('show');
+}
+function closeGameIntro(){
+  document.getElementById('game-intro-overlay').classList.remove('show');
+}
+
+function startGame(){
+  closeGameIntro();
+  hidePanel();
+  document.getElementById('game-result-overlay').classList.remove('show');
+  // A game round is exclusive with every other overlay/side-panel — close
+  // whatever might already be open before dropping into game mode.
+  document.getElementById('stats-card').classList.remove('show');
+  document.getElementById('brand').classList.remove('open');
+  ['filter-card','compare-card','settings-card'].forEach(id => document.getElementById(id).classList.remove('show'));
+  ['toggle-filter','toggle-compare','toggle-settings'].forEach(id => document.getElementById(id).classList.remove('on'));
+
+  gameTarget = pickGameTarget();
+  gameGuesses = [];
+  gameCluesRevealed = 0;
+  gameSlideIndex = 0;
+  gameOver = false;
+  gameExitArmed = false;
+  gameHudCollapsed = false;
+  window.gameActive = true;
+
+  gameStartTime = Date.now();
+  gameElapsedSeconds = 0;
+  clearInterval(gameTimerInterval);
+  gameTimerInterval = setInterval(updateGameTimer, 1000);
+  const timerEl = document.getElementById('game-timer');
+  if(timerEl) timerEl.textContent = '0:00';
+
+  renderGameStreetView();
+
+  const exitBtn = document.getElementById('game-exit-btn');
+  exitBtn.textContent = 'Exit Game';
+  exitBtn.classList.remove('confirm');
+  exitBtn.style.display = 'flex';
+
+  document.body.classList.add('game-mode');
+  const hudEl = document.getElementById('game-hud');
+  hudEl.classList.add('show');
+  hudEl.classList.remove('collapsed');
+  renderGameHUD();
+}
+
+function endGame(){
+  clearTimeout(gameExitTimer);
+  clearInterval(gameTimerInterval);
+  window.gameActive = false;
+  document.body.classList.remove('game-mode');
+  document.getElementById('game-hud').classList.remove('show');
+  document.getElementById('game-exit-btn').style.display = 'none';
+  // Drop the iframe so a backgrounded panorama isn't still loaded/using
+  // resources once the round is over.
+  const frame = document.getElementById('game-streetview-frame');
+  if(frame) frame.innerHTML = '';
+  hidePanel();
+}
+
+// These two lines back the *copyable* share text — always padded out to
+// the full guesses/clues slots, unused shown as ⬜, Wordle-style.
+function gameResultGuessLine(){
+  return Array.from({length: GAME_MAX_GUESSES}, (_, i) => {
+    const g = gameGuesses[i];
+    return g ? (g.correct ? '🟩' : '🟥') : '⬜';
+  }).join('');
+}
+function gameResultClueLine(){
+  return Array.from({length: GAME_MAX_CLUES}, (_, i) => i < gameCluesRevealed ? '🟫' : '⬜').join('');
+}
+
+// Builds the Wordle-style emoji summary. Doesn't name the spot, same as
+// Wordle's share text not spelling out the word.
+function buildGameResultEmoji(){
+  return `Caffinated Sonny Coffee-guessr\n· Time: ${formatGameTime(gameElapsedSeconds)}\n· Guesses ${gameResultGuessLine()}\n· Clues ${gameResultClueLine()}`;
+}
+
+// The *on-screen* squares use real little boxes instead — the ⬜🟥🟩 emoji
+// glyphs render inconsistently (odd sizing/spacing) across systems and
+// fonts at a readable size, where here we control the box exactly.
+function gameResultBoxesHtml(){
+  const guessBoxes = Array.from({length: GAME_MAX_GUESSES}, (_, i) => {
+    const g = gameGuesses[i];
+    const cls = g ? (g.correct ? 'green' : 'red') : '';
+    return `<div class="game-result-box ${cls}"></div>`;
+  }).join('');
+  const clueBoxes = Array.from({length: GAME_MAX_CLUES}, (_, i) => {
+    return `<div class="game-result-box ${i < gameCluesRevealed ? 'used' : ''}"></div>`;
+  }).join('');
+  return `<div class="game-result-line"><span class="game-result-line-label">Guesses</span><div class="game-result-box-row">${guessBoxes}</div></div>` +
+    `<div class="game-result-line"><span class="game-result-line-label">Hints Used</span><div class="game-result-box-row">${clueBoxes}</div></div>`;
+}
+
+function showGameResultModal(){
+  const won = gameGuesses.some(g => g.correct);
+  document.getElementById('game-result-subtitle').textContent = won
+    ? `Solved in ${gameGuesses.length} guess${gameGuesses.length === 1 ? '' : 'es'} · ${formatGameTime(gameElapsedSeconds)} 🎉`
+    : `Out of guesses · ${formatGameTime(gameElapsedSeconds)}`;
+  document.getElementById('game-result-answer').textContent = `It was ${gameTarget.name}.`;
+  document.getElementById('game-result-squares').innerHTML = gameResultBoxesHtml();
+  const copyBtn = document.getElementById('game-result-copy-btn');
+  copyBtn.textContent = 'Copy results';
+  copyBtn.classList.remove('game-result-copied');
+  document.getElementById('game-result-overlay').classList.add('show');
+}
+
+// A correct guess (or the last guess used up) ends the round immediately —
+// back to the normal map/toolbar, with a Wordle-style share summary.
+function finishGame(){
+  showGameResultModal();
+  endGame();
+}
+
+// Clicking a pin just previews it (the normal showPanel flow, stripped
+// down to photo/name/location by the body.game-mode CSS rules) — this is
+// the actual guess action, wired to the "Submit guess" button that lives
+// at the bottom of that stripped panel.
+function handleGameGuessSubmit(shop){
+  if(!window.gameActive || gameOver || !shop) return;
+  if(gameGuesses.length >= GAME_MAX_GUESSES) return;
+
+  const correct = shop === gameTarget;
+  gameGuesses.push({ shop, correct });
+  if(correct || gameGuesses.length >= GAME_MAX_GUESSES){
+    gameOver = true;
+    // Freeze the exact elapsed time right now, rather than however stale
+    // the last once-a-second tick happened to be.
+    gameElapsedSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
+    finishGame();
+    return;
+  }
+
+  hidePanel();
+  renderGameHUD();
+}
+
+// Keeps the panel's "Submit guess" button in sync with the current round
+// state every time the panel opens (or the round ends) — disabled once
+// there's no active round left to submit a guess into.
+function syncGameSubmitButton(){
+  const btn = document.getElementById('game-submit-guess-btn');
+  if(!btn) return;
+  const canSubmit = window.gameActive && !gameOver && gameGuesses.length < GAME_MAX_GUESSES;
+  btn.disabled = !canSubmit;
+  btn.textContent = (window.gameActive && gameOver) ? 'Round over' : 'Submit guess';
+}
+
+function revealNextClue(){
+  if(gameCluesRevealed >= GAME_MAX_CLUES) return;
+  gameCluesRevealed++;
+  gameSlideIndex = gameCluesRevealed - 1; // jump the slideshow to the newly revealed clue
+  renderGameHUD();
+}
+
+function gameClueHtml(index){
+  // index is 1-based (1 = radar, 2 = price/dates, 3 = tags, 4 = description)
+  if(!gameTarget) return '';
+  if(index === 1){
+    return renderShopRadar(gameTarget, {showLabels: false}) || '<p>Not enough data for a radar.</p>';
+  }
+  if(index === 2){
+    const bits = [];
+    if(gameTarget.price) bits.push(`<b>${gameTarget.price}</b>`);
+    if(gameTarget.visited && gameTarget.visited.length){
+      bits.push('Visited ' + gameTarget.visited.join(', '));
+    }
+    return bits.join(' &middot; ') || 'No price/visit data.';
+  }
+  if(index === 3){
+    return (gameTarget.tags && gameTarget.tags.length) ? gameTarget.tags.join('  &middot;  ') : 'No tags.';
+  }
+  if(index === 4){
+    return gameTarget.note || 'No description.';
+  }
+  return '';
+}
+
+function goToSlide(i){
+  if(i < 0 || i >= gameCluesRevealed) return; // can't navigate past what's actually unlocked
+  gameSlideIndex = i;
+  renderGameHUD();
+}
+
+function renderGameHUD(){
+  if(!gameTarget) return;
+
+  // ---- trackers (small, side by side) ----
+  document.getElementById('game-guess-tracker').innerHTML = Array.from({length: GAME_MAX_GUESSES}, (_, i) => {
+    const g = gameGuesses[i];
+    const cls = g ? (g.correct ? 'green' : 'red') : '';
+    return `<div class="game-track-box ${cls}"></div>`;
+  }).join('');
+  document.getElementById('game-clue-tracker').innerHTML = Array.from({length: GAME_MAX_CLUES}, (_, i) => {
+    return `<div class="game-track-box ${i < gameCluesRevealed ? 'used' : ''}"></div>`;
+  }).join('');
+
+  // ---- clue slideshow ----
+  // All 4 clues (including the radar) start locked now — nothing to show
+  // until the player reveals at least one.
+  const slideLabelEl = document.getElementById('game-slide-label');
+  const slideContentEl = document.getElementById('game-slide-content');
+  if(gameCluesRevealed === 0){
+    slideLabelEl.textContent = 'No clues revealed yet';
+    slideContentEl.innerHTML = '<span class="game-slide-locked">Tap "Reveal next clue" below to get your first clue.</span>';
+  }else{
+    slideLabelEl.textContent = `Clue ${gameSlideIndex + 1} · ${GAME_CLUE_LABELS[gameSlideIndex]}`;
+    slideContentEl.innerHTML = gameClueHtml(gameSlideIndex + 1);
+  }
+  document.getElementById('game-slide-prev').disabled = gameSlideIndex <= 0 || gameCluesRevealed === 0;
+  document.getElementById('game-slide-next').disabled = gameSlideIndex >= gameCluesRevealed - 1;
+  document.getElementById('game-slide-dots').innerHTML = Array.from({length: GAME_MAX_CLUES}, (_, i) => {
+    const locked = i >= gameCluesRevealed;
+    return `<button type="button" class="game-slide-dot ${(i === gameSlideIndex && !locked) ? 'active' : ''} ${locked ? 'locked' : ''}" data-i="${i}" ${locked ? 'disabled' : ''}></button>`;
+  }).join('');
+  document.querySelectorAll('.game-slide-dot').forEach(dot => {
+    dot.onclick = () => goToSlide(parseInt(dot.dataset.i, 10));
+  });
+
+  // ---- reveal-next-clue button ----
+  const revealBtn = document.getElementById('game-reveal-btn');
+  revealBtn.disabled = gameCluesRevealed >= GAME_MAX_CLUES;
+  revealBtn.textContent = gameCluesRevealed >= GAME_MAX_CLUES ? 'All clues revealed' : 'Reveal next clue';
+
+  // ---- guess history ----
+  document.getElementById('game-guess-list').innerHTML = gameGuesses.map(g => `
+    <div class="game-guess-row">
+      <span class="game-guess-name">${g.shop.name}</span>
+      <span class="game-guess-status ${g.correct ? 'correct' : 'wrong'}">${g.correct ? '✓' : '✗'}</span>
+    </div>`).join('');
+}
+
+document.getElementById('toggle-game').onclick = openGameIntro;
+document.getElementById('game-intro-overlay').onclick = (e) => { if(e.target.id === 'game-intro-overlay') closeGameIntro(); };
+document.getElementById('game-start-btn').onclick = startGame;
+document.getElementById('game-submit-guess-btn').onclick = () => handleGameGuessSubmit(lastShownShop);
+document.getElementById('game-reveal-btn').onclick = revealNextClue;
+document.getElementById('game-hud-toggle').onclick = () => {
+  gameHudCollapsed = !gameHudCollapsed;
+  document.getElementById('game-hud').classList.toggle('collapsed', gameHudCollapsed);
+};
+
+document.getElementById('game-result-overlay').onclick = (e) => { if(e.target.id === 'game-result-overlay') document.getElementById('game-result-overlay').classList.remove('show'); };
+document.getElementById('game-result-close-btn').onclick = () => document.getElementById('game-result-overlay').classList.remove('show');
+document.getElementById('game-result-playagain-btn').onclick = startGame;
+document.getElementById('game-result-copy-btn').onclick = () => {
+  const text = buildGameResultEmoji();
+  const btn = document.getElementById('game-result-copy-btn');
+  const showCopied = () => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('game-result-copied');
+    setTimeout(() => { btn.textContent = 'Copy results'; btn.classList.remove('game-result-copied'); }, 1800);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(showCopied).catch(() => fallbackCopy(text, showCopied));
+  }else{
+    fallbackCopy(text, showCopied);
+  }
+};
+function fallbackCopy(text, onDone){
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    onDone();
+  }catch(e){ /* clipboard unavailable — no-op */ }
+}
+document.getElementById('game-slide-prev').onclick = () => goToSlide(gameSlideIndex - 1);
+document.getElementById('game-slide-next').onclick = () => goToSlide(gameSlideIndex + 1);
+
+document.getElementById('game-exit-btn').onclick = () => {
+  const btn = document.getElementById('game-exit-btn');
+  if(!gameExitArmed){
+    gameExitArmed = true;
+    btn.textContent = 'Confirm';
+    btn.classList.add('confirm');
+    clearTimeout(gameExitTimer);
+    gameExitTimer = setTimeout(() => {
+      gameExitArmed = false;
+      btn.textContent = 'Exit Game';
+      btn.classList.remove('confirm');
+    }, 3000);
+  }else{
+    clearTimeout(gameExitTimer);
+    endGame();
+  }
+};
 </script>
 </body>
 </html>
