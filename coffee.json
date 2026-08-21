@@ -744,40 +744,6 @@
     ]
   },
   {
-    "name": "Philz Coffee",
-    "area": "Cupertino",
-    "country": "USA",
-    "state": "California",
-    "type": "coffee",
-    "lat": 37.324237,
-    "lng": -122.0104416,
-    "overall": 4.5,
-    "ratings": {
-      "richness": 4.6,
-      "craft": 4.1,
-      "ambiance": 4.2,
-      "character": 4.3,
-      "value": 4.2
-    },
-    "note": "California-based coffee spot with an overcomplicated but nice coffee menu to help you feel even more performative.",
-    "tags": [
-      "lively",
-      "crowded",
-      "laptop-friendly",
-      "outdoor-seating",
-      "cozy"
-    ],
-    "price": "$$",
-    "mapsUrl": "https://maps.app.goo.gl/TWm5SpqA2ConpNsN8",
-    "visited": [
-      "May 26, 2025",
-      "Jun 7, 2025",
-      "Aug 23, 2025",
-      "Jan 11, 2026",
-      "Jan 19, 2026"
-    ]
-  },
-  {
     "name": "Voyager Craft Coffee - Cupertino",
     "area": "Cupertino",
     "country": "USA",
@@ -2164,6 +2130,107 @@
       {
         "src": "images/blue-bottle-coffee-santana-row_2026-08-20.jpg",
         "date": "Aug 20, 2026"
+      }
+    ]
+  },
+  {
+    "name": "VØID",
+    "area": "Santa Clara",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.37413,
+    "lng": -121.9941935,
+    "overall": 3.9,
+    "ratings": {
+      "richness": 3.8,
+      "craft": 3.9,
+      "ambiance": 4.3,
+      "character": 3.9,
+      "value": 3.6
+    },
+    "note": "The coffee fails to live up to the promise of the shop’s design.",
+    "tags": [
+      "modern",
+      "lively",
+      "laptop-friendly",
+      "study",
+      "outdoor-seating"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/wDLNv3bPwWUSPkhm7",
+    "visited": [
+      "Aug 20, 2026"
+    ],
+    "state": "California",
+    "photos": [
+      {
+        "src": "images/v-id_2026-08-20.jpg",
+        "date": "Aug 20, 2026"
+      },
+      {
+        "src": "images/v-id_2026-08-20-2.jpg",
+        "date": "Aug 20, 2026"
+      },
+      {
+        "src": "images/v-id_2026-08-20-3.jpg",
+        "date": "Aug 20, 2026"
+      },
+      {
+        "src": "images/v-id_2026-08-20-4.jpg",
+        "date": "Aug 20, 2026"
+      }
+    ]
+  },
+  {
+    "name": "Philz Coffee - Main Street Cupertino",
+    "area": "Cupertino",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.324237,
+    "lng": -122.0104416,
+    "overall": 4.5,
+    "ratings": {
+      "richness": 4.6,
+      "craft": 4.1,
+      "ambiance": 4.2,
+      "character": 4.3,
+      "value": 4.2
+    },
+    "note": "California-based coffee spot with an overcomplicated but nice coffee menu to help you feel even more performative.",
+    "tags": [
+      "lively",
+      "crowded",
+      "laptop-friendly",
+      "outdoor-seating",
+      "cozy"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/TWm5SpqA2ConpNsN8",
+    "visited": [
+      "May 26, 2025",
+      "Jun 7, 2025",
+      "Aug 23, 2025",
+      "Jan 11, 2026",
+      "Jan 19, 2026",
+      "Aug 21, 2026"
+    ],
+    "state": "California",
+    "photos": [
+      {
+        "src": "images/philz-coffee-main-street-cupertino_2026-08-21.jpg",
+        "date": "Aug 21, 2026"
+      },
+      {
+        "src": "images/philz-coffee-main-street-cupertino_2026-08-21-2.jpg",
+        "date": "Aug 21, 2026"
+      },
+      {
+        "src": "images/philz-coffee-main-street-cupertino_2026-08-21-3.jpg",
+        "date": "Aug 21, 2026"
+      },
+      {
+        "src": "images/philz-coffee-main-street-cupertino_2026-08-21-4.jpg",
+        "date": "Aug 21, 2026"
       }
     ]
   }

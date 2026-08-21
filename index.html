@@ -650,6 +650,16 @@
     transition:width 0.15s ease, background 0.15s ease;
   }
   .panel-photo-dots .dot.active{ background:#fff; width:14px; }
+  /* Only ever shown in game mode (see the body.game-mode rule below) — sits
+     above the photo, unaffected by the blur/scale applied to the img
+     itself, so the label always reads crisp regardless of what's under it. */
+  .panel-photo-hidden-label{
+    display:none; position:absolute; inset:0; z-index:2;
+    align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:#fff; text-shadow:0 1px 4px rgba(0,0,0,0.55);
+    pointer-events:none;
+  }
   .panel-header{ padding:16px 20px 0; }
   .panel-header.no-photo{ padding-top:20px; }
   .panel-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px; }
@@ -864,13 +874,41 @@
        elements don't overlap. (Extra `body.game-mode` specificity here so
        this reliably wins over the unconditional `.game-hud` rule defined
        later in the stylesheet, regardless of source order.) */
+    /* Height is capped as a function of vh rather than a fixed px number —
+       a fixed cap either wasted space or (on shorter phones) let the card
+       run past the bottom of the screen. With that cap in place the HUD
+       itself no longer scrolls as one long card (that made short phones
+       feel like an endless sheet) — instead it's a flex column, the street
+       view + guess/clue trackers stay put at a fixed size, and only the
+       clue slideshow + reveal button + guess list (wrapped in
+       .game-hud-scroll below) scroll within whatever room is left. */
     body.game-mode .game-hud{
       width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
       top:calc(70px + var(--safe-t));
+      max-height:calc(100vh - 90px - var(--safe-t) - var(--safe-b));
+      display:flex; flex-direction:column;
+      overflow:hidden;
     }
+    body.game-mode .game-hud-body{
+      display:flex; flex-direction:column; min-height:0; flex:1 1 auto;
+      overflow:hidden;
+    }
+    /* Street view + the guess/clue tracker line are the "map section" —
+       fixed size, never scrolls, never gets squeezed by the flex layout. */
+    body.game-mode .game-streetview,
+    body.game-mode .game-tracker-line{ flex:none; }
     /* Same specificity-bump reasoning as .game-hud above — this needs to
-       beat the unconditional .game-streetview-frame rule defined later. */
-    body.game-mode .game-streetview-frame{ height:300px; }
+       beat the unconditional .game-streetview-frame rule defined later.
+       A vh-based height (clamped so it never goes unreasonably short/tall)
+       instead of a flat px number, per the note above. */
+    body.game-mode .game-streetview-frame{ height:clamp(190px, 30vh, 300px); }
+    /* Everything from the clue slideshow down: this is the part that
+       scrolls on mobile, within whatever vertical room the fixed-size
+       street view + tracker line above it left behind. */
+    body.game-mode .game-hud-scroll{
+      flex:1 1 auto; min-height:0;
+      overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
+    }
   }
 
   /* =====================================================================
@@ -907,8 +945,8 @@
   .game-hud{
     display:none;
     position:fixed; top:calc(20px + var(--safe-t)); right:calc(20px + var(--safe-r)); z-index:610;
-    width:600px; max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
-    max-height:calc(100vh - 40px - var(--safe-t) - var(--safe-b));
+    width:450px; max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
+    max-height:calc(100vh - 20px - var(--safe-t) - var(--safe-b));
     overflow-y:auto; overscroll-behavior:contain;
     background:rgba(255,255,255,0.55);
     border-radius:16px;
@@ -925,6 +963,9 @@
   .game-hud-header{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
   .game-hud.collapsed .game-hud-header{ margin-bottom:0; }
   .game-hud-title{ font-size:13px; font-weight:700; color:var(--ink); }
+  /* Timer + collapse toggle grouped tight on the right, instead of the
+     timer floating in the middle of the header. */
+  .game-hud-header-right{ display:flex; align-items:center; gap:8px; }
   .game-hud-timer{ font-size:11px; font-weight:600; color:var(--dim); font-variant-numeric:tabular-nums; }
   .game-hud-toggle{
     width:20px; height:20px; flex:none; border-radius:50%; border:none;
@@ -942,7 +983,7 @@
      the HUD body. */
   .game-streetview{ position:relative; margin-bottom:10px; }
   .game-streetview-frame{
-    position:relative; width:100%; height:340px; border-radius:10px; overflow:hidden;
+    position:relative; width:100%; height:360px; border-radius:10px; overflow:hidden;
     background:var(--line);
   }
   .game-streetview-frame iframe{
@@ -996,38 +1037,41 @@
 
   .game-result{ text-align:center; font-size:11.5px; font-weight:700; margin:0 0 8px; color:var(--ink); }
 
-  /* ---- Clue slideshow: one clue at a time, arrows + dots, to keep the
-     card small regardless of how many clues are revealed. ---- */
-  .game-slideshow{ margin-bottom:8px; }
-  .game-slide-nav{ display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:4px; }
-  .game-slide-arrow{
-    width:18px; height:18px; flex:none; border-radius:50%; border:none;
-    background:var(--line); color:var(--ink);
-    font-size:12px; line-height:1; cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
+  /* ---- Clue tabs: the 4 clues as one row of tabs instead of a slideshow
+     (nav arrows + dots + a full-width reveal button stacked underneath).
+     Only the single next clue in line is tappable — it's styled like a
+     button and labeled "Reveal" so it doesn't read as a dead locked tile;
+     tapping it both reveals and opens it. Clues further out stay flat and
+     inert until it's their turn. Already-revealed clues are just tabs you
+     can switch between. ---- */
+  .game-clue-tabs{ display:flex; gap:4px; margin-bottom:8px; }
+  .game-clue-tab{
+    flex:1; text-align:center; font-family:inherit;
+    font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.02em;
+    padding:6px 2px; border-radius:7px; background:var(--line); color:var(--dim);
+    border:1px solid transparent; cursor:default; user-select:none; opacity:0.55;
+    transition:background 0.15s ease, color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
   }
-  .game-slide-arrow:disabled{ opacity:0.35; cursor:not-allowed; }
-  .game-slide-label{
-    font-size:9.5px; font-weight:600; text-transform:uppercase; letter-spacing:.03em;
-    color:var(--accent); text-align:center; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  /* Already revealed, viewable, but not the one currently open. */
+  .game-clue-tab.open{ opacity:1; background:rgba(74,42,22,0.14); color:var(--accent); cursor:pointer; }
+  /* Currently open in the content area below. */
+  .game-clue-tab.active{ opacity:1; background:var(--accent); color:#fff; }
+  /* The single next clue in line — the only locked tab that's actually
+     tappable, so it needs to look like a button, not a dead tile. */
+  .game-clue-tab.next{
+    opacity:1; cursor:pointer; color:var(--accent);
+    background:rgba(255,255,255,0.5); border-color:var(--accent); border-style:dashed;
   }
-  .game-slide-content{
-    font-size:12px; color:var(--ink); line-height:1.5; text-align:center;
-    min-height:130px; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  }
-  .game-slide-content svg{ display:block; width:100%; max-width:190px; height:auto; margin:0 auto; }
-  .game-slide-locked{ font-size:11px; color:var(--dim); font-style:italic; }
-  .game-slide-dots{ display:flex; justify-content:center; gap:4px; margin-top:6px; }
-  .game-slide-dot{ width:5px; height:5px; border-radius:3px; background:var(--line); cursor:pointer; border:none; padding:0; }
-  .game-slide-dot.active{ width:12px; background:var(--accent); }
-  .game-slide-dot.locked{ opacity:0.4; cursor:default; }
+  .game-clue-tab.next:hover{ background:rgba(74,42,22,0.1); }
+  .game-clue-tab-sub{ display:block; font-size:7.5px; letter-spacing:.03em; margin-top:1px; font-weight:800; }
 
-  .game-reveal-btn{
-    display:block; width:100%; margin:2px 0 8px; padding:7px; font-family:inherit;
-    font-size:11px; font-weight:600; text-align:center; color:#fff;
-    background:rgba(74,42,22,0.88); border:none; border-radius:8px; cursor:pointer;
+  .game-clue-content{
+    font-size:12px; color:var(--ink); line-height:1.5; text-align:center;
+    min-height:90px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    margin-bottom:8px;
   }
-  .game-reveal-btn:disabled{ opacity:0.4; cursor:not-allowed; }
+  .game-clue-content svg{ display:block; width:100%; max-width:170px; height:auto; margin:0 auto; }
+  .game-clue-locked{ font-size:11px; color:var(--dim); font-style:italic; }
 
   .game-guess-list{ margin-top:4px; max-height:90px; overflow-y:auto; }
   .game-guess-row{
@@ -1038,7 +1082,9 @@
   .game-guess-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .game-guess-status{ font-weight:700; flex:none; }
   .game-guess-status.correct{ color:#3f7d4f; }
-  .game-guess-status.wrong{ color:#b23c3c; }
+  /* Wrong guesses show a distance instead of a bare X — smaller/lighter
+     weight than the checkmark since it's a few words, not one glyph. */
+  .game-guess-status.wrong{ color:#b23c3c; font-size:9.5px; font-weight:600; white-space:nowrap; }
 
   .game-play-again{
     display:block; width:100%; margin-top:8px; padding:8px; font-family:inherit;
@@ -1085,6 +1131,10 @@
      blurred too, scaled up slightly so the blur's soft edge never peeks
      past the (overflow-hidden) photo frame. */
   body.game-mode .panel-photo{ filter:blur(16px); transform:scale(1.15); }
+  /* A heavy blur alone can read as a slow-loading image rather than a
+     deliberate spoiler-block — label it so it's unambiguous. Sits on its
+     own layer above the (blurred) img, so it stays perfectly crisp. */
+  body.game-mode .panel-photo-hidden-label{ display:flex; }
   /* A little extra air between the (blurred) title and the location line
      underneath it while playing, so the blur doesn't read as crowding it. */
   body.game-mode #p-area{ margin-top:10px; }
@@ -1377,15 +1427,17 @@
 <div class="game-hud" id="game-hud">
   <div class="game-hud-header">
     <span class="game-hud-title">Coffee-guessr</span>
-    <span class="game-hud-timer" id="game-timer">0:00</span>
-    <button type="button" class="game-hud-toggle" id="game-hud-toggle" aria-label="Collapse"><i data-lucide="chevron-down"></i></button>
+    <div class="game-hud-header-right">
+      <span class="game-hud-timer" id="game-timer">0:00</span>
+      <button type="button" class="game-hud-toggle" id="game-hud-toggle" aria-label="Collapse"><i data-lucide="chevron-down"></i></button>
+    </div>
   </div>
 
   <div class="game-hud-body" id="game-hud-body">
     <div class="game-streetview" id="game-streetview">
       <div class="game-streetview-frame" id="game-streetview-frame"></div>
       <div class="game-streetview-shield" id="game-streetview-shield" style="display:none;"></div>
-      <p class="game-streetview-caption">Closest available Street View to these coordinates - not always on the street, and not always close to the spot...</p>
+      <p class="game-streetview-caption">Randomized Street View close to coffee coordinates - not always on the street, and not always close to the spot...</p>
     </div>
 
     <div class="game-tracker-line">
@@ -1399,19 +1451,12 @@
       </div>
     </div>
 
-    <div class="game-slideshow">
-      <div class="game-slide-nav">
-        <button type="button" class="game-slide-arrow" id="game-slide-prev" aria-label="Previous clue">‹</button>
-        <span class="game-slide-label" id="game-slide-label"></span>
-        <button type="button" class="game-slide-arrow" id="game-slide-next" aria-label="Next clue">›</button>
-      </div>
-      <div class="game-slide-content" id="game-slide-content"></div>
-      <div class="game-slide-dots" id="game-slide-dots"></div>
+    <div class="game-hud-scroll" id="game-hud-scroll">
+      <div class="game-clue-tabs" id="game-clue-tabs"></div>
+      <div class="game-clue-content" id="game-clue-content"></div>
+
+      <div class="game-guess-list" id="game-guess-list"></div>
     </div>
-
-    <button type="button" class="game-reveal-btn" id="game-reveal-btn">Reveal next clue</button>
-
-    <div class="game-guess-list" id="game-guess-list"></div>
   </div>
 </div>
 
@@ -1432,6 +1477,7 @@
 <div class="panel" id="panel">
   <div class="panel-photo-wrap" id="p-photo-wrap">
     <img class="panel-photo" id="p-photo" alt="">
+    <div class="panel-photo-hidden-label">Hidden</div>
     <div class="panel-photo-dots" id="p-photo-dots"></div>
   </div>
   <div class="panel-body">
@@ -1788,11 +1834,12 @@ function stadiumPoints(hx, hy, w, h, n){
 const CATEGORY_ORDER = ['richness','craft','ambiance','character','value'];
 // Ratings cluster hard between 3.5 and 4.5 in practice, so a plain linear
 // v/5 mapping makes every shop's radar look nearly identical. This piecewise
-// map stretches that middle band out to the majority of the radius (1–3.5
-// compressed near the center, 3.5–4.5 = most of the line, 4.5–5 moderate)
-// so shops actually differentiate visually. Used by both renderShopRadar
+// map stretches that band out across most of the radius so shops actually
+// differentiate visually: 1–3.5 compressed into 26% of the line, 3.5–4.0
+// gets 30%, 4.0–4.7 gets another 30%, and 4.7–5.0 (the rarest, most
+// meaningful spread) gets the remaining 14%. Used by both renderShopRadar
 // and renderCompareRadar below — identical math, same breakpoints.
-const RADIUS_BREAKPOINTS = [[1,0.0], [3.5,0.18], [4.5,0.82], [5,1.0]];
+const RADIUS_BREAKPOINTS = [[1,0.0], [3.5,0.26], [4.0,0.56], [4.7,0.86], [5,1.0]];
 function ratingToT(r){
   if(r <= 1) return 0;
   if(r >= 5) return 1;
@@ -3774,12 +3821,27 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
 // — the radar/price/tags/description clues and guessing are unaffected;
 // the Street View panel just shows a short placeholder instead of a live
 // panorama.
+//
+// To pick a randomized (rather than always-closest) panorama, the same
+// key also needs the "Street View Static API" enabled — that's what backs
+// the metadata lookup below. If that API isn't enabled (or the metadata
+// fetch fails for any other reason, e.g. no network), the lookup quietly
+// fails and we fall back to the old behavior: hand Google the shop's own
+// coordinates and let it pick whatever panorama is closest, however far
+// away that ends up being.
 const GOOGLE_STREETVIEW_API_KEY = 'AIzaSyDJS5yx-eZQRro6DxcumF0XNhDfqDHoQnY';
 
-function buildStreetViewEmbedUrl(shop, headingDeg){
+// Search tiers, in order: each tries a random point within `radius` meters
+// of the coffee spot and asks Street View for the nearest panorama within
+// that same radius of the random point. First tier that finds one wins.
+// If every tier comes up empty, we fall back to an unrestricted lookup
+// centered on the shop itself (closest available, regardless of distance).
+const STREETVIEW_RADIUS_TIERS_METERS = [60, 250];
+
+function buildStreetViewEmbedUrl(loc, headingDeg){
   const params = new URLSearchParams({
     key: GOOGLE_STREETVIEW_API_KEY,
-    location: `${shop.lat},${shop.lng}`,
+    location: `${loc.lat},${loc.lng}`,
     heading: String(headingDeg),
     pitch: '0',
     fov: '90',
@@ -3787,10 +3849,78 @@ function buildStreetViewEmbedUrl(shop, headingDeg){
   return `https://www.google.com/maps/embed/v1/streetview?${params.toString()}`;
 }
 
+// Uniform-random point within `radiusMeters` of (lat, lng). Uses sqrt(u) on
+// the radius draw so points are distributed evenly over the disc's area
+// rather than clumping toward the center.
+function randomPointWithinRadius(lat, lng, radiusMeters){
+  const metersPerDegLat = 111320;
+  const radiusDegLat = radiusMeters / metersPerDegLat;
+  const u = Math.random();
+  const v = Math.random();
+  const w = radiusDegLat * Math.sqrt(u);
+  const t = 2 * Math.PI * v;
+  const dLat = w * Math.sin(t);
+  const dLng = (w * Math.cos(t)) / Math.cos(lat * Math.PI / 180);
+  return { lat: lat + dLat, lng: lng + dLng };
+}
+
+// Asks the Street View Static API's metadata endpoint whether a panorama
+// exists near (lat, lng) — optionally within `radiusMeters` of it. Returns
+// the parsed JSON ({status, location, ...}) or null on any failure
+// (network error, API not enabled, non-OK HTTP response, etc.) so callers
+// can just treat null the same as "no panorama found here."
+async function fetchStreetViewMetadata(lat, lng, radiusMeters){
+  if(!GOOGLE_STREETVIEW_API_KEY) return null;
+  const params = new URLSearchParams({
+    key: GOOGLE_STREETVIEW_API_KEY,
+    location: `${lat},${lng}`,
+  });
+  if(radiusMeters) params.set('radius', String(radiusMeters));
+  try{
+    const res = await fetch(`https://maps.googleapis.com/maps/api/streetview/metadata?${params.toString()}`);
+    if(!res.ok) return null;
+    return await res.json();
+  }catch(err){
+    return null;
+  }
+}
+
+// Works through STREETVIEW_RADIUS_TIERS_METERS from smallest to largest,
+// trying one random candidate point per tier. Returns the {lat,lng} of an
+// actual panorama Google found, or — if nothing turned up at any radius —
+// falls back to an unrestricted lookup around the shop itself, and finally
+// to the shop's raw coordinates if even that lookup couldn't be made.
+async function pickRandomizedStreetViewLocation(shop){
+  for(const radius of STREETVIEW_RADIUS_TIERS_METERS){
+    const candidate = randomPointWithinRadius(shop.lat, shop.lng, radius);
+    const meta = await fetchStreetViewMetadata(candidate.lat, candidate.lng, radius);
+    if(meta && meta.status === 'OK' && meta.location){
+      return { lat: meta.location.lat, lng: meta.location.lng };
+    }
+  }
+  // Backup: no randomized point within any tier had a panorama nearby —
+  // default to whatever's closest to the spot itself, regardless of
+  // distance, same as the old always-closest behavior.
+  const fallbackMeta = await fetchStreetViewMetadata(shop.lat, shop.lng, null);
+  if(fallbackMeta && fallbackMeta.status === 'OK' && fallbackMeta.location){
+    return { lat: fallbackMeta.location.lat, lng: fallbackMeta.location.lng };
+  }
+  // Metadata lookups themselves aren't working (key/network/API issue) —
+  // hand the embed API the shop's raw coordinates and let it do its own
+  // closest-panorama search, exactly like before this change.
+  return { lat: shop.lat, lng: shop.lng };
+}
+
+// Bumped on every renderGameStreetView() call so a slow metadata lookup
+// from a previous round (or a rapid re-trigger) can't land after a newer
+// one has already taken over the frame.
+let gameStreetViewToken = 0;
+
 // Called once per round, right after a target is picked — builds (or
 // re-placeholders) the Street View iframe. A random heading each round so
-// the panorama isn't always facing the same way.
-function renderGameStreetView(){
+// the panorama isn't always facing the same way, and a randomized (rather
+// than always-closest) panorama location — see pickRandomizedStreetViewLocation.
+async function renderGameStreetView(){
   const frame = document.getElementById('game-streetview-frame');
   const shield = document.getElementById('game-streetview-shield');
   if(!frame) return;
@@ -3799,8 +3929,14 @@ function renderGameStreetView(){
     if(shield) shield.style.display = 'none';
     return;
   }
+  const token = ++gameStreetViewToken;
+  const shop = gameTarget;
+  const loc = await pickRandomizedStreetViewLocation(shop);
+  // A newer round (or re-render) started while this lookup was in flight —
+  // let that one own the frame instead of clobbering it with a stale result.
+  if(token !== gameStreetViewToken) return;
   const heading = Math.floor(Math.random() * 360);
-  const url = buildStreetViewEmbedUrl(gameTarget, heading);
+  const url = buildStreetViewEmbedUrl(loc, heading);
   // Deliberately NO allowfullscreen here. The iframe is cross-origin
   // (Google's document, not ours) — once it goes fullscreen the browser
   // renders it in the "top layer" where nothing from our page, however high
@@ -3832,12 +3968,13 @@ document.addEventListener('fullscreenchange', () => {
 const GAME_MAX_GUESSES = 3;
 const GAME_MAX_CLUES = 4;
 const GAME_CLUE_LABELS = ['Coffee radar', 'Price & dates visited', 'Tags', 'Description'];
+const GAME_CLUE_TAB_LABELS = ['Radar', 'Price', 'Tags', 'Desc']; // short forms for the compact clue tabs
 
 window.gameActive = false;
 let gameTarget = null;
 let gameGuesses = []; // [{shop, correct}]
 let gameCluesRevealed = 0;
-let gameSlideIndex = 0; // which revealed clue (0-based) the slideshow is showing
+let gameSlideIndex = 0; // which revealed clue (0-based) is open in the clue-tab content area
 let gameOver = false;
 let gameExitArmed = false;
 let gameExitTimer = null;
@@ -4013,11 +4150,22 @@ function syncGameSubmitButton(){
   btn.textContent = (window.gameActive && gameOver) ? 'Round over' : 'Submit guess';
 }
 
-function revealNextClue(){
-  if(gameCluesRevealed >= GAME_MAX_CLUES) return;
-  gameCluesRevealed++;
-  gameSlideIndex = gameCluesRevealed - 1; // jump the slideshow to the newly revealed clue
-  renderGameHUD();
+// Tapping a clue tab does one of two things depending on which tab it is:
+// an already-revealed tab (i < gameCluesRevealed) just switches the content
+// area to show it; the single next tab in line (i === gameCluesRevealed)
+// reveals it and opens it in the same tap. Tabs further out than that are
+// inert — clicks on them are never wired up in renderGameHUD below.
+function selectClueTab(i){
+  if(i < gameCluesRevealed){
+    gameSlideIndex = i;
+    renderGameHUD();
+    return;
+  }
+  if(i === gameCluesRevealed && gameCluesRevealed < GAME_MAX_CLUES){
+    gameCluesRevealed++;
+    gameSlideIndex = i;
+    renderGameHUD();
+  }
 }
 
 function gameClueHtml(index){
@@ -4043,10 +4191,14 @@ function gameClueHtml(index){
   return '';
 }
 
-function goToSlide(i){
-  if(i < 0 || i >= gameCluesRevealed) return; // can't navigate past what's actually unlocked
-  gameSlideIndex = i;
-  renderGameHUD();
+// A wrong guess shows how far off it was instead of a bare ✗ — reuses the
+// same haversineMiles() the compare card and journey line already use.
+function formatGuessDistance(shop){
+  if(!gameTarget || shop.lat == null || shop.lng == null || gameTarget.lat == null || gameTarget.lng == null){
+    return '✗';
+  }
+  const miles = haversineMiles(shop.lat, shop.lng, gameTarget.lat, gameTarget.lng);
+  return miles < 0.1 ? 'Right next door' : `${miles.toFixed(miles < 10 ? 1 : 0)} mi away`;
 }
 
 function renderGameHUD(){
@@ -4062,38 +4214,37 @@ function renderGameHUD(){
     return `<div class="game-track-box ${i < gameCluesRevealed ? 'used' : ''}"></div>`;
   }).join('');
 
-  // ---- clue slideshow ----
-  // All 4 clues (including the radar) start locked now — nothing to show
-  // until the player reveals at least one.
-  const slideLabelEl = document.getElementById('game-slide-label');
-  const slideContentEl = document.getElementById('game-slide-content');
+  // ---- clue tabs ----
+  // All 4 clues (including the radar) start locked — nothing to show until
+  // the player reveals at least one. Only the tab at index gameCluesRevealed
+  // (the next one in line) is tappable while locked; it's styled like a
+  // button and labeled "Reveal" instead of just looking dead like the ones
+  // further out.
+  const clueContentEl = document.getElementById('game-clue-content');
   if(gameCluesRevealed === 0){
-    slideLabelEl.textContent = 'No clues revealed yet';
-    slideContentEl.innerHTML = '<span class="game-slide-locked">Tap "Reveal next clue" below to get your first clue.</span>';
+    clueContentEl.innerHTML = '<span class="game-clue-locked">Tap a tab below to reveal your first clue.</span>';
   }else{
-    slideLabelEl.textContent = `Clue ${gameSlideIndex + 1} · ${GAME_CLUE_LABELS[gameSlideIndex]}`;
-    slideContentEl.innerHTML = gameClueHtml(gameSlideIndex + 1);
+    clueContentEl.innerHTML = gameClueHtml(gameSlideIndex + 1);
   }
-  document.getElementById('game-slide-prev').disabled = gameSlideIndex <= 0 || gameCluesRevealed === 0;
-  document.getElementById('game-slide-next').disabled = gameSlideIndex >= gameCluesRevealed - 1;
-  document.getElementById('game-slide-dots').innerHTML = Array.from({length: GAME_MAX_CLUES}, (_, i) => {
-    const locked = i >= gameCluesRevealed;
-    return `<button type="button" class="game-slide-dot ${(i === gameSlideIndex && !locked) ? 'active' : ''} ${locked ? 'locked' : ''}" data-i="${i}" ${locked ? 'disabled' : ''}></button>`;
+  document.getElementById('game-clue-tabs').innerHTML = GAME_CLUE_TAB_LABELS.map((label, i) => {
+    const open = i < gameCluesRevealed;
+    const isNext = i === gameCluesRevealed && gameCluesRevealed < GAME_MAX_CLUES;
+    const active = open && i === gameSlideIndex;
+    const cls = active ? 'active' : (open ? 'open' : (isNext ? 'next' : ''));
+    const sub = isNext ? '<span class="game-clue-tab-sub">Reveal</span>' : '';
+    return `<button type="button" class="game-clue-tab ${cls}" data-i="${i}" ${(!open && !isNext) ? 'disabled' : ''}>${label}${sub}</button>`;
   }).join('');
-  document.querySelectorAll('.game-slide-dot').forEach(dot => {
-    dot.onclick = () => goToSlide(parseInt(dot.dataset.i, 10));
+  document.querySelectorAll('.game-clue-tab').forEach(tab => {
+    tab.onclick = () => selectClueTab(parseInt(tab.dataset.i, 10));
   });
 
-  // ---- reveal-next-clue button ----
-  const revealBtn = document.getElementById('game-reveal-btn');
-  revealBtn.disabled = gameCluesRevealed >= GAME_MAX_CLUES;
-  revealBtn.textContent = gameCluesRevealed >= GAME_MAX_CLUES ? 'All clues revealed' : 'Reveal next clue';
-
   // ---- guess history ----
+  // A correct guess still shows a checkmark; a wrong one shows how far off
+  // it was instead of a bare ✗.
   document.getElementById('game-guess-list').innerHTML = gameGuesses.map(g => `
     <div class="game-guess-row">
       <span class="game-guess-name">${g.shop.name}</span>
-      <span class="game-guess-status ${g.correct ? 'correct' : 'wrong'}">${g.correct ? '✓' : '✗'}</span>
+      <span class="game-guess-status ${g.correct ? 'correct' : 'wrong'}">${g.correct ? '✓' : formatGuessDistance(g.shop)}</span>
     </div>`).join('');
 }
 
@@ -4101,7 +4252,6 @@ document.getElementById('toggle-game').onclick = openGameIntro;
 document.getElementById('game-intro-overlay').onclick = (e) => { if(e.target.id === 'game-intro-overlay') closeGameIntro(); };
 document.getElementById('game-start-btn').onclick = startGame;
 document.getElementById('game-submit-guess-btn').onclick = () => handleGameGuessSubmit(lastShownShop);
-document.getElementById('game-reveal-btn').onclick = revealNextClue;
 document.getElementById('game-hud-toggle').onclick = () => {
   gameHudCollapsed = !gameHudCollapsed;
   document.getElementById('game-hud').classList.toggle('collapsed', gameHudCollapsed);
@@ -4137,9 +4287,6 @@ function fallbackCopy(text, onDone){
     onDone();
   }catch(e){ /* clipboard unavailable — no-op */ }
 }
-document.getElementById('game-slide-prev').onclick = () => goToSlide(gameSlideIndex - 1);
-document.getElementById('game-slide-next').onclick = () => goToSlide(gameSlideIndex + 1);
-
 document.getElementById('game-exit-btn').onclick = () => {
   const btn = document.getElementById('game-exit-btn');
   if(!gameExitArmed){
