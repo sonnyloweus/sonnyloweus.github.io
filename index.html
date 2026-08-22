@@ -47,7 +47,20 @@
     --safe-l: env(safe-area-inset-left, 0px);
   }
   *{box-sizing:border-box;}
-  html,body{margin:0; height:100%; overscroll-behavior:none;}
+  /* touch-action:pan-x pan-y as the page-wide default (rather than leaving
+     it at the browser's default `auto`) means every element inherits "you
+     may scroll, but native pinch-zoom is off" unless it opts back in —
+     without this, a pinch that happens to start on a rating bubble, a
+     button, or the intro modal falls through to the browser's own
+     page-zoom instead of the map's, which is also how you could get stuck
+     zoomed into the page with no non-map surface left to pinch back out
+     on. maximum-scale/user-scalable in the viewport meta tag used to be
+     enough for this, but modern Safari ignores those, so this is the part
+     that actually holds on iOS. #map below opts back in with its own
+     touch-action:none so Leaflet's JS-driven pan/pinch still fully owns
+     gestures that start on the map itself; scrollable panels
+     (.stats-card, .filter-card, .panel, etc.) keep their own pan-y. */
+  html,body{margin:0; height:100%; overscroll-behavior:none; touch-action:pan-x pan-y;}
   body{
     font-family:'Inter',system-ui,sans-serif;
     color:var(--ink);
@@ -60,6 +73,17 @@
      panels (.stats-card, .filter-card, .panel, etc.) are untouched, since
      touch-action isn't inherited by ancestors that don't opt in. */
   #map{ position:fixed; inset:0; background:var(--bg); touch-action:none; }
+  /* Rubber-band feedback when a pinch/scroll gesture pushes past minZoom or
+     maxZoom: Leaflet just silently clamps at the limit and fires no event,
+     which on a touchscreen reads as "did that even register?". This plays
+     a quick overshoot-and-settle pulse on the whole map surface instead —
+     see the wheel/touchmove watcher near the map init in the script below
+     for what triggers it. Purely a CSS transform on the outer container;
+     doesn't touch Leaflet's own internal pane transforms. */
+  #map.zoom-limit-out{ animation: zoomLimitOut 0.34s cubic-bezier(.34,1.56,.64,1); }
+  #map.zoom-limit-in{ animation: zoomLimitIn 0.34s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes zoomLimitOut{ 0%{transform:scale(1);} 30%{transform:scale(0.93);} 100%{transform:scale(1);} }
+  @keyframes zoomLimitIn{ 0%{transform:scale(1);} 30%{transform:scale(1.07);} 100%{transform:scale(1);} }
   .leaflet-tile-pane{ filter:grayscale(1) brightness(1.04) contrast(0.92); }
   .leaflet-control-attribution{
     font-size:10px; background:transparent !important; color:var(--dim) !important;
@@ -538,6 +562,14 @@
     transform:translateX(-50%); white-space:nowrap;
   }
 
+  /* Invisible tap-target padding around a marker's visible pill — the pill
+     itself (.bubble / cluster bubble) stays its normal size so the map
+     doesn't get visually crowded, but the actual hit area is bigger, which
+     matters far more on a fingertip than a cursor. This wrapper is what
+     Leaflet actually sizes to iconSize/iconAnchor (see buildBubbleIcon and
+     the cluster iconCreateFunction); the pill is just centered inside it. */
+  .bubble-hit{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; touch-action:none; }
+
   /* rating pill marker */
   .bubble{
     position:relative;
@@ -545,6 +577,7 @@
     border-radius:999px; font-weight:700; font-family:'Inter',sans-serif;
     box-shadow:0 2px 5px rgba(21,18,16,0.28);
     transition:transform 0.15s ease; animation:popin 0.55s ease backwards;
+    touch-action:none;
   }
   @keyframes popin{ from{ opacity:0; transform:scale(0.4); } to{ opacity:1; transform:scale(1); } }
   .bubble:hover{ transform:scale(1.12); }
@@ -1107,6 +1140,32 @@
   }
   .game-submit-guess-btn:disabled{ opacity:0.55; cursor:not-allowed; }
   body.game-mode .game-submit-guess-btn{ display:block; }
+  /* Flashes red for a beat right after a wrong guess, so the button itself
+     confirms the miss before the panel auto-closes — on top of the toast
+     below, which is the part that still shows up if the panel/HUD are
+     already out of view. */
+  .game-submit-guess-btn.wrong-flash{ background:rgba(178,60,60,0.92) !important; }
+
+  /* ---- Guess-feedback toast: fixed to the viewport (not the panel or the
+     HUD), so a wrong guess always registers even with the game HUD
+     collapsed or the pin panel already closed. Fades in, sits, fades out —
+     doesn't require the player to dismiss it. ---- */
+  .game-toast{
+    position:fixed; left:50%; top:calc(16px + var(--safe-t));
+    transform:translate(-50%, -8px);
+    max-width:calc(100vw - 32px - var(--safe-l) - var(--safe-r));
+    padding:10px 16px; border-radius:999px; z-index:1200;
+    background:rgba(74,42,22,0.92); color:#fff;
+    font-size:12.5px; font-weight:600; text-align:center; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis;
+    box-shadow:0 10px 26px rgba(21,18,16,0.3);
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+    opacity:0; pointer-events:none;
+    transition:opacity 0.25s ease, transform 0.25s ease;
+  }
+  .game-toast.show{ opacity:1; transform:translate(-50%, 0); }
+  .game-toast.wrong{ background:rgba(178,60,60,0.92); }
 
   /* ---- Everything else drops away while a round is active — same map,
      same pins, none of the everyday chrome. ---- */
@@ -1157,12 +1216,33 @@
   #game-result-overlay .modal-actions{ gap:6px; }
   #game-result-overlay .modal-btn{ padding:9px; font-size:12.5px; }
   #game-result-overlay h2{ margin:0 0 6px; }
+  /* Same top-of-card photo slideshow the pin panel uses (reveal shot of
+     whichever spot the round ended on) — bleeds out to the modal's own
+     edges/radius since .modal has real padding, unlike the pin panel which
+     doesn't. Reuses .panel-photo-dots/.dot for the dot styling above. */
+  .game-result-photo-wrap{
+    position:relative; margin:-20px -20px 14px; width:calc(100% + 40px);
+    height:140px; border-radius:16px 16px 0 0; overflow:hidden;
+    background:var(--line); touch-action:pan-y; cursor:pointer;
+  }
+  .game-result-photo{ width:100%; height:140px; object-fit:cover; display:block; background:var(--line); }
   .game-result-close-x{
-    position:absolute; top:12px; right:14px;
+    position:absolute; top:12px; right:14px; z-index:3;
     font-size:16px; color:var(--dim); cursor:pointer; line-height:1; padding:2px;
     background:none; border:none; font-family:inherit;
   }
   .game-result-close-x:hover{ color:var(--ink); }
+  /* Sits on top of the photo (when there is one) instead of the bare card
+     background, so it needs its own scrim to stay legible against a bright
+     photo the same way the pin panel's close button doesn't have to.
+     .has-photo is toggled on the overlay by showGameResultModal(). */
+  #game-result-overlay.has-photo .game-result-close-x{
+    top:8px; right:10px; color:#fff;
+    background:rgba(21,18,16,0.35); border-radius:50%;
+    width:22px; height:22px; display:flex; align-items:center; justify-content:center;
+    -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+  }
+  #game-result-overlay.has-photo .game-result-close-x:hover{ color:#fff; background:rgba(21,18,16,0.5); }
   /* On-screen result squares are real little rounded boxes (not the ⬜🟥🟩
      emoji glyphs — those render inconsistently across systems/fonts at
      this size). The copyable share text still uses the emoji, since that
@@ -1460,9 +1540,15 @@
   </div>
 </div>
 
+<div class="game-toast" id="game-toast"></div>
+
 <div class="modal-overlay" id="game-result-overlay">
   <div class="modal">
     <button type="button" class="game-result-close-x" id="game-result-close-btn" aria-label="Close">&times;</button>
+    <div class="game-result-photo-wrap" id="game-result-photo-wrap" style="display:none;">
+      <img class="game-result-photo" id="game-result-photo" alt="">
+      <div class="panel-photo-dots" id="game-result-photo-dots"></div>
+    </div>
     <h2>Coffee-guessr</h2>
     <p id="game-result-subtitle"></p>
     <div class="game-result-squares" id="game-result-squares"></div>
@@ -2469,6 +2555,13 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
   // it live would mean rebuilding every marker on orientation change.
   const isMobileViewport = window.matchMedia('(max-width: 640px)').matches;
 
+  // Extra invisible tap-target padding around a marker's visible pill, on
+  // touch only (see buildBubbleIcon) — a fingertip needs a bigger hit area
+  // than a cursor, but growing the pill itself would clutter the map. Kept
+  // here so the tooltip offset below can stay visually anchored to the
+  // pill rather than drifting as the (larger) hit box grows.
+  const BUBBLE_HIT_PAD = isMobileViewport ? {x: 10, y: 9} : {x: 0, y: 0};
+
   const map = L.map('map', {
     zoomControl:false,
     attributionControl:true,
@@ -2489,6 +2582,62 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     attribution: '&copy; OpenStreetMap &copy; CARTO',
     subdomains: 'abcd'
   }).addTo(map);
+
+  // ---- zoom-limit "rubber-band" feedback ----
+  // Leaflet clamps zoom silently at minZoom/maxZoom: if a gesture can't
+  // actually move the zoom level, no event fires at all, which on a
+  // touchscreen reads as "did my pinch even register?". There's no public
+  // hook for "a zoom gesture happened but got clamped", so this watches
+  // the raw wheel/touch input ourselves, alongside (not instead of)
+  // Leaflet's own handlers — passive listeners that never call
+  // preventDefault/stopPropagation, so Leaflet's real zoom handling is
+  // completely unaffected. When the gesture's direction pushes against a
+  // limit the map is already sitting at, it plays a quick overshoot pulse
+  // on the map container (see .zoom-limit-out/.zoom-limit-in in the
+  // <style> block) so the input always gets a visible response even when
+  // the zoom level itself can't move.
+  (function(){
+    const el = map.getContainer();
+    let bounceT = null, lastBounceAt = 0;
+    function bounce(dir){
+      const now = Date.now();
+      if(now - lastBounceAt < 260) return; // throttle re-triggers mid-gesture
+      lastBounceAt = now;
+      const cls = dir === 'out' ? 'zoom-limit-out' : 'zoom-limit-in';
+      const other = dir === 'out' ? 'zoom-limit-in' : 'zoom-limit-out';
+      el.classList.remove(other, cls);
+      void el.offsetWidth; // force reflow so re-adding the class restarts the animation
+      el.classList.add(cls);
+      clearTimeout(bounceT);
+      bounceT = setTimeout(() => el.classList.remove(cls), 340);
+    }
+
+    // Trackpad/mouse-wheel zoom
+    el.addEventListener('wheel', (e) => {
+      if(e.deltaY > 0 && map.getZoom() <= map.getMinZoom()) bounce('out');
+      else if(e.deltaY < 0 && map.getZoom() >= map.getMaxZoom()) bounce('in');
+    }, {passive: true});
+
+    // Touch pinch
+    let pinchDist = null;
+    function touchDist(touches){
+      const [a, b] = touches;
+      return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    }
+    el.addEventListener('touchstart', (e) => {
+      pinchDist = e.touches.length === 2 ? touchDist(e.touches) : null;
+    }, {passive: true});
+    el.addEventListener('touchmove', (e) => {
+      if(e.touches.length !== 2 || pinchDist == null) return;
+      const d = touchDist(e.touches);
+      const delta = d - pinchDist;
+      if(Math.abs(delta) < 12) return; // ignore jitter below a real pinch intent
+      if(delta < 0 && map.getZoom() <= map.getMinZoom()) bounce('out');
+      else if(delta > 0 && map.getZoom() >= map.getMaxZoom()) bounce('in');
+      pinchDist = d; // reset baseline so a sustained pinch-past-the-limit can keep bouncing (throttled above)
+    }, {passive: true});
+    el.addEventListener('touchend', () => { pinchDist = null; }, {passive: true});
+  })();
 
   // The hotspot heatmap lives in its own pane, below Leaflet's default
   // markerPane (zIndex 600) — so the heat blob can never paint over a
@@ -3417,15 +3566,21 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
     // Bigger on mobile only — desktop's precise cursor doesn't need it, and
     // a larger pin there would just crowd the map unnecessarily.
     const w = isMobileViewport ? 40 : 34, h = isMobileViewport ? 27 : 22;
+    // On touch, the actual tap target (what Leaflet sizes via iconSize
+    // below) is padded out beyond the visible pill — a fingertip needs a
+    // bigger hit area than a cursor does, but growing the pill itself to
+    // match would crowd/clutter the map. .bubble-hit centers the
+    // normal-sized pill inside this larger invisible box.
+    const hitW = w + BUBBLE_HIT_PAD.x * 2, hitH = h + BUBBLE_HIT_PAD.y * 2;
     const displayOverall = displayRating(shop.overall);
     const tier = tierClass(displayOverall);
     const animStyle = opts.animate ? `animation-delay:${opts.delay || 0}s;` : `animation:none;`;
     const visitBadge = badgeCount > 1 ? `<span class="visit-count">×${badgeCount}</span>` : '';
     return L.divIcon({
       className: '',
-      html: `<div class="bubble ${tier}" style="width:${w}px;height:${h}px;${animStyle}">${displayOverall.toFixed(1)}${visitBadge}</div>`,
-      iconSize: [w, h],
-      iconAnchor: [w/2, h/2]
+      html: `<div class="bubble-hit"><div class="bubble ${tier}" style="width:${w}px;height:${h}px;${animStyle}">${displayOverall.toFixed(1)}${visitBadge}</div></div>`,
+      iconSize: [hitW, hitH],
+      iconAnchor: [hitW/2, hitH/2]
     });
   }
 
@@ -3484,7 +3639,10 @@ if(!alreadySeenIntro){ isFirstRunIntro = true; openModal(); }
       zIndexOffset: Math.round(shop.overall * 1000) // higher-rated pins render on top when overlapping
     });
     marker.shopRating = shop.overall;
-    marker.bindTooltip(shop.name, {direction:'top', offset:[0,-14], className:'mini-tip'});
+    // -14 tuned against the visible pill; the hit box grew by BUBBLE_HIT_PAD.y
+    // on each side (see buildBubbleIcon), so pull the tooltip back down by
+    // that much to keep it sitting the same visual distance above the pill.
+    marker.bindTooltip(shop.name, {direction:'top', offset:[0, -14 + BUBBLE_HIT_PAD.y], className:'mini-tip'});
     marker.on('click', () => showPanel(shop));
     return marker;
   }
@@ -4096,6 +4254,64 @@ function gameResultBoxesHtml(){
     `<div class="game-result-line"><span class="game-result-line-label">Hints Used</span><div class="game-result-box-row">${clueBoxes}</div></div>`;
 }
 
+// Same reveal-photo slideshow the pin panel uses — shown on both a win and
+// a loss, since either way the round is over and the name/photo are no
+// longer a spoiler. Kept as its own index/array (rather than reusing
+// panelPhotos) so this doesn't stomp on whatever the pin panel is
+// currently showing underneath the modal.
+let gameResultPhotos = [];
+let gameResultPhotoIndex = 0;
+
+function renderGameResultPhoto(){
+  const photoImg = document.getElementById('game-result-photo');
+  const dotsEl = document.getElementById('game-result-photo-dots');
+  if(!gameResultPhotos.length){
+    photoImg.src = '';
+    dotsEl.innerHTML = '';
+    return;
+  }
+  photoImg.src = gameResultPhotos[gameResultPhotoIndex].src;
+  dotsEl.innerHTML = '';
+  if(gameResultPhotos.length > 1){
+    gameResultPhotos.forEach((p, i) => {
+      const dot = document.createElement('div');
+      dot.className = 'dot' + (i === gameResultPhotoIndex ? ' active' : '');
+      dot.onclick = (e) => { e.stopPropagation(); gameResultPhotoIndex = i; renderGameResultPhoto(); };
+      dotsEl.appendChild(dot);
+    });
+  }
+}
+
+(function setupGameResultPhotoNav(){
+  const wrap = document.getElementById('game-result-photo-wrap');
+  let touchStartX = null;
+  let suppressClick = false;
+
+  wrap.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive:true});
+  wrap.addEventListener('touchend', e => {
+    if(touchStartX === null || !gameResultPhotos.length){ touchStartX = null; return; }
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    touchStartX = null;
+    if(Math.abs(dx) < 30) return; // treat as a tap, let the click handler below decide left/right
+    suppressClick = true;
+    gameResultPhotoIndex = dx < 0
+      ? (gameResultPhotoIndex + 1) % gameResultPhotos.length
+      : (gameResultPhotoIndex - 1 + gameResultPhotos.length) % gameResultPhotos.length;
+    renderGameResultPhoto();
+  }, {passive:true});
+
+  wrap.addEventListener('click', e => {
+    if(suppressClick){ suppressClick = false; return; }
+    if(gameResultPhotos.length <= 1) return;
+    const rect = wrap.getBoundingClientRect();
+    const clickedLeftHalf = (e.clientX - rect.left) < rect.width / 2;
+    gameResultPhotoIndex = clickedLeftHalf
+      ? (gameResultPhotoIndex - 1 + gameResultPhotos.length) % gameResultPhotos.length
+      : (gameResultPhotoIndex + 1) % gameResultPhotos.length;
+    renderGameResultPhoto();
+  });
+})();
+
 function showGameResultModal(){
   const won = gameGuesses.some(g => g.correct);
   document.getElementById('game-result-subtitle').textContent = won
@@ -4106,7 +4322,14 @@ function showGameResultModal(){
   const copyBtn = document.getElementById('game-result-copy-btn');
   copyBtn.textContent = 'Copy results';
   copyBtn.classList.remove('game-result-copied');
-  document.getElementById('game-result-overlay').classList.add('show');
+
+  gameResultPhotos = getShopPhotos(gameTarget);
+  gameResultPhotoIndex = 0;
+  renderGameResultPhoto();
+  const resultOverlay = document.getElementById('game-result-overlay');
+  document.getElementById('game-result-photo-wrap').style.display = gameResultPhotos.length ? 'block' : 'none';
+  resultOverlay.classList.toggle('has-photo', gameResultPhotos.length > 0);
+  resultOverlay.classList.add('show');
 }
 
 // A correct guess (or the last guess used up) ends the round immediately —
@@ -4114,6 +4337,21 @@ function showGameResultModal(){
 function finishGame(){
   showGameResultModal();
   endGame();
+}
+
+// Fixed-to-viewport toast (see .game-toast) — the one piece of guess
+// feedback that's guaranteed visible no matter what else is on screen:
+// pin panel open or closed, game HUD expanded or collapsed. Fades in,
+// holds, and fades back out on its own; a second call just restarts the
+// clock rather than stacking toasts.
+let gameToastTimer = null;
+function showGameToast(message, variant){
+  const el = document.getElementById('game-toast');
+  if(!el) return;
+  el.textContent = message;
+  el.className = 'game-toast show' + (variant ? ' ' + variant : '');
+  clearTimeout(gameToastTimer);
+  gameToastTimer = setTimeout(() => { el.classList.remove('show'); }, 2200);
 }
 
 // Clicking a pin just previews it (the normal showPanel flow, stripped
@@ -4135,8 +4373,27 @@ function handleGameGuessSubmit(shop){
     return;
   }
 
-  hidePanel();
+  // Wrong guess, round continues — the panel is about to auto-close, so
+  // this is the only moment the player sees this shop's distance-off
+  // called out directly. Flash the button red with that readout, toast it
+  // too (so it still lands even if the panel/HUD are out of view), then
+  // close the panel a beat later instead of instantly.
+  const distanceText = formatGuessDistance(shop);
+  const guessesLeft = GAME_MAX_GUESSES - gameGuesses.length;
+  showGameToast(`✗ Wrong — ${distanceText} · ${guessesLeft} guess${guessesLeft === 1 ? '' : 'es'} left`, 'wrong');
+
+  const btn = document.getElementById('game-submit-guess-btn');
+  if(btn){
+    btn.textContent = `✗ ${distanceText}`;
+    btn.classList.add('wrong-flash');
+    btn.disabled = true;
+  }
+
   renderGameHUD();
+  // Guard against the delayed close clobbering a *different* pin's panel —
+  // if the player taps another pin during this 900ms window, lastShownShop
+  // will have moved on and this close is skipped.
+  setTimeout(() => { if(lastShownShop === shop) hidePanel(); }, 900);
 }
 
 // Keeps the panel's "Submit guess" button in sync with the current round
@@ -4145,7 +4402,26 @@ function handleGameGuessSubmit(shop){
 function syncGameSubmitButton(){
   const btn = document.getElementById('game-submit-guess-btn');
   if(!btn) return;
+  btn.classList.remove('wrong-flash');
   const canSubmit = window.gameActive && !gameOver && gameGuesses.length < GAME_MAX_GUESSES;
+
+  // If the pin currently shown is one the player already guessed this
+  // round, re-show that outcome instead of resetting to "Submit guess" —
+  // otherwise reopening a spot you already got wrong looks like the miss
+  // never happened. Also blocks spending a second guess re-confirming a
+  // result you already know.
+  const priorGuess = lastShownShop && gameGuesses.find(g => g.shop === lastShownShop);
+  if(canSubmit && priorGuess){
+    btn.disabled = true;
+    if(priorGuess.correct){
+      btn.textContent = '✓ Correct guess';
+    }else{
+      btn.textContent = `✗ ${formatGuessDistance(priorGuess.shop)}`;
+      btn.classList.add('wrong-flash');
+    }
+    return;
+  }
+
   btn.disabled = !canSubmit;
   btn.textContent = (window.gameActive && gameOver) ? 'Round over' : 'Submit guess';
 }
