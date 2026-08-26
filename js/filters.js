@@ -1,0 +1,446 @@
+import { S } from './state.js';
+import { formatDay, earliestVisit } from './data.js';
+import { syncBadgeCountsAndGetActive, activeGroup, refreshDependentUI } from './map.js';
+import { closeOtherSidePanels } from './panel.js';
+
+// days (floored to UTC day number) for every visit belonging to a given
+// list of shops — shared by the full-dataset histogram and the
+// in-viewport recompute below.
+export function daysFromShops(shops){
+  return shops.flatMap(shop => (shop.visited || []).map(dateStr => {
+    const t = new Date(dateStr).getTime();
+    return isNaN(t) ? null : Math.floor(t / 86400000);
+  })).filter(v => v !== null);
+}
+
+export function dayToPct(day){ return S.maxDay === S.minDay ? 0 : (day - S.minDay) / (S.maxDay - S.minDay); }
+export function pctToDay(p){ return Math.round(S.minDay + p * (S.maxDay - S.minDay)); }
+
+export function updateHandles(){
+  const loP = dayToPct(S.lowDay) * 100, hiP = dayToPct(S.highDay) * 100;
+  S.handleLow.style.left = loP + '%';
+  S.handleHigh.style.left = hiP + '%';
+  S.fillEl.style.left = loP + '%';
+  S.fillEl.style.width = (hiP - loP) + '%';
+  document.getElementById('scrubber-lo').textContent = formatDay(S.lowDay);
+  document.getElementById('scrubber-hi').textContent = formatDay(S.highDay);
+  updateHistogramRange();
+}
+
+// ---- visit-frequency histogram (sits above the slider track) ----
+// One bar per calendar month, height = total visits that occurred in
+// that month among the given shops. Defaults to the full dataset, but
+// updateInViewStats() re-renders this with only the shops currently
+// on-screen (in the map viewport, passing the active filters) every time
+// the map pans/zooms or a filter changes — so the histogram tracks what's
+// actually visible rather than the whole collection. The x-axis scale
+// (dayToPct, driven by the full dataset's minDay/maxDay) stays fixed
+// either way, so the timeline itself doesn't rescale as you pan. Bars
+// inside the current [lowDay, highDay] selection are drawn at full
+// strength; bars outside it are dimmed, the same way the track's
+// unfilled portion is deemphasized — so the shape doubles as a live
+// preview of what dragging the handles will include.
+export function renderVisitHistogram(shops){
+  const histEl = document.getElementById('visit-hist');
+  if(!histEl) return;
+  if(!S.scrubberShouldShow){ histEl.style.display = 'none'; return; }
+
+  const days = daysFromShops(shops || S.GLOBAL_DATA);
+  if(!days.length){ histEl.innerHTML = ''; histEl.style.display = 'block'; return; }
+
+  const buckets = new Map(); // 'Y-M' -> { startDay, endDay, count }
+  days.forEach(day => {
+    const dt = new Date(day * 86400000);
+    const y = dt.getUTCFullYear(), m = dt.getUTCMonth();
+    const key = y + '-' + m;
+    let b = buckets.get(key);
+    if(!b){
+      b = {
+        startDay: Math.floor(Date.UTC(y, m, 1) / 86400000),
+        endDay: Math.floor(Date.UTC(y, m + 1, 1) / 86400000),
+        count: 0
+      };
+      buckets.set(key, b);
+    }
+    b.count++;
+  });
+
+  const list = [...buckets.values()].sort((a, b) => a.startDay - b.startDay);
+  const maxCount = Math.max(...list.map(b => b.count));
+
+  histEl.innerHTML = list.map(b => {
+    const leftPct = dayToPct(b.startDay) * 100;
+    const rightPct = dayToPct(b.endDay) * 100;
+    const widthPct = Math.max(rightPct - leftPct, 0);
+    const heightPct = maxCount ? (b.count / maxCount) * 100 : 0;
+    const mid = (b.startDay + b.endDay) / 2;
+    const label = new Date(b.startDay * 86400000).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+    const visitWord = b.count === 1 ? 'visit' : 'visits';
+    return `<div class="visit-hist-bar" data-mid="${mid}" style="left:calc(${leftPct}% + 1px); width:calc(${widthPct}% - 2px); height:${heightPct}%;" title="${label} · ${b.count} ${visitWord}"></div>`;
+  }).join('');
+
+  histEl.style.display = 'block';
+  updateHistogramRange();
+}
+
+export function updateHistogramRange(){
+  const histEl = document.getElementById('visit-hist');
+  if(!histEl) return;
+  histEl.querySelectorAll('.visit-hist-bar').forEach(bar => {
+    const mid = parseFloat(bar.dataset.mid);
+    bar.classList.toggle('in-range', mid >= S.lowDay && mid <= S.highDay);
+  });
+}
+
+export function makeDraggable(handle, isLow){
+  handle.addEventListener('pointerdown', e => {
+    handle.setPointerCapture(e.pointerId);
+    const move = ev => {
+      const rect = S.sliderEl.getBoundingClientRect();
+      let p = (ev.clientX - rect.left) / rect.width;
+      p = Math.min(1, Math.max(0, p));
+      let day = pctToDay(p);
+      if(isLow){ S.lowDay = Math.min(day, S.highDay); }
+      else { S.highDay = Math.max(day, S.lowDay); }
+      updateHandles();
+      applyFilters();
+    };
+    const up = () => {
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', up);
+    };
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', up);
+  });
+}
+
+export function renderYearTicks(){
+  const ticksEl = document.getElementById('range-ticks');
+  const minYear = new Date(S.minDay * 86400000).getUTCFullYear();
+  const maxYear = new Date(S.maxDay * 86400000).getUTCFullYear();
+  let html = '';
+  for(let y = minYear; y <= maxYear; y++){
+    const jan1Day = Math.round(Date.UTC(y, 0, 1) / 86400000);
+    if(jan1Day >= S.minDay && jan1Day <= S.maxDay){
+      const pct = dayToPct(jan1Day) * 100;
+      html += `<div class="range-tick" style="left:${pct}%"></div><div class="range-tick-label" style="left:${pct}%">${y}</div>`;
+    }
+    // Unlabeled mid-year tick (Jul 1) so the scale reads evenly between
+    // the labeled year marks instead of leaving a long bare stretch.
+    const jul1Day = Math.round(Date.UTC(y, 6, 1) / 86400000);
+    if(jul1Day >= S.minDay && jul1Day <= S.maxDay){
+      const pct = dayToPct(jul1Day) * 100;
+      html += `<div class="range-tick minor" style="left:${pct}%"></div>`;
+    }
+  }
+  ticksEl.innerHTML = html;
+}
+
+export function updateRatingHandles(){
+  const loP = (S.filters.ratingLow/5)*100, hiP = (S.filters.ratingHigh/5)*100;
+  S.ratingHandleLow.style.left = loP + '%';
+  S.ratingHandleHigh.style.left = hiP + '%';
+  S.ratingFillEl.style.left = loP + '%';
+  S.ratingFillEl.style.width = (hiP - loP) + '%';
+  document.getElementById('rating-lo').textContent = S.filters.ratingLow.toFixed(1);
+  document.getElementById('rating-hi').textContent = S.filters.ratingHigh.toFixed(1);
+}
+export function makeRatingDraggable(handle, isLow){
+  handle.addEventListener('pointerdown', e => {
+    handle.setPointerCapture(e.pointerId);
+    const move = ev => {
+      const rect = S.ratingSliderEl.getBoundingClientRect();
+      let p = (ev.clientX - rect.left) / rect.width;
+      p = Math.min(1, Math.max(0, p));
+      let val = Math.round(p * 5 * 10) / 10;
+      if(isLow){ S.filters.ratingLow = Math.min(val, S.filters.ratingHigh); }
+      else { S.filters.ratingHigh = Math.max(val, S.filters.ratingLow); }
+      updateRatingHandles();
+      updateFilterDot();
+      applyFilters();
+    };
+    const up = () => {
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', up);
+    };
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', up);
+  });
+}
+
+// ---- custom scrollbar, shared by the filter and settings panels ----
+// Built by hand instead of styling the native one: native scrollbars
+// can't be reliably clipped to a rounded container across browsers (the
+// old thumb poked out past the corners at the ends of its travel), and
+// Chrome (~121+) stopped letting a styled ::-webkit-scrollbar disable its
+// auto-hiding overlay scrollbar, so "always visible" isn't achievable by
+// styling the real one there either. This one is fully within our
+// control: sized/positioned in JS off the real scroll state, and
+// draggable like the site's other custom sliders. setupCustomScrollbar
+// wires up one scroll/track/thumb triplet and returns its update function
+// so callers (e.g. a panel-open handler) can force a resync on demand.
+export function setupCustomScrollbar(scrollEl, trackEl, thumbEl){
+  if(!scrollEl || !trackEl || !thumbEl) return () => {};
+
+  function update(){
+    const { scrollTop, scrollHeight, clientHeight } = scrollEl;
+    const scrollable = scrollHeight - clientHeight > 1;
+    trackEl.classList.toggle('visible', scrollable);
+    if(!scrollable) return;
+    const trackHeight = trackEl.clientHeight;
+    const thumbHeight = Math.max(24, (clientHeight / scrollHeight) * trackHeight);
+    const maxThumbTop = Math.max(0, trackHeight - thumbHeight);
+    const maxScroll = scrollHeight - clientHeight;
+    const thumbTop = maxScroll > 0 ? (scrollTop / maxScroll) * maxThumbTop : 0;
+    thumbEl.style.height = thumbHeight + 'px';
+    thumbEl.style.top = thumbTop + 'px';
+  }
+  scrollEl.addEventListener('scroll', update);
+  // Height depends on viewport (see the min()/calc() in .filter-scroll), so
+  // recompute whenever that can change, not just when content changes.
+  if('ResizeObserver' in window){
+    new ResizeObserver(update).observe(scrollEl);
+  }else{
+    window.addEventListener('resize', update);
+  }
+  update();
+
+  thumbEl.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    thumbEl.setPointerCapture(e.pointerId);
+    thumbEl.classList.add('dragging');
+    const startY = e.clientY;
+    const startScrollTop = scrollEl.scrollTop;
+    const trackHeight = trackEl.clientHeight;
+    const thumbHeight = thumbEl.clientHeight;
+    const maxThumbTravel = Math.max(1, trackHeight - thumbHeight);
+    const maxScroll = scrollEl.scrollHeight - scrollEl.clientHeight;
+    const move = ev => {
+      const dy = ev.clientY - startY;
+      const scrollDelta = (dy / maxThumbTravel) * maxScroll;
+      scrollEl.scrollTop = Math.min(maxScroll, Math.max(0, startScrollTop + scrollDelta));
+    };
+    const up = () => {
+      thumbEl.classList.remove('dragging');
+      thumbEl.removeEventListener('pointermove', move);
+      thumbEl.removeEventListener('pointerup', up);
+    };
+    thumbEl.addEventListener('pointermove', move);
+    thumbEl.addEventListener('pointerup', up);
+  });
+
+  return update;
+}
+
+export function filtersActive(){
+  return S.filters.ratingLow > 0 || S.filters.ratingHigh < 5 || S.filters.prices.size > 0 || S.filters.tags.size > 0;
+}
+export function updateFilterDot(){
+  const btn = document.getElementById('toggle-filter');
+  const existing = btn.querySelector('.filter-dot');
+  if(filtersActive() && !existing){
+    btn.insertAdjacentHTML('beforeend', '<span class="filter-dot"></span>');
+  }else if(!filtersActive() && existing){
+    existing.remove();
+  }
+}
+
+export function updateSearchDot(){
+  const btn = document.getElementById('toggle-search');
+  const existing = btn.querySelector('.filter-dot');
+  if(S.filters.search && !existing){
+    btn.insertAdjacentHTML('beforeend', '<span class="filter-dot"></span>');
+  }else if(!S.filters.search && existing){
+    existing.remove();
+  }
+}
+
+export function passesNonDateFilters(shop){
+  if(shop.overall < S.filters.ratingLow || shop.overall > S.filters.ratingHigh) return false;
+  if(S.filters.prices.size && !S.filters.prices.has(shop.price)) return false;
+  if(S.filters.tags.size && !(shop.tags||[]).some(t => S.filters.tags.has(t))) return false;
+  if(S.filters.search){
+    const q = S.filters.search;
+    const hay = `${shop.name} ${shop.area||''} ${shop.country||''}`.toLowerCase();
+    if(!hay.includes(q)) return false;
+  }
+  return true;
+}
+
+// Lightweight: only adds/removes the markers whose membership actually
+// changed, instead of clearing and rebuilding every pill on the map. Used
+// for every filter/date-range/clustering-toggle change after the initial
+// reveal — those should feel instant, not staggered.
+export function applyFilters(){
+  const activeEntries = syncBadgeCountsAndGetActive();
+  const nextActive = new Set(activeEntries.map(e => e.marker));
+  const toAdd = activeEntries.filter(e => !S.activeSet.has(e.marker)).map(e => e.marker);
+  const toRemove = [];
+  S.activeSet.forEach(m => { if(!nextActive.has(m)) toRemove.push(m); });
+
+  if(toAdd.length) toAdd.forEach(m => activeGroup().addLayer(m));
+  if(toRemove.length) toRemove.forEach(m => activeGroup().removeLayer(m));
+  S.activeSet = nextActive;
+
+  refreshDependentUI();
+}
+
+// ---- Wires up everything in this module that touches the DOM: the date
+// range scrubber + histogram, the rating range slider, price/tag chips,
+// the filter/settings/compare custom scrollbars, filter-dot/search-dot,
+// and the reset/search controls. Mirrors the original init()'s top-to-
+// bottom order for this section. Called once from map.js's initApp(),
+// after the map/cluster/heat layers exist but before markers are built. ----
+export function setupFilters(){
+  // ---- date range (dual handle) ----
+  // visitDays: one entry per shop (its first visit) — used only to decide
+  // whether the scrubber has enough spread to bother showing.
+  S.visitDays = S.GLOBAL_DATA.map(earliestVisit).filter(v => v !== null).map(v => Math.floor(v / 86400000));
+  // allVisitDays: every visit of every shop — this is the real span of
+  // activity, and it's what the histogram buckets and the slider's own
+  // min/max are built from. (Using only first-visit days here would clip
+  // off later revisits to a place discovered after everything else.)
+  S.allVisitDays = daysFromShops(S.GLOBAL_DATA);
+  S.minDay = S.allVisitDays.length ? Math.min(...S.allVisitDays) : 0;
+  S.maxDay = S.allVisitDays.length ? Math.max(...S.allVisitDays) : 0;
+  S.lowDay = S.minDay; S.highDay = S.maxDay;
+
+  S.scrubberEl = document.getElementById('scrubber');
+  S.sliderEl = document.getElementById('range-slider');
+  S.fillEl = document.getElementById('range-fill');
+  S.handleLow = document.getElementById('handle-low');
+  S.handleHigh = document.getElementById('handle-high');
+
+  S.scrubberShouldShow = S.visitDays.length > 1 && S.minDay !== S.maxDay;
+  if(S.scrubberShouldShow){
+    S.scrubberEl.style.display = 'block';
+    updateHandles();
+    renderYearTicks();
+    renderVisitHistogram();
+    makeDraggable(S.handleLow, true);
+    makeDraggable(S.handleHigh, false);
+  }
+
+  // ---- rating range (filter panel) ----
+  S.ratingSliderEl = document.getElementById('rating-slider');
+  S.ratingFillEl = document.getElementById('rating-fill');
+  S.ratingHandleLow = document.getElementById('rating-handle-low');
+  S.ratingHandleHigh = document.getElementById('rating-handle-high');
+
+  updateRatingHandles();
+  makeRatingDraggable(S.ratingHandleLow, true);
+  makeRatingDraggable(S.ratingHandleHigh, false);
+
+  // ---- price + tag chips, built from whatever's actually in the data ----
+  const allPrices = [...new Set(S.GLOBAL_DATA.map(s => s.price).filter(Boolean))].sort((a,b) => a.length - b.length);
+  const allTags = [...new Set(S.GLOBAL_DATA.flatMap(s => s.tags || []))].sort();
+
+  const priceChipsEl = document.getElementById('price-chips');
+  allPrices.forEach(price => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.textContent = price;
+    chip.onclick = () => {
+      if(S.filters.prices.has(price)) S.filters.prices.delete(price); else S.filters.prices.add(price);
+      chip.classList.toggle('active');
+      updateFilterDot();
+      applyFilters();
+    };
+    priceChipsEl.appendChild(chip);
+  });
+
+  const tagChipsEl = document.getElementById('tag-chips');
+  allTags.forEach(tag => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.textContent = tag;
+    chip.onclick = () => {
+      if(S.filters.tags.has(tag)) S.filters.tags.delete(tag); else S.filters.tags.add(tag);
+      chip.classList.toggle('active');
+      updateFilterDot();
+      applyFilters();
+    };
+    tagChipsEl.appendChild(chip);
+  });
+
+  const updateFilterScrollbar = setupCustomScrollbar(
+    document.getElementById('filter-scroll'),
+    document.getElementById('filter-scrollbar-track'),
+    document.getElementById('filter-scrollbar-thumb')
+  );
+  // Read elsewhere via S.updateSettingsScrollbar / S.updateCompareScrollbar /
+  // S.updatePanelScrollbar — see their placeholder declarations in state.js.
+  S.updateSettingsScrollbar = setupCustomScrollbar(
+    document.getElementById('settings-scroll'),
+    document.getElementById('settings-scrollbar-track'),
+    document.getElementById('settings-scrollbar-thumb')
+  );
+  S.updateCompareScrollbar = setupCustomScrollbar(
+    document.getElementById('compare-scroll'),
+    document.getElementById('compare-scrollbar-track'),
+    document.getElementById('compare-scrollbar-thumb')
+  );
+  S.updatePanelScrollbar = setupCustomScrollbar(
+    document.getElementById('panel-scroll'),
+    document.getElementById('panel-scrollbar-track'),
+    document.getElementById('panel-scrollbar-thumb')
+  );
+
+  document.getElementById('filter-reset').onclick = () => {
+    S.filters = { ratingLow: 0, ratingHigh: 5, prices: new Set(), tags: new Set(), search: S.filters.search };
+    updateRatingHandles();
+    document.querySelectorAll('#price-chips .chip, #tag-chips .chip').forEach(c => c.classList.remove('active'));
+    updateFilterDot();
+    applyFilters();
+  };
+
+  document.getElementById('toggle-search').onclick = (e) => {
+    const pill = e.currentTarget;
+    const input = document.getElementById('search-input');
+    if(e.target === input) return; // clicking into the box just places the caret
+    if(e.target.closest('.search-clear')) return; // handled by its own listener
+    const expanded = pill.classList.toggle('expanded');
+    if(expanded){
+      input.focus();
+    }else{
+      input.blur();
+      if(input.value){
+        input.value = '';
+        S.filters.search = '';
+        pill.classList.remove('has-text');
+        updateSearchDot();
+        applyFilters();
+      }
+    }
+  };
+
+  document.getElementById('search-input').addEventListener('input', (e) => {
+    S.filters.search = e.target.value.trim().toLowerCase();
+    document.getElementById('toggle-search').classList.toggle('has-text', !!e.target.value);
+    updateSearchDot();
+    applyFilters();
+  });
+
+  document.getElementById('search-clear').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const input = document.getElementById('search-input');
+    const pill = document.getElementById('toggle-search');
+    input.value = '';
+    S.filters.search = '';
+    pill.classList.remove('has-text');
+    updateSearchDot();
+    applyFilters();
+    input.focus();
+  });
+
+  document.getElementById('toggle-filter').onclick = (e) => {
+    const card = document.getElementById('filter-card');
+    const opening = !card.classList.contains('show');
+    closeOtherSidePanels('filter-card');
+    card.classList.toggle('show', opening);
+    e.currentTarget.classList.toggle('on', opening);
+    updateFilterScrollbar();
+  };
+
+  return { updateFilterScrollbar };
+}

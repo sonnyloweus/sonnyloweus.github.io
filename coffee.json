@@ -2233,5 +2233,94 @@
         "date": "Aug 21, 2026"
       }
     ]
+  },
+  {
+    "name": "Studio Cafe",
+    "area": "Monterey",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 36.6165345,
+    "lng": -121.9016018,
+    "overall": 4.3,
+    "ratings": {
+      "richness": 4.3,
+      "craft": 4.5,
+      "ambiance": 4.3,
+      "character": 4.3,
+      "value": 4.2
+    },
+    "note": "Beautifully crafted coffee right on the Monterey Bay Coastal Trail, with some tasty breakfast.",
+    "tags": [
+      "lively",
+      "crowded",
+      "outdoor-seating",
+      "scenic"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/774BTq73HDQtSNcC9",
+    "visited": [
+      "Aug 22, 2026"
+    ],
+    "state": "California",
+    "photos": [
+      {
+        "src": "images/studio-cafe_2026-08-22.jpg",
+        "date": "Aug 22, 2026"
+      },
+      {
+        "src": "images/studio-cafe_2026-08-22-2.jpg",
+        "date": "Aug 22, 2026"
+      },
+      {
+        "src": "images/studio-cafe_2026-08-22-3.jpg",
+        "date": "Aug 22, 2026"
+      },
+      {
+        "src": "images/studio-cafe_2026-08-22-4.jpg",
+        "date": "Aug 22, 2026"
+      }
+    ]
+  },
+  {
+    "name": "Blue Bottle Coffee - Stanford Shopping",
+    "area": "Stanford",
+    "country": "USA",
+    "type": "coffee",
+    "lat": 37.4447264,
+    "lng": -122.1713224,
+    "overall": 4,
+    "ratings": {
+      "richness": 4,
+      "craft": 3.9,
+      "ambiance": 4.1,
+      "character": 3.9,
+      "value": 3.8
+    },
+    "note": "NOLA you can count on, well-designed interior.",
+    "tags": [
+      "modern",
+      "minimal",
+      "laptop-friendly"
+    ],
+    "price": "$$",
+    "mapsUrl": "https://maps.app.goo.gl/VxfdPkMETFefFg9s8",
+    "visited": [
+      "Aug 24, 2026"
+    ],
+    "state": "California",
+    "photos": [
+      {
+        "src": "images/blue-bottle-coffee-stanford-shopping_2026-08-24.jpg",
+        "date": "Aug 24, 2026"
+      },
+      {
+        "src": "images/blue-bottle-coffee-stanford-shopping_2026-08-24-2.jpg",
+        "date": "Aug 24, 2026"
+      },
+      {
+        "src": "images/blue-bottle-coffee-stanford-shopping_2026-08-24-3.jpg",
+        "date": "Aug 24, 2026"
+      }
+    ]
   }
 ]

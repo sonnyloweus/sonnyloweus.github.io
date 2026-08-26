@@ -1,0 +1,1263 @@
+  :root{
+    --bg:#FAFAF8;
+    --ink:#151210;
+    --dim:#8C8579;
+    --accent:#4A2A16;
+    --line:rgba(21,18,16,0.10);
+    /* Rating tiers — one hue (matches --accent), 7 monotone lightness steps,
+       light→dark low→high. t1 = lowest ratings, t7 = highest (= --accent). */
+    --tier-1:#C5AD9B;
+    --tier-2:#B6957C;
+    --tier-3:#A67D5E;
+    --tier-4:#8F694D;
+    --tier-5:#72533C;
+    --tier-6:#543D2B;
+    --tier-7:#4A2A16;
+    --crema:#E8D3AC;
+    --crema-light:#F3E6C9;
+    --crema-lightest:#FBF3DD;
+    --coffee-mid:#5E3E24;
+    --coffee-dark:#3A2712;
+    --ceramic:#FBF8F2;
+    --ceramic-edge:#DDD5C5;
+    /* Compare-feature colors for "shop A" / "shop B" — a translucent white
+       and a translucent tan, drawn as two overlapping foam traces on the
+       same coffee cup radar. Reused for every paired compare element
+       (search dots, name dots, radar) so the two shops are always the
+       same color everywhere in the panel. */
+    --compare-a:#FFFFFF;
+    --compare-b:#B9863E;
+    /* Safe-area insets — 0px on devices without a notch/home-indicator,
+       and the real inset (with viewport-fit=cover) on ones that have it. */
+    --safe-t: env(safe-area-inset-top, 0px);
+    --safe-r: env(safe-area-inset-right, 0px);
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --safe-l: env(safe-area-inset-left, 0px);
+  }
+  *{box-sizing:border-box;}
+  /* touch-action:pan-x pan-y as the page-wide default (rather than leaving
+     it at the browser's default `auto`) means every element inherits "you
+     may scroll, but native pinch-zoom is off" unless it opts back in —
+     without this, a pinch that happens to start on a rating bubble, a
+     button, or the intro modal falls through to the browser's own
+     page-zoom instead of the map's, which is also how you could get stuck
+     zoomed into the page with no non-map surface left to pinch back out
+     on. maximum-scale/user-scalable in the viewport meta tag used to be
+     enough for this, but modern Safari ignores those, so this is the part
+     that actually holds on iOS. #map below opts back in with its own
+     touch-action:none so Leaflet's JS-driven pan/pinch still fully owns
+     gestures that start on the map itself; scrollable panels
+     (.stats-card, .filter-card, .panel, etc.) keep their own pan-y. */
+  html,body{margin:0; height:100%; overscroll-behavior:none; touch-action:pan-x pan-y;}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+  }
+  /* Let Leaflet's own touch handling fully own panning/pinch inside #map —
+     without this, the browser's default touch gestures compete with
+     Leaflet's for the same drag/pinch, which is what caused the janky,
+     double-handled feel while panning and zooming on mobile. Scrollable
+     panels (.stats-card, .filter-card, .panel, etc.) are untouched, since
+     touch-action isn't inherited by ancestors that don't opt in. */
+  #map{ position:fixed; inset:0; background:var(--bg); touch-action:none; }
+  /* Rubber-band feedback when a pinch/scroll gesture pushes past minZoom or
+     maxZoom: Leaflet just silently clamps at the limit and fires no event,
+     which on a touchscreen reads as "did that even register?". This plays
+     a quick overshoot-and-settle pulse on the whole map surface instead —
+     see the wheel/touchmove watcher near the map init in the script below
+     for what triggers it. Purely a CSS transform on the outer container;
+     doesn't touch Leaflet's own internal pane transforms. */
+  #map.zoom-limit-out{ animation: zoomLimitOut 0.34s cubic-bezier(.34,1.56,.64,1); }
+  #map.zoom-limit-in{ animation: zoomLimitIn 0.34s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes zoomLimitOut{ 0%{transform:scale(1);} 30%{transform:scale(0.93);} 100%{transform:scale(1);} }
+  @keyframes zoomLimitIn{ 0%{transform:scale(1);} 30%{transform:scale(1.07);} 100%{transform:scale(1);} }
+  .leaflet-tile-pane{ filter:grayscale(1) brightness(1.04) contrast(0.92); }
+  .leaflet-control-attribution{
+    font-size:10px; background:transparent !important; color:var(--dim) !important;
+  }
+
+  .brand{
+    position:fixed; top:calc(20px + var(--safe-t)); left:calc(20px + var(--safe-l)); z-index:500;
+    font-size:13px; font-weight:500; letter-spacing:0.02em;
+    background:rgba(74,42,22,0.86); color:#fff;
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+    /* Fixed height (matching .toggle-icon's 32px — see the mobile override
+       below for the 40px pairing) instead of a padding-driven height, so
+       the pill is exactly as tall as the toolbar buttons. Vertical
+       centering of its content comes from align-items below. */
+    height:32px; padding:0 14px;
+    border:none; border-radius:20px;
+    box-shadow:0 24px 60px rgba(21,18,16,0.32);
+    cursor:pointer; user-select:none;
+    display:flex; align-items:center;
+    max-width:calc(100vw - 110px - var(--safe-l) - var(--safe-r));
+    overflow:hidden;
+    white-space:nowrap;
+  }
+  .brand span{
+    color:rgba(255,255,255,0.62); font-weight:400; margin-left:6px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;
+  }
+  /* #count no longer needs its own leading margin — the .brand-gap either
+     side of it now owns that spacing (and centers the dot within it). */
+  .brand #count{ margin-left:0; }
+  /* Shown in place of the "N in view · avg" text while that count is stale
+     or not yet known — the initial data fetch, and the staggered marker
+     pop-in that follows it (see revealMarkers/showCountSpinner in the
+     script below). Sized to sit on the text baseline like a lowercase
+     letter would. */
+  .count-spinner{
+    display:inline-block; width:9px; height:9px; vertical-align:-1.5px;
+    border:1.5px solid rgba(255,255,255,0.32); border-top-color:#fff;
+    border-radius:50%;
+    animation:count-spin 0.7s linear infinite;
+  }
+  @keyframes count-spin{ to{ transform:rotate(360deg); } }
+  /* The title needs to always render on a single line — left as a bare
+     text node it was an anonymous flex item with no flex-shrink/min-width
+     override, so at narrow widths the flexbox shrink algorithm would wrap
+     it onto two lines instead of just clipping, which threw off the
+     pill's height and spacing. Wrapping it in its own span + flex:none
+     keeps it at its natural width always; the count/dot/icons (which
+     already shrink+ellipsis via the ".brand span" rule above) give way
+     first instead. The ".brand .brand-title" selector (two classes) is
+     needed to outrank ".brand span" (class+type) so the title keeps the
+     brand's full-opacity color and isn't shoved right by that rule's
+     margin-left. */
+  .brand .brand-title{ flex:none; white-space:nowrap; color:#fff; margin-left:0; }
+  /* A dot lives inside its own flex item between two sections, rather than
+     glued to the front of whichever section follows it. On mobile, where
+     the bar is stretched full-width, this item's flex-grow soaks up the
+     leftover space on both sides of the dot equally, so the dot sits in
+     the true middle of the gap instead of hugging one edge. On desktop,
+     where the bar shrink-wraps its content and there's no leftover space
+     to grow into, it just falls back to its own small fixed padding — the
+     same modest breathing room a plain margin used to give it. */
+  .brand-gap{
+    flex:1 1 auto; display:flex; align-items:center; justify-content:center;
+    padding:0 6px;
+  }
+  .brand-gap .brand-dot{ margin-left:0; }
+  /* Groups the stats-icon and chevron so they move together as one flex
+     item — needed so the mobile layout above treats them as a single
+     "icon cluster" rather than two separately-spread items. */
+  .brand-icons{ display:inline-flex; align-items:center; flex:none; }
+  .brand-sigma{
+    display:inline-flex; margin-left:0; color:rgba(255,255,255,0.62); flex:none;
+    transition:color 0.2s ease;
+  }
+  .brand-sigma svg{ width:13px; height:13px; }
+  .brand.open .brand-sigma{ color:#fff; }
+  .brand-chevron{
+    display:inline-flex; margin-left:7px; color:rgba(255,255,255,0.62); flex:none;
+    transition:transform 0.2s ease;
+  }
+  .brand.open .brand-chevron{ transform:rotate(180deg); }
+
+  .onthisday-banner{
+    position:fixed; top:calc(64px + var(--safe-t)); left:50%; transform:translateX(-50%); z-index:500;
+    display:flex; align-items:center; gap:10px;
+    background:rgba(255,255,255,0.38); border:none; border-radius:20px;
+    padding:8px 10px 8px 14px; font-size:12px; color:var(--ink);
+    box-shadow:0 24px 60px rgba(21,18,16,0.32);
+    max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+  }
+  .onthisday-close{
+    color:var(--dim); cursor:pointer; font-size:15px; line-height:1; padding:2px 4px;
+  }
+  .onthisday-close:hover{ color:var(--ink); }
+
+  .stats-card{
+    /* Same reasoning as .toggle-group: above .scrubber (500) so this panel
+       stays on top if it ever grows tall enough to reach the bottom
+       time-range card on a short/mobile viewport. */
+    position:fixed; top:calc(66px + var(--safe-t)); left:calc(20px + var(--safe-l)); z-index:510;
+    width:220px;
+    max-height:calc(100vh - 100px - var(--safe-t) - var(--safe-b));
+    overflow-y:auto;
+    background:rgba(255,255,255,0.38); border:none; border-radius:14px;
+    box-shadow:0 24px 60px rgba(21,18,16,0.32);
+    padding:14px 16px 16px;
+    opacity:0; transform:translateY(-6px); pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease;
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+  }
+  .stats-card.show{ opacity:1; transform:translateY(0); pointer-events:auto; }
+  .stats-title{
+    font-size:10.5px; font-weight:600; text-transform:uppercase;
+    letter-spacing:.05em; color:var(--dim); margin-bottom:9px;
+  }
+  .stats-row{ display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px; gap:8px; }
+  .stats-row span{ color:var(--dim); flex:none; display:flex; align-items:center; }
+  .stats-row b{ font-weight:600; text-align:right; }
+  .mini-help{
+    width:13px; height:13px; margin-left:5px; padding:0;
+    border-radius:50%; border:1px solid var(--line); background:var(--bg);
+    color:var(--dim); font-size:9px; font-family:inherit; line-height:1;
+    display:inline-flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .mini-help:hover{ color:var(--ink); border-color:var(--dim); }
+  .mini-desc{
+    max-height:0; overflow:hidden; opacity:0;
+    font-size:10.5px; line-height:1.55; color:var(--dim);
+    transition:max-height .2s ease, opacity .2s ease, margin .2s ease;
+  }
+  .mini-desc.show{ max-height:160px; opacity:1; margin:2px 0 8px; }
+  .stats-row.stack{ flex-direction:column; gap:2px; }
+  .stats-row.stack b{ text-align:left; font-size:11.5px; }
+  .stats-hist{ display:flex; align-items:flex-end; gap:2px; height:26px; margin-top:10px; }
+  .stats-bar{ flex:1; background:rgba(59,42,30,0.25); border-radius:2px 2px 0 0; min-height:2px; }
+  .stats-curve{ margin-top:10px; height:44px; }
+  .stats-curve svg{ width:100%; height:100%; display:block; overflow:visible; }
+  .stats-axis-label{ font-size:8px; fill:var(--dim); font-family:'Inter',sans-serif; }
+  .stats-divider{ height:1px; background:var(--line); margin:11px 0 9px; }
+  .stats-fun-title{
+    font-size:9.5px; font-weight:600; text-transform:uppercase;
+    letter-spacing:.05em; color:var(--dim); margin-bottom:8px; opacity:0.75;
+  }
+  .panel-radar svg text{ font-family:'Inter',sans-serif; }
+
+  /* .filter-card is shared by three panels — #filter-card, #compare-card,
+     #settings-card — so this base rule set has to stay generic (padding,
+     scroll, sizing all included) and match what compare/settings actually
+     need. The custom-scrollbar treatment below is scoped to all three IDs
+     (which outrank the shared class), so filter, compare, and settings all
+     get the same always-visible custom scrollbar instead of a native one. */
+  .filter-card{
+    width:210px;
+    max-height:0;
+    overflow:hidden;
+    opacity:0;
+    margin-bottom:0;
+    background:rgba(255,255,255,0.38); border:none; border-radius:14px;
+    box-shadow:0 0 0 rgba(21,18,16,0);
+    padding:0 16px;
+    transition:max-height .25s ease, opacity .2s ease, padding .25s ease, box-shadow .2s ease, margin-bottom .25s ease;
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+    /* Re-enable hit-testing that .toggle-group turns off on itself — this
+       class is shared by #filter-card/#compare-card/#settings-card. */
+    pointer-events:auto;
+  }
+  .filter-card.show{
+    /* Capped to whatever room is actually left below the card's own
+       position, the same way .stats-card is (see above) — not just a flat
+       vh guess, which could still run past the bottom of short viewports
+       since the card sits ~150px down the fixed toggle-group already.
+       180px = that 150px offset plus a ~30px breathing-room margin at the
+       bottom of the screen. Past this, it scrolls instead of overflowing
+       off-screen or getting clipped. */
+    max-height:min(calc(100vh - 180px - var(--safe-t) - var(--safe-b)), 380px);
+    overflow-y:auto;
+    overflow-x:hidden;
+    opacity:1;
+    margin-bottom:8px;
+    padding:14px 16px 20px;
+    box-shadow:0 24px 60px rgba(21,18,16,0.32);
+  }
+  /* ---- #filter-card, #compare-card and #settings-card: swap the native
+     scroll above for a custom, always-visible, light-brown one (see the
+     JS-driven #*-scrollbar-* elements, one pair per panel). Native
+     scrollbars can't be reliably clipped to a rounded container across
+     browsers, and current Chrome (~121+) ignores a styled
+     ::-webkit-scrollbar for its auto-hiding overlay scrollbar anyway, so
+     these panels get their own inner scroller instead of relying on the
+     shared .filter-card.show behavior above. ---- */
+  #filter-card, #compare-card, #settings-card{ position:relative; } /* anchors the custom scrollbar */
+  #filter-card.show, #compare-card.show, #settings-card.show{
+    /* Outer just clips to the rounded corners now; the real scroll cap
+       lives on .filter-scroll below. 34px = .filter-scroll's own
+       top+bottom padding, so the outer stays tall enough not to clip it. */
+    max-height:calc(min(calc(100vh - 180px - var(--safe-t) - var(--safe-b)), 380px) + 34px);
+    overflow:hidden;
+    padding:0;
+  }
+  .filter-scroll{
+    max-height:min(calc(100vh - 180px - var(--safe-t) - var(--safe-b)), 380px);
+    overflow-y:auto;
+    overflow-x:hidden;
+    /* Extra right padding clears the custom scrollbar so text/chips never
+       sit under it. */
+    padding:14px 20px 20px 16px;
+    scrollbar-width:none;
+  }
+  .filter-scroll::-webkit-scrollbar{ width:0; height:0; display:none; }
+  /* Track is inset 10px from the top/bottom and 5px from the right edge,
+     so the thumb can never reach the rounded corners or the card's outer
+     edge, no matter how far it's scrolled. */
+  .filter-scrollbar-track{
+    position:absolute; top:10px; right:5px; bottom:10px; width:5px;
+    border-radius:3px; background:rgba(21,18,16,0.06);
+    opacity:0; pointer-events:none;
+    transition:opacity .15s ease;
+  }
+  .filter-scrollbar-track.visible{ opacity:1; pointer-events:auto; }
+  .filter-scrollbar-thumb{
+    position:absolute; left:0; width:100%; min-height:24px;
+    border-radius:3px; background:var(--tier-2);
+    cursor:pointer;
+  }
+  .filter-scrollbar-thumb:hover, .filter-scrollbar-thumb.dragging{ background:var(--tier-3); }
+  .filter-label{
+    font-size:10.5px; font-weight:600; text-transform:uppercase;
+    letter-spacing:.05em; color:var(--dim); margin:14px 0 8px;
+  }
+  .filter-label:first-child{ margin-top:0; }
+  .filter-range-value{ font-size:11px; color:var(--dim); text-align:center; margin-bottom:8px; }
+  .filter-range-value b{ color:var(--ink); font-weight:600; }
+  /* Same bars as the stats panel's rating histogram, just sized to sit
+     snugly between the lo–hi readout and the range slider it previews —
+     just enough bottom margin to keep the bars and the slider track from
+     visually touching. */
+  .filter-card .stats-hist{ height:22px; margin:0 0 3px; }
+  .chip-row{ display:flex; gap:6px; flex-wrap:wrap; }
+  .chip{
+    font-size:11px; padding:5px 10px; border-radius:999px;
+    border:1px solid var(--line); color:var(--dim);
+    cursor:pointer; user-select:none;
+  }
+  .chip.active{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .filter-reset{
+    font-size:11px; color:var(--dim); text-decoration:underline;
+    cursor:pointer; margin-top:16px; margin-bottom:2px; text-align:center;
+  }
+  .compare-select{
+    width:100%; font-family:inherit; font-size:12px;
+    padding:8px 10px; margin-bottom:8px;
+    border:1px solid var(--line); border-radius:8px;
+    background:#fff; color:var(--ink); cursor:pointer;
+  }
+  .compare-results{ margin-top:6px; }
+  .compare-row{
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;
+    align-items:center; padding:5px 0; font-size:11.5px;
+    border-bottom:1px solid var(--line);
+  }
+  .compare-row:last-child{ border-bottom:none; }
+  .compare-row .label{ color:var(--dim); font-size:10.5px; }
+  .compare-row b{ text-align:center; font-weight:600; }
+  .compare-row b.winner{ color:var(--accent); }
+  .compare-names{
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;
+    margin-bottom:2px;
+  }
+  .compare-names span:first-child{ visibility:hidden; }
+  .compare-names span{
+    font-size:10.5px; font-weight:600; text-align:center;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .compare-name-dot{
+    display:inline-block; width:6px; height:6px; border-radius:50%;
+    margin-right:4px; vertical-align:middle;
+    border:1px solid var(--ceramic-edge); /* the white swatch needs an edge to read against a white row */
+  }
+
+  /* ---- Head-to-head: search-with-autocomplete selectors ---- */
+  #compare-card{ width:280px; }
+  .compare-search-row{ position:relative; }
+  .compare-search-dot{
+    position:absolute; left:9px; top:50%; transform:translateY(-50%);
+    width:7px; height:7px; border-radius:50%; pointer-events:none;
+    border:1px solid var(--ceramic-edge);
+  }
+  .compare-search-input{
+    width:100%; font-family:inherit; font-size:12px;
+    padding:8px 10px 8px 22px; margin-bottom:8px;
+    border:1px solid var(--line); border-radius:8px;
+    background:#fff; color:var(--ink);
+  }
+  .compare-search-input:focus{ outline:none; border-color:var(--tier-2); }
+  .compare-suggestions{
+    position:absolute; left:0; right:0; top:calc(100% - 4px); z-index:20;
+    background:#fff; border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 12px 28px rgba(21,18,16,0.18);
+    max-height:190px; overflow-y:auto; display:none;
+  }
+  .compare-suggestions.show{ display:block; }
+  .compare-suggestion{
+    padding:7px 10px; font-size:11.5px; cursor:pointer;
+    display:flex; flex-direction:column; gap:1px;
+  }
+  .compare-suggestion b{ font-weight:600; font-size:12px; }
+  .compare-suggestion span{ color:var(--dim); font-size:10.5px; }
+  .compare-suggestion:hover, .compare-suggestion.active{ background:var(--bg); }
+  .compare-suggestion-empty{ padding:10px; font-size:11px; color:var(--dim); text-align:center; }
+  .compare-radar{ margin:4px auto 8px; max-width:88%; }
+  .compare-radar svg{ display:block; width:100%; height:auto; }
+  .compare-extra-row{
+    font-size:10.5px; color:var(--dim); text-align:center;
+    margin:8px 0 0; line-height:1.5;
+  }
+  .compare-extra-row b{ color:var(--ink); font-weight:600; }
+  .filter-dot{
+    display:inline-block; width:5px; height:5px; border-radius:50%;
+    background:var(--accent); margin-left:5px; vertical-align:middle;
+  }
+  .toggle.on .filter-dot{ background:#fff; }
+  .toggle-group{
+    /* Sits below the "Caffinated Sonny" brand pill (not level with it) so
+       the search bar, once expanded, opens underneath the title with some
+       breathing room instead of sliding left and covering it. Same offset
+       on mobile and laptop, per request. */
+    /* z-index sits above .scrubber (500) — on mobile the filter/compare/
+       settings panels below grow tall enough to reach the bottom time-range
+       card, and since they're both fixed-position siblings at the same
+       z-index, DOM order alone would let the scrubber (which comes later in
+       the markup) paint on top and cover them. Bumping the whole group above
+       it keeps the panels on top wherever they're tall enough to overlap. */
+    position:fixed; top:calc(70px + var(--safe-t)); right:calc(20px + var(--safe-r)); z-index:510;
+    display:flex; flex-direction:column; align-items:flex-end;
+    /* This flex column's own box is sized to its widest child — which
+       includes the collapsed .filter-card/.compare-card/.settings-card
+       panels (they collapse to zero *height* via max-height:0, but keep
+       their full 210-280px *width*). That leaves an invisible rectangle,
+       well beyond the visible toggle pills, silently eating clicks/drags
+       meant for the map underneath (mobile touchscreens especially — a
+       drag that starts anywhere in that phantom box never reaches
+       Leaflet). Turning off hit-testing on the container and re-enabling
+       it only on the actual visible children (below) fixes that without
+       changing any layout. */
+    pointer-events:none;
+  }
+  .toggle{
+    font-size:12px; background:rgba(255,255,255,0.38); padding:8px 14px;
+    border:none; border-radius:20px;
+    box-shadow:0 4px 14px rgba(21,18,16,0.16);
+    cursor:pointer; user-select:none; color:var(--dim);
+    margin-bottom:8px;
+    transition:box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease;
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+    /* Re-enable hit-testing that .toggle-group turns off on itself. */
+    pointer-events:auto;
+  }
+  .toggle:hover{ box-shadow:0 6px 18px rgba(21,18,16,0.22); }
+  .toggle.on{ color:#fff; background:rgba(74,42,22,0.55); box-shadow:0 4px 14px rgba(59,42,30,0.4); }
+  /* Game button — matches the "Caffinated Sonny" brand pill exactly (same
+     espresso color/translucency, same backdrop-blur, white icon) instead of
+     the default white toggle look, so it reads as the other fixed pill on
+     the map rather than just another toolbar icon. */
+  #toggle-game{ background:rgba(74,42,22,0.86); color:#fff; }
+  .toggle-icon{
+    position:relative;
+    width:32px; height:32px; padding:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  /* Lucide icons ship as 24x24 with no inline sizing, unlike the hand-drawn
+     SVGs they replaced (which set width/height right on the tag) — so the
+     icon buttons need an explicit desktop size here. Same specificity as
+     the mobile `.toggle-icon svg{ width:17px }` override below, so source
+     order (this rule first) decides which wins at each breakpoint, same as
+     the rest of this file's cascade. */
+  .toggle-icon svg{ width:15px; height:15px; stroke-width:1.75; }
+  .toggle-icon .filter-dot{
+    position:absolute; top:5px; right:5px; margin-left:0;
+  }
+  .search-pill{
+    --icon-size:32px;
+    width:32px;
+    transition:width 0.25s cubic-bezier(.4,0,.2,1);
+  }
+  .search-pill.expanded{
+    width:200px; cursor:default;
+    padding-left:calc(var(--icon-size) + 8px);
+  }
+  /* The badge is sized to the full height of the pill. Collapsed, it sits
+     flush and transparent (just centers the icon). Expanded, it becomes a
+     full espresso circle that bulges out past the bar's left edge — a
+     round badge overlapping a white pill, not a flat-edged cap. */
+  .search-icon-wrap{
+    position:absolute; top:0; left:0;
+    width:var(--icon-size); height:var(--icon-size);
+    display:flex; align-items:center; justify-content:center;
+    border-radius:50%;
+    z-index:1;
+    transition:background 0.15s ease, color 0.15s ease, left 0.15s ease, box-shadow 0.15s ease;
+  }
+  /* Slightly smaller than the other toggle icons, and needs to win over the
+     shared `.toggle-icon svg` rule above at equal specificity — placed
+     after it in source order for that. */
+  .search-icon-wrap svg{ width:14px; height:14px; stroke-width:1.75; }
+  .search-pill.expanded .search-icon-wrap{
+    left:calc(var(--icon-size) * -0.2);
+    background:rgba(74,42,22,0.55); color:#fff;
+    box-shadow:0 2px 8px rgba(59,42,30,0.35);
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+  }
+  .search-pill:not(.expanded) .search-icon-wrap{ cursor:pointer; }
+  .search-pill .search-input{
+    flex:1; min-width:0;
+    border:none; outline:none; background:transparent;
+    font-family:inherit; font-size:12px; color:var(--ink);
+    padding:0; opacity:0; pointer-events:none;
+    transition:opacity 0.15s ease;
+  }
+  .search-pill.expanded .search-input{
+    opacity:1; padding-right:4px; pointer-events:auto;
+  }
+  .search-pill.expanded .filter-dot{ display:none; }
+
+  .search-clear{
+    flex:none; display:none; align-items:center; justify-content:center;
+    width:18px; height:18px; margin-right:6px; padding:0; line-height:0;
+    border:none; border-radius:50%; background:var(--line);
+    color:var(--dim); cursor:pointer;
+  }
+  .search-clear svg{ display:block; }
+  .search-clear:hover{ background:#e3dbd2; color:var(--ink); }
+  .search-pill.expanded.has-text .search-clear{ display:flex; }
+
+  .scrubber{
+    position:fixed; bottom:calc(20px + var(--safe-b)); left:50%; transform:translateX(-50%); z-index:500;
+    width:300px;
+    max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
+    background:rgba(255,255,255,0.38); border:none; border-radius:16px;
+    box-shadow:0 24px 60px rgba(21,18,16,0.32);
+    padding:10px 18px 14px;
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+  }
+  .scrubber-label{ font-size:11px; color:var(--dim); text-align:center; margin-bottom:9px; }
+  .scrubber-label b{ color:var(--ink); font-weight:600; }
+
+  .visit-hist{ position:relative; height:26px; margin-bottom:5px; }
+  .visit-hist-bar{
+    position:absolute; bottom:0; min-height:2px;
+    background:rgba(59,42,30,0.14);
+    border-radius:2px 2px 0 0;
+    transition:background 0.15s ease;
+  }
+  .visit-hist-bar.in-range{ background:rgba(59,42,30,0.55); }
+
+  .range-slider{ position:relative; height:14px; }
+  .range-track{
+    position:absolute; top:50%; left:0; right:0; height:3px;
+    background:var(--line); border-radius:2px; transform:translateY(-50%);
+  }
+  .range-fill{
+    position:absolute; top:50%; height:3px; background:var(--accent);
+    border-radius:2px; transform:translateY(-50%);
+  }
+  .range-handle{
+    position:absolute; top:50%; width:13px; height:13px; border-radius:50%;
+    background:var(--accent); border:2px solid var(--bg);
+    box-shadow:0 1px 3px rgba(21,18,16,.3);
+    transform:translate(-50%,-50%); cursor:pointer; touch-action:none;
+  }
+  .range-ticks{ position:relative; height:13px; margin-top:3px; }
+  .range-tick{
+    position:absolute; top:0; width:1px; height:4px;
+    background:var(--dim); transform:translateX(-50%);
+  }
+  .range-tick.minor{ height:3px; }
+  .range-tick-label{
+    position:absolute; top:6px; font-size:9px; color:var(--dim);
+    transform:translateX(-50%); white-space:nowrap;
+  }
+
+  /* Invisible tap-target padding around a marker's visible pill — the pill
+     itself (.bubble / cluster bubble) stays its normal size so the map
+     doesn't get visually crowded, but the actual hit area is bigger, which
+     matters far more on a fingertip than a cursor. This wrapper is what
+     Leaflet actually sizes to iconSize/iconAnchor (see buildBubbleIcon and
+     the cluster iconCreateFunction); the pill is just centered inside it. */
+  .bubble-hit{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; touch-action:none; }
+
+  /* rating pill marker */
+  .bubble{
+    position:relative;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:999px; font-weight:700; font-family:'Inter',sans-serif;
+    box-shadow:0 2px 5px rgba(21,18,16,0.28);
+    transition:transform 0.15s ease; animation:popin 0.55s ease backwards;
+    touch-action:none;
+  }
+  @keyframes popin{ from{ opacity:0; transform:scale(0.4); } to{ opacity:1; transform:scale(1); } }
+  .bubble:hover{ transform:scale(1.12); }
+  .bubble.t1{ background:var(--tier-1); color:#fff; }
+  .bubble.t2{ background:var(--tier-2); color:#fff; }
+  .bubble.t3{ background:var(--tier-3); color:#fff; }
+  .bubble.t4{ background:var(--tier-4); color:#fff; }
+  .bubble.t5{ background:var(--tier-5); color:#fff; }
+  .bubble.t6{ background:var(--tier-6); color:#fff; }
+  .bubble.t7{ background:var(--tier-7); color:#fff; }
+  .bubble.small{ font-size:9px !important; }
+
+  /* hotspot heatmap (see heatGradientForPalette / updateHeatLayer below)
+     renders to a canvas layer via leaflet.heat, not divIcon/CSS — no
+     bubble-style rules needed here. */
+  .bubble.journey-active{
+    animation: journeyPulse 1.1s ease-in-out infinite;
+    box-shadow: 0 0 0 5px rgba(59,42,30,0.3), 0 3px 10px rgba(21,18,16,.35) !important;
+    z-index: 1000 !important;
+  }
+  @keyframes journeyPulse{
+    0%, 100%{ transform:scale(1); }
+    50%{ transform:scale(1.18); }
+  }
+
+  .journey-bar{
+    position:fixed; bottom:calc(20px + var(--safe-b)); left:50%; transform:translateX(-50%); z-index:550;
+    display:flex; align-items:center; gap:14px;
+    background:rgba(255,255,255,0.38); border:none; border-radius:20px;
+    padding:10px 16px; box-shadow:0 24px 60px rgba(21,18,16,0.32);
+    max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+  }
+  .journey-info{ display:flex; flex-direction:column; line-height:1.35; }
+  .journey-info b{ font-size:12.5px; font-weight:600; white-space:nowrap; }
+  .journey-info span{ font-size:10.5px; color:var(--dim); white-space:nowrap; }
+  .journey-progress{ font-size:11px; color:var(--dim); white-space:nowrap; }
+  .journey-stop{
+    font-size:11px; padding:5px 11px; border-radius:999px;
+    border:1px solid var(--line); color:var(--dim); cursor:pointer; white-space:nowrap;
+  }
+  .journey-stop:hover{ color:var(--ink); }
+  .bubble.cluster{ position:relative; font-size:12.5px; box-shadow:0 3px 8px rgba(21,18,16,0.32); }
+  .cluster-count{
+    position:absolute; top:-6px; right:-6px;
+    width:16px; height:16px; border-radius:50%;
+    background:var(--ink); color:#fff;
+    font-size:9px; font-weight:600;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 1px 3px rgba(21,18,16,.35);
+  }
+  .leaflet-marker-icon.marker-cluster-anim{ transition:transform 0.2s ease; }
+
+  /* Visit-count badge on an INDIVIDUAL spot's pin ("you've been here ×70") —
+     deliberately opposite the cluster-count badge in every way: bottom
+     instead of top, light outline instead of solid dark, pill instead of
+     circle — so the two are never confused for one another. */
+  .visit-count{
+    position:absolute; bottom:-3px; right:-3px;
+    background:var(--ink); color:#fff;
+    font-size:7.5px; font-weight:700; line-height:1;
+    padding:1.5px 4px; border-radius:999px;
+    box-shadow:0 1px 3px rgba(21,18,16,.3);
+    white-space:nowrap;
+  }
+
+  .leaflet-tooltip.mini-tip{
+    background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:6px; font-family:'Inter',sans-serif; font-size:11px; font-weight:500;
+    padding:4px 9px; box-shadow:0 2px 8px rgba(21,18,16,0.14);
+  }
+  .leaflet-tooltip-top.mini-tip::before{ display:none; }
+
+  /* detail panel */
+  .panel{
+    position:fixed; left:calc(20px + var(--safe-l)); bottom:calc(20px + var(--safe-b)); z-index:600; width:300px;
+    max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
+    /* Outer is just an overall safety cap now (should rarely bind) — the
+       real scroll boundary is .panel-scroll below, which kicks in right
+       after the date-visited line so a long note/story/tags list scrolls
+       in place instead of growing the whole card off-screen. */
+    max-height:calc(100vh - 40px - var(--safe-t) - var(--safe-b)); overflow:hidden;
+    background:rgba(255,255,255,0.38); border:none; border-radius:14px;
+    box-shadow:0 24px 60px rgba(21,18,16,0.32);
+    opacity:0; transform:translateY(8px); pointer-events:none;
+    transition:opacity 0.18s ease, transform 0.18s ease;
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+  }
+  .panel.show{ opacity:1; transform:translateY(0); pointer-events:auto; }
+  .panel-photo-wrap{ position:relative; width:100%; height:140px; border-radius:14px 14px 0 0; overflow:hidden; background:var(--line); touch-action:pan-y; cursor:pointer; }
+  .panel-photo{ width:100%; height:140px; object-fit:cover; display:block; background:var(--line); }
+  .panel-photo-dots{
+    position:absolute; bottom:8px; left:0; right:0;
+    display:flex; justify-content:center; gap:5px;
+    pointer-events:none;
+  }
+  .panel-photo-dots .dot{
+    width:5px; height:5px; border-radius:3px;
+    background:rgba(255,255,255,0.55);
+    cursor:pointer; pointer-events:auto;
+    transition:width 0.15s ease, background 0.15s ease;
+  }
+  .panel-photo-dots .dot.active{ background:#fff; width:14px; }
+  /* Only ever shown in game mode (see the body.game-mode rule below) — sits
+     above the photo, unaffected by the blur/scale applied to the img
+     itself, so the label always reads crisp regardless of what's under it. */
+  .panel-photo-hidden-label{
+    display:none; position:absolute; inset:0; z-index:2;
+    align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:#fff; text-shadow:0 1px 4px rgba(0,0,0,0.55);
+    pointer-events:none;
+  }
+  .panel-header{ padding:16px 20px 0; }
+  .panel-header.no-photo{ padding-top:20px; }
+  .panel-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px; }
+  .panel-name{ font-size:16px; font-weight:600; margin:0; }
+  .panel-area{ font-size:12px; color:var(--dim); margin:2px 0 0; }
+  .panel-meta{ font-size:11.5px; color:var(--dim); margin:4px 0 0; }
+  .panel-close{ font-size:16px; color:var(--dim); cursor:pointer; line-height:1; padding:2px; }
+  .panel-close:hover{ color:var(--ink); }
+  .panel-actions{ display:flex; align-items:center; gap:2px; flex:none; }
+  .panel-icon-btn{
+    width:24px; height:24px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--dim); text-decoration:none; cursor:pointer;
+  }
+  .panel-icon-btn:hover{ color:var(--ink); background:var(--line); }
+
+  .rating-row{ display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+  .rating-row.overall{ margin-bottom:3px; }
+  .panel-context{ font-size:11px; color:var(--dim); margin:0 0 6px; }
+  .rating-label{ font-size:11px; color:var(--dim); width:64px; flex:none; text-transform:capitalize; }
+  .rating-row.overall .rating-label{ font-size:12px; font-weight:600; color:var(--ink); width:auto; }
+  .rating-num{ font-size:11px; font-weight:600; width:24px; flex:none; text-align:right; }
+  .rating-row.overall .rating-num{ font-size:14px; }
+  .rating-bar{ flex:1; height:3px; background:var(--line); border-radius:2px; overflow:hidden; }
+  .rating-fill{ height:100%; background:var(--accent); }
+  .panel-radar{ margin:0 auto; max-width:86%; }
+  .panel-radar svg{ display:block; width:100%; height:auto; }
+  .panel-note{ font-size:13px; line-height:1.55; color:var(--ink); margin:0 0 10px; }
+  .panel-story{
+    font-size:12.5px; line-height:1.55; color:var(--dim); font-style:italic;
+    margin:0 0 12px; padding-left:10px; border-left:2px solid var(--line);
+  }
+  .panel-tags{ font-size:11px; color:var(--dim); }
+  /* Everything from the overall-rating bar down (ratings, radar, note,
+     story, tags) lives in its own scroller below the fixed photo+header, so
+     a long note/story doesn't push the close button and visit dates off
+     the top of the card, and doesn't grow the panel past a sane height on
+     a short phone screen. Same custom-scrollbar treatment as
+     #filter-card/#compare-card/#settings-card below, on its own track/thumb
+     pair since it sits under a header instead of starting flush at the
+     card's top. Desktop/laptop gets a lenient flat cap; the
+     max-width:640px override below tightens it for phones. */
+  .panel-scroll-wrap{ position:relative; }
+  .panel-scroll{
+    max-height:min(calc(100vh - 280px - var(--safe-t) - var(--safe-b)), 460px);
+    overflow-y:auto; overflow-x:hidden;
+    padding:4px 24px 18px 20px;
+    scrollbar-width:none;
+  }
+  .panel-scroll::-webkit-scrollbar{ width:0; height:0; display:none; }
+
+  /* intro modal */
+  .modal-overlay{
+    position:fixed; inset:0; z-index:1000;
+    background:rgba(21,18,16,0.35);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none;
+    transition:opacity 0.2s ease;
+  }
+  .modal-overlay.show{ opacity:1; pointer-events:auto; }
+  .modal{
+    width:320px; max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
+    background:rgba(255,255,255,0.82); border-radius:16px;
+    padding:24px 24px 20px;
+    box-shadow:0 24px 60px rgba(21,18,16,0.32);
+    transform:translateY(10px);
+    transition:transform 0.2s ease;
+    -webkit-backdrop-filter:blur(16px) saturate(180%) brightness(1.15);
+    backdrop-filter:blur(16px) saturate(180%) brightness(1.15);
+  }
+  .modal-overlay.show .modal{ transform:translateY(0); }
+  .modal-icon{
+    width:56px; height:56px; margin:0 auto 16px;
+    color:var(--accent);
+  }
+  .modal h2{ font-size:16px; font-weight:600; margin:0 0 8px; text-align:center; }
+  .modal p{ font-size:13.5px; line-height:1.55; color:var(--ink); margin:0 0 4px; text-align:center; }
+  /* ---- scoreboard slide: condensed label/value list instead of a 2x2
+     grid, so the four totals read at a glance without eating vertical
+     space the name-marquee below needs. ---- */
+  .modal-stats-list{ margin:4px 0 10px; }
+  .modal-stat-row{
+    display:flex; align-items:baseline; justify-content:space-between;
+    padding:4px 2px; border-bottom:1px solid var(--line);
+  }
+  .modal-stat-row:last-child{ border-bottom:none; }
+  .modal-stat-label{
+    font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:.04em;
+  }
+  .modal-stat-value{
+    font-family:'Inter',sans-serif; font-size:13.5px; font-weight:500; color:var(--ink);
+  }
+  /* ---- scoreboard slide: a slow auto-scrolling list of every spot's
+     name, fading in/out at the top and bottom edges of a fixed box via a
+     mask gradient. Purely ambient/decorative — the track holds the name
+     list twice back-to-back and the keyframe scrolls exactly one copy's
+     height, so the loop seams invisibly. ---- */
+  .modal-marquee{
+    position:relative; height:92px; overflow:hidden; margin:2px 0 14px;
+    -webkit-mask-image:linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+    mask-image:linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+  }
+  .modal-marquee-track{
+    display:flex; flex-direction:column; align-items:center;
+    animation:modalMarqueeScroll linear infinite;
+  }
+  .modal-marquee-item{
+    padding:7px 0; font-size:12.5px; color:var(--ink); text-align:center;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px;
+  }
+  @keyframes modalMarqueeScroll{
+    from{ transform:translateY(0); }
+    to{ transform:translateY(-50%); }
+  }
+  .modal-dots{ display:flex; justify-content:center; gap:6px; margin:18px 0 18px; }
+  .modal-dot{
+    width:6px; height:6px; border-radius:3px; background:var(--line);
+    cursor:pointer; transition:width .2s ease, background .2s ease;
+  }
+  .modal-dot.active{ width:16px; background:var(--accent); }
+  .modal-close{
+    width:100%; padding:11px; font-size:13px; font-weight:500;
+    font-family:inherit; color:#fff; background:rgba(74,42,22,0.88);
+    border:none; border-radius:8px; cursor:pointer;
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+  }
+  .modal-actions{ display:flex; flex-direction:column; gap:8px; }
+  .modal-btn{
+    width:100%; padding:11px; font-size:13px; font-weight:500;
+    font-family:inherit; border-radius:8px; cursor:pointer; text-align:center;
+  }
+  .modal-btn-primary{
+    color:#fff; background:rgba(74,42,22,0.88); border:none;
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+  }
+  .modal-btn-secondary{
+    background:transparent; color:var(--dim); border:1px solid var(--line);
+  }
+  .modal-btn-secondary span{ font-size:11px; }
+  .modal-btn-secondary:disabled{ cursor:not-allowed; opacity:0.65; }
+
+  .switch-block{ border-bottom:1px solid var(--line); }
+  .switch-block:last-child{ border-bottom:none; }
+  .switch-row{
+    display:flex; align-items:center; justify-content:space-between;
+    font-size:12.5px; color:var(--ink); padding:9px 0;
+  }
+  .switch-caption{
+    font-size:10.5px; line-height:1.45; color:var(--dim);
+    margin:0 0 9px;
+  }
+  .switch{
+    position:relative; flex:none;
+    width:34px; height:20px; border-radius:999px;
+    background:var(--line); cursor:pointer;
+    transition:background 0.15s ease;
+  }
+  .switch-knob{
+    position:absolute; top:2px; left:2px;
+    width:16px; height:16px; border-radius:50%;
+    background:#fff; box-shadow:0 1px 3px rgba(21,18,16,.3);
+    transition:left 0.15s ease;
+  }
+  .switch.on{ background:var(--accent); }
+  .switch.on .switch-knob{ left:16px; }
+
+  .palette-row{ display:flex; gap:8px; padding:2px 0 10px; }
+  .palette-swatch{
+    display:flex; flex:1; height:22px; border-radius:7px; overflow:hidden;
+    cursor:pointer; border:2px solid transparent; transition:border-color 0.15s ease, transform 0.15s ease;
+  }
+  .palette-swatch span{ flex:1; }
+  .palette-swatch:hover{ transform:translateY(-1px); }
+  .palette-swatch.active{ border-color:var(--ink); }
+  .palette-name{ font-size:10.5px; color:var(--dim); text-align:center; flex:1; }
+  .palette-names{ display:flex; gap:8px; margin:-4px 0 9px; }
+
+  /* ---- Mobile: bigger touch targets on the toolbar, a little more
+     breathing room between stacked buttons, and slightly roomier text
+     entry so search doesn't feel cramped under a thumb. ---- */
+  @media (max-width: 640px){
+    /* Same 20px side margins as everything else, but no longer reserving
+       room for the toolbar next to it — that moved below the brand pill
+       (see .toggle-group) — so it can stretch edge-to-edge instead of
+       hugging its own content. Height matches the 40px toolbar buttons,
+       same pairing as the 32px desktop height above. Spreading the three
+       sections evenly (title / stats summary / icon cluster), with each
+       dot centered in the gap between them, is handled by .brand-gap's
+       flex-grow above — nothing extra needed here. */
+    .brand{ height:40px; right:calc(20px + var(--safe-r)); max-width:none; }
+    .toggle-icon{ width:40px; height:40px; }
+    .toggle{ margin-bottom:10px; }
+    .search-pill{ --icon-size:40px; width:40px; }
+    .search-pill.expanded{ width:min(220px, calc(100vw - 90px - var(--safe-r))); }
+    #help-btn{ font-size:14px; }
+    /* Icons scale up along with their bigger buttons above, roughly the
+       same ~1.25x the button size grew by, so they don't look lost inside
+       the now-larger tap targets. */
+    .toggle-icon svg{ width:17px; height:17px; }
+    .search-clear{ width:20px; height:20px; }
+    .search-clear svg{ width:12px; height:12px; }
+    /* Tighter cap than the desktop/laptop rule above — phone screens don't
+       have the vertical room to let a long note/story stretch the card, so
+       the scrollable region below the date-visited line kicks in sooner. */
+    .panel-scroll{ max-height:min(calc(100vh - 280px - var(--safe-t) - var(--safe-b)), 280px); }
+    /* Expanded, the HUD spans almost the full width with the same 20px
+       margins everything else on the toolbar uses — collapse it (via the
+       chevron) to get it out of the way of the map underneath. Dropped
+       below the Exit Game button's row (top-left) so the two full-width-ish
+       elements don't overlap. (Extra `body.game-mode` specificity here so
+       this reliably wins over the unconditional `.game-hud` rule defined
+       later in the stylesheet, regardless of source order.) */
+    /* Height is capped as a function of vh rather than a fixed px number —
+       a fixed cap either wasted space or (on shorter phones) let the card
+       run past the bottom of the screen. With that cap in place the HUD
+       itself no longer scrolls as one long card (that made short phones
+       feel like an endless sheet) — instead it's a flex column, the street
+       view + guess/clue trackers stay put at a fixed size, and only the
+       clue slideshow + reveal button + guess list (wrapped in
+       .game-hud-scroll below) scroll within whatever room is left. */
+    body.game-mode .game-hud{
+      width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
+      top:calc(70px + var(--safe-t));
+      max-height:calc(100vh - 90px - var(--safe-t) - var(--safe-b));
+      display:flex; flex-direction:column;
+      overflow:hidden;
+    }
+    body.game-mode .game-hud-body{
+      display:flex; flex-direction:column; min-height:0; flex:1 1 auto;
+      overflow:hidden;
+    }
+    /* Street view + the guess/clue tracker line are the "map section" —
+       fixed size, never scrolls, never gets squeezed by the flex layout. */
+    body.game-mode .game-streetview,
+    body.game-mode .game-tracker-line{ flex:none; }
+    /* Same specificity-bump reasoning as .game-hud above — this needs to
+       beat the unconditional .game-streetview-frame rule defined later.
+       A vh-based height (clamped so it never goes unreasonably short/tall)
+       instead of a flat px number, per the note above. */
+    body.game-mode .game-streetview-frame{ height:clamp(190px, 30vh, 300px); }
+    /* Everything from the clue slideshow down: this is the part that
+       scrolls on mobile, within whatever vertical room the fixed-size
+       street view + tracker line above it left behind. */
+    body.game-mode .game-hud-scroll{
+      flex:1 1 auto; min-height:0;
+      overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
+    }
+  }
+
+  /* =====================================================================
+     Coffee-guessr — the map-guessing mini-game. Styled with the site's own
+     palette throughout (no separate "game theme") so it reads as a mode of
+     this map, not a bolted-on widget.
+     ===================================================================== */
+
+  /* Extra breathing room around the intro modal's one-liner, between the
+     title above and the Start button below. */
+  .game-intro-text{ margin:6px 0 28px; }
+
+  /* ---- Exit-game button: fixed opposite corner from the HUD, red so it
+     reads as a "leave" action; a second tap is required to actually leave
+     (armed "Confirm" state) so a stray tap mid-round can't boot you out. ---- */
+  .game-exit-btn{
+    display:none;
+    position:fixed; top:calc(20px + var(--safe-t)); left:calc(20px + var(--safe-l)); z-index:610;
+    font-family:inherit; font-size:12px; font-weight:600; letter-spacing:.01em; color:#fff;
+    background:rgba(196,16,16,0.92);
+    border:none; border-radius:20px; padding:9px 16px;
+    cursor:pointer; user-select:none;
+    box-shadow:0 4px 14px rgba(196,16,16,0.4);
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+    transition:background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+  }
+  .game-exit-btn:hover{ box-shadow:0 6px 18px rgba(196,16,16,0.5); }
+  .game-exit-btn.confirm{ background:rgba(230,12,12,1); box-shadow:0 4px 20px rgba(230,12,12,0.65); }
+  .game-exit-btn.confirm:active{ transform:scale(0.97); }
+
+  /* ---- Game HUD: small, same frosted-pill language as .filter-card /
+     .modal — just a compact card, not a differently-themed panel. ---- */
+  .game-hud{
+    display:none;
+    position:fixed; top:calc(20px + var(--safe-t)); right:calc(20px + var(--safe-r)); z-index:610;
+    width:450px; max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
+    max-height:calc(100vh - 20px - var(--safe-t) - var(--safe-b));
+    overflow-y:auto; overscroll-behavior:contain;
+    background:rgba(255,255,255,0.55);
+    border-radius:16px;
+    padding:12px 14px 14px;
+    box-shadow:0 24px 60px rgba(21,18,16,0.32);
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+  }
+  .game-hud.show{ display:block; }
+  /* Collapsible so the map stays reachable underneath it, especially on
+     phones where the HUD's footprint eats a real chunk of the screen. */
+  .game-hud.collapsed{ padding-bottom:12px; overflow:hidden; }
+  .game-hud.collapsed .game-hud-body{ display:none; }
+  .game-hud-header{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+  .game-hud.collapsed .game-hud-header{ margin-bottom:0; }
+  .game-hud-title{ font-size:13px; font-weight:700; color:var(--ink); }
+  /* Timer + collapse toggle grouped tight on the right, instead of the
+     timer floating in the middle of the header. */
+  .game-hud-header-right{ display:flex; align-items:center; gap:8px; }
+  .game-hud-timer{ font-size:11px; font-weight:600; color:var(--dim); font-variant-numeric:tabular-nums; }
+  .game-hud-toggle{
+    width:20px; height:20px; flex:none; border-radius:50%; border:none;
+    background:var(--line); color:var(--ink);
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform 0.2s ease;
+  }
+  .game-hud-toggle svg{ width:12px; height:12px; stroke-width:2.25; }
+  .game-hud.collapsed .game-hud-toggle{ transform:rotate(180deg); }
+
+  /* ---- Street View clue: the closest available panorama to the target,
+     shown clear (it's the coffee photos that get blurred, not this) — still
+     fully pannable, drag to look around. Collapses along with the rest of
+     the HUD body. */
+  .game-streetview{ position:relative; margin-bottom:10px; }
+  .game-streetview-frame{
+    position:relative; width:100%; height:360px; border-radius:10px; overflow:hidden;
+    background:var(--line);
+  }
+  .game-streetview-frame iframe{
+    width:100%; height:100%; border:0; display:block;
+  }
+  /* Covers Street View's built-in "location name + view on street view"
+     banner so it can't give the answer away. Google renders that as a
+     horizontal strip flush against the top-LEFT edge of the embed that
+     fades out toward the right (not a floating box) — this matches that
+     shape: flush to the frame's left+top edges, only the top-left corner
+     rounded (to follow the frame's own corner), and a mask/gradient fade
+     on the right side so it reads as a banner sliding in from the side
+     rather than a hard-edged rectangle.
+     TO FINE-TUNE: adjust the --sv-shield-w / --sv-shield-h custom
+     properties below for size, and the % stop in the mask-image /
+     background gradients to move where the fade-out happens. Purely
+     cosmetic (like the photo/name blurs elsewhere in game mode) —
+     pointer-events:none so panning the panorama underneath still works. */
+  .game-streetview-shield {
+    --sv-shield-w: 100%;
+    --sv-shield-h: 55px;
+    position: absolute;
+    top: 10px;
+    left: 0;
+    width: min(72%, var(--sv-shield-w));
+    height: var(--sv-shield-h);
+    border-radius: 0 2px 2px 0;
+    overflow: hidden;
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    background: rgba(20, 16, 12, 0.1);
+    pointer-events: none;
+    z-index: 2;
+  }
+  .game-streetview-placeholder{
+    width:100%; height:100%; padding:10px; box-sizing:border-box;
+    display:flex; align-items:center; justify-content:center;
+    text-align:center; font-size:10px; line-height:1.45; color:var(--dim);
+  }
+  .game-streetview-caption{ font-size:9.5px; color:var(--dim); text-align:center; margin:5px 0 0; line-height:1.4; }
+
+  /* Guesses / clues trackers: small boxes, side by side on one line. */
+  .game-tracker-line{ display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:10px; }
+  .game-tracker-group{ display:flex; align-items:center; gap:5px; }
+  .game-tracker-tag{ font-size:8.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+  .game-tracker-row{ display:flex; gap:3px; }
+  .game-track-box{ width:9px; height:9px; border-radius:2.5px; background:var(--line); transition:background 0.2s ease; }
+  .game-track-box.red{ background:#b23c3c; }
+  .game-track-box.green{ background:#3f7d4f; }
+  .game-track-box.used{ background:var(--accent); }
+
+  .game-result{ text-align:center; font-size:11.5px; font-weight:700; margin:0 0 8px; color:var(--ink); }
+
+  /* ---- Clue tabs: the 4 clues as one row of tabs instead of a slideshow
+     (nav arrows + dots + a full-width reveal button stacked underneath).
+     Only the single next clue in line is tappable — it's styled like a
+     button and labeled "Reveal" so it doesn't read as a dead locked tile;
+     tapping it both reveals and opens it. Clues further out stay flat and
+     inert until it's their turn. Already-revealed clues are just tabs you
+     can switch between. ---- */
+  .game-clue-tabs{ display:flex; gap:4px; margin-bottom:8px; }
+  .game-clue-tab{
+    flex:1; text-align:center; font-family:inherit;
+    font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.02em;
+    padding:6px 2px; border-radius:7px; background:var(--line); color:var(--dim);
+    border:1px solid transparent; cursor:default; user-select:none; opacity:0.55;
+    transition:background 0.15s ease, color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  }
+  /* Already revealed, viewable, but not the one currently open. */
+  .game-clue-tab.open{ opacity:1; background:rgba(74,42,22,0.14); color:var(--accent); cursor:pointer; }
+  /* Currently open in the content area below. */
+  .game-clue-tab.active{ opacity:1; background:var(--accent); color:#fff; }
+  /* The single next clue in line — the only locked tab that's actually
+     tappable, so it needs to look like a button, not a dead tile. */
+  .game-clue-tab.next{
+    opacity:1; cursor:pointer; color:var(--accent);
+    background:rgba(255,255,255,0.5); border-color:var(--accent); border-style:dashed;
+  }
+  .game-clue-tab.next:hover{ background:rgba(74,42,22,0.1); }
+  .game-clue-tab-sub{ display:block; font-size:7.5px; letter-spacing:.03em; margin-top:1px; font-weight:800; }
+
+  .game-clue-content{
+    font-size:12px; color:var(--ink); line-height:1.5; text-align:center;
+    min-height:90px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    margin-bottom:8px;
+  }
+  .game-clue-content svg{ display:block; width:100%; max-width:170px; height:auto; margin:0 auto; }
+  .game-clue-locked{ font-size:11px; color:var(--dim); font-style:italic; }
+
+  .game-guess-list{ margin-top:4px; max-height:90px; overflow-y:auto; }
+  .game-guess-row{
+    display:flex; align-items:center; justify-content:space-between; gap:6px;
+    font-size:10.5px; padding:4px 0; border-top:1px solid var(--line);
+  }
+  .game-guess-row:first-child{ border-top:none; }
+  .game-guess-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .game-guess-status{ font-weight:700; flex:none; }
+  .game-guess-status.correct{ color:#3f7d4f; }
+  /* Wrong guesses show a distance instead of a bare X — smaller/lighter
+     weight than the checkmark since it's a few words, not one glyph. */
+  .game-guess-status.wrong{ color:#b23c3c; font-size:9.5px; font-weight:600; white-space:nowrap; }
+
+  .game-play-again{
+    display:block; width:100%; margin-top:8px; padding:8px; font-family:inherit;
+    font-size:11px; font-weight:600; text-align:center; color:#fff;
+    background:rgba(74,42,22,0.88); border:none; border-radius:8px; cursor:pointer;
+  }
+
+  /* Submit-guess button: lives at the bottom of the stripped-down pin
+     panel, only while a round is active — clicking a pin just previews the
+     spot; this is the actual guess action. Same styling as the site's
+     other primary buttons (.modal-close / .modal-btn-primary). */
+  .game-submit-guess-btn{
+    display:none;
+    width:100%; margin:2px 0 14px; padding:10px; font-family:inherit;
+    font-size:13px; font-weight:500; text-align:center; color:#fff;
+    background:rgba(74,42,22,0.88);
+    border:none; border-radius:8px; cursor:pointer;
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+  }
+  .game-submit-guess-btn:disabled{ opacity:0.55; cursor:not-allowed; }
+  body.game-mode .game-submit-guess-btn{ display:block; }
+  /* Flashes red for a beat right after a wrong guess, so the button itself
+     confirms the miss before the panel auto-closes — on top of the toast
+     below, which is the part that still shows up if the panel/HUD are
+     already out of view. */
+  .game-submit-guess-btn.wrong-flash{ background:rgba(178,60,60,0.92) !important; }
+
+  /* ---- Guess-feedback toast: fixed to the viewport (not the panel or the
+     HUD), so a wrong guess always registers even with the game HUD
+     collapsed or the pin panel already closed. Fades in, sits, fades out —
+     doesn't require the player to dismiss it. ---- */
+  .game-toast{
+    position:fixed; left:50%; top:calc(16px + var(--safe-t));
+    transform:translate(-50%, -8px);
+    max-width:calc(100vw - 32px - var(--safe-l) - var(--safe-r));
+    padding:10px 16px; border-radius:999px; z-index:1200;
+    background:rgba(74,42,22,0.92); color:#fff;
+    font-size:12.5px; font-weight:600; text-align:center; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis;
+    box-shadow:0 10px 26px rgba(21,18,16,0.3);
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+    opacity:0; pointer-events:none;
+    transition:opacity 0.25s ease, transform 0.25s ease;
+  }
+  .game-toast.show{ opacity:1; transform:translate(-50%, 0); }
+  .game-toast.wrong{ background:rgba(178,60,60,0.92); }
+
+  /* ---- Everything else drops away while a round is active — same map,
+     same pins, none of the everyday chrome. ---- */
+  body.game-mode .brand,
+  body.game-mode .toggle-group,
+  body.game-mode .scrubber,
+  body.game-mode .stats-card,
+  body.game-mode .onthisday-banner,
+  body.game-mode .journey-bar,
+  body.game-mode .filter-card,
+  body.game-mode .compare-card,
+  body.game-mode .settings-card{ display:none !important; }
+  /* Pin hover tooltips and the panel title both show the shop's name —
+     that's the whole answer, so both are blurred (not hidden) for the
+     duration of a round. Every pin gets this, not just the target —
+     blurring only the target would immediately give it away. Guesses
+     you've already submitted still show their real name in the HUD's
+     guess-history list, since that's your own guess, not a spoiler. */
+  body.game-mode .leaflet-tooltip.mini-tip{ filter:blur(4px); user-select:none; }
+  body.game-mode #p-name{ filter:blur(5px); user-select:none; }
+  /* The photo itself is also a giveaway (storefront signage, etc.) —
+     blurred too, scaled up slightly so the blur's soft edge never peeks
+     past the (overflow-hidden) photo frame. */
+  body.game-mode .panel-photo{ filter:blur(16px); transform:scale(1.15); }
+  /* A heavy blur alone can read as a slow-loading image rather than a
+     deliberate spoiler-block — label it so it's unambiguous. Sits on its
+     own layer above the (blurred) img, so it stays perfectly crisp. */
+  body.game-mode .panel-photo-hidden-label{ display:flex; }
+  /* A little extra air between the (blurred) title and the location line
+     underneath it while playing, so the blur doesn't read as crowding it. */
+  body.game-mode #p-area{ margin-top:10px; }
+
+  /* ---- Stripped-down pin panel while playing: photo (blurred), name
+     (blurred), and the location line survive exactly as they normally
+     look; every rating/price/tag/description field that would hand over
+     the answer (or spoil a clue) is hidden. ---- */
+  body.game-mode .panel-meta,
+  body.game-mode .rating-row,
+  body.game-mode .panel-context,
+  body.game-mode .panel-radar,
+  body.game-mode .panel-note,
+  body.game-mode .panel-story,
+  body.game-mode .panel-tags{ display:none !important; }
+
+  /* ---- End-of-round results modal: same overlay/card language as the
+     welcome modal, with a Wordle-style emoji-square summary. ---- */
+  #game-result-overlay .modal{ width:270px; padding:20px 20px 16px; position:relative; }
+  #game-result-overlay .modal-actions{ gap:6px; }
+  #game-result-overlay .modal-btn{ padding:9px; font-size:12.5px; }
+  #game-result-overlay h2{ margin:0 0 6px; }
+  /* Same top-of-card photo slideshow the pin panel uses (reveal shot of
+     whichever spot the round ended on) — bleeds out to the modal's own
+     edges/radius since .modal has real padding, unlike the pin panel which
+     doesn't. Reuses .panel-photo-dots/.dot for the dot styling above. */
+  .game-result-photo-wrap{
+    position:relative; margin:-20px -20px 14px; width:calc(100% + 40px);
+    height:140px; border-radius:16px 16px 0 0; overflow:hidden;
+    background:var(--line); touch-action:pan-y; cursor:pointer;
+  }
+  .game-result-photo{ width:100%; height:140px; object-fit:cover; display:block; background:var(--line); }
+  .game-result-close-x{
+    position:absolute; top:12px; right:14px; z-index:3;
+    font-size:16px; color:var(--dim); cursor:pointer; line-height:1; padding:2px;
+    background:none; border:none; font-family:inherit;
+  }
+  .game-result-close-x:hover{ color:var(--ink); }
+  /* Sits on top of the photo (when there is one) instead of the bare card
+     background, so it needs its own scrim to stay legible against a bright
+     photo the same way the pin panel's close button doesn't have to.
+     .has-photo is toggled on the overlay by showGameResultModal(). */
+  #game-result-overlay.has-photo .game-result-close-x{
+    top:8px; right:10px; color:#fff;
+    background:rgba(21,18,16,0.35); border-radius:50%;
+    width:22px; height:22px; display:flex; align-items:center; justify-content:center;
+    -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+  }
+  #game-result-overlay.has-photo .game-result-close-x:hover{ color:#fff; background:rgba(21,18,16,0.5); }
+  /* On-screen result squares are real little rounded boxes (not the ⬜🟥🟩
+     emoji glyphs — those render inconsistently across systems/fonts at
+     this size). The copyable share text still uses the emoji, since that
+     needs to be plain text. */
+  .game-result-squares{ margin:10px 0; }
+  .game-result-line{ display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:6px; }
+  .game-result-line:last-child{ margin-bottom:0; }
+  .game-result-line-label{
+    width:80px; flex:none; text-align:right; white-space:nowrap;
+    font-size:9.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--dim);
+  }
+  .game-result-box-row{ display:flex; align-items:center; justify-content:flex-start; gap:5px; }
+  .game-result-box{ width:16px; height:16px; border-radius:4px; background:var(--line); }
+  .game-result-box.red{ background:#b23c3c; }
+  .game-result-box.green{ background:#3f7d4f; }
+  .game-result-box.used{ background:var(--accent); }
+  .game-result-answer{ font-size:11.5px; color:var(--dim); text-align:center; margin:0 0 12px; }
+  .game-result-copied{ color:var(--accent); }
