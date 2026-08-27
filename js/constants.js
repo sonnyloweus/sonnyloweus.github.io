@@ -56,6 +56,13 @@ export const MG_CAFFEINE_PER_REDBULL = 80; // one 8.4oz can
 // away that ends up being.
 export const GOOGLE_STREETVIEW_API_KEY = 'AIzaSyDJS5yx-eZQRro6DxcumF0XNhDfqDHoQnY';
 
+// ---- CARTO basemap key ----
+// CARTO now requires a (free) API key for their basemap tiles, or every
+// tile renders with an "api key required" watermark instead of the actual
+// map. Get one at https://carto.com/basemaps/apikey/ (instant, no CARTO
+// account needed) and paste it below.
+export const CARTO_API_KEY = 'cb1_29mn_1_140cf3700f30d94235d2b52d';
+
 // Search tiers, in order: each tries a random point within `radius` meters
 // of the coffee spot and asks Street View for the nearest panorama within
 // that same radius of the random point. First tier that finds one wins.

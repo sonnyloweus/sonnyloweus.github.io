@@ -1,7 +1,7 @@
 /* global L */
 import { S } from './state.js';
 import { loadData, tierClass, displayRating, computeRatingBounds, saveStoredSetting, applyPalette, earliestVisit } from './data.js';
-import { RATING_PALETTES, CLUSTER_ZOOM_STEP, POP_EASE, POP_IN_BASE_WAIT, MIN_ZOOM_FLOOR, MIN_ZOOM_CEILING, MIN_ZOOM_BUFFER } from './constants.js';
+import { RATING_PALETTES, CLUSTER_ZOOM_STEP, POP_EASE, POP_IN_BASE_WAIT, MIN_ZOOM_FLOOR, MIN_ZOOM_CEILING, MIN_ZOOM_BUFFER, CARTO_API_KEY } from './constants.js';
 import { renderIntroSlide } from './modal.js';
 import { showOnThisDay, updateInViewStats, showCountSpinner } from './stats.js';
 import { setupFilters, passesNonDateFilters } from './filters.js';
@@ -446,7 +446,11 @@ export async function initApp(){
   }
   map.on('resize', refreshMinZoom); // covers window resizes and, via Leaflet's trackResize, orientation changes
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  // CARTO requires a free API key as of 2026 or every tile shows an
+  // "api key required" watermark instead of the map. Get one at
+  // https://carto.com/basemaps/apikey/ and set CARTO_API_KEY in
+  // constants.js.
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png' + (CARTO_API_KEY ? '?key=' + CARTO_API_KEY : ''), {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap &copy; CARTO',
     subdomains: 'abcd'
