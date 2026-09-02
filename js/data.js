@@ -98,10 +98,47 @@ export function tierClass(rating){
   return 't1';
 }
 
+// Default values for the site-wide neutral vars a palette can optionally
+// override (see the `mono` entry in RATING_PALETTES) — used whenever the
+// active palette doesn't specify one of these, so roast/coldbrew
+// keep the original warm neutrals and only shift --accent + the tier
+// gradient.
+const DEFAULT_THEME_VARS = {
+  bg:'#FAFAF8', ink:'#151210', dim:'#8C8579',
+  crema:'#E8D3AC', cremaLight:'#F3E6C9', cremaLightest:'#FBF3DD',
+  coffeeMid:'#5E3E24', coffeeDark:'#3A2712',
+  ceramic:'#FBF8F2', ceramicEdge:'#DDD5C5',
+  compareA:'#FFFFFF', compareB:'#B9863E'
+};
+
+// camelCase var key -> its kebab-case CSS custom property name, e.g.
+// 'cremaLight' -> '--crema-light'.
+function cssVarName(key){
+  return '--' + key.replace(/([A-Z])/g, '-$1').toLowerCase();
+}
+
+function hexToRgbString(hex){
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+  if(!m) return '74,42,22';
+  return [1,2,3].map(i => parseInt(m[i], 16)).join(',');
+}
+
+// Applying a rating theme drives the whole site's look, not just the
+// rating-bubble gradient: --accent (and its rgb twin, needed for the CSS
+// rgba() backgrounds on the brand pill/toggles/title bar) shifts to match,
+// and any neutral vars the palette overrides (see `mono`/"Noir" above)
+// repaint the rest of the chrome too.
 export function applyPalette(key){
   const palette = RATING_PALETTES[key] || RATING_PALETTES.roast;
+  const root = document.documentElement.style;
   palette.colors.forEach((c, i) => {
-    document.documentElement.style.setProperty(`--tier-${i+1}`, c);
+    root.setProperty(`--tier-${i+1}`, c);
+  });
+  const accent = palette.accent || palette.colors[palette.colors.length - 1];
+  root.setProperty('--accent', accent);
+  root.setProperty('--accent-rgb', hexToRgbString(accent));
+  Object.entries(DEFAULT_THEME_VARS).forEach(([k, fallback]) => {
+    root.setProperty(cssVarName(k), palette[k] || fallback);
   });
 }
 

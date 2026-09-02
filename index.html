@@ -21,23 +21,41 @@
   </svg></span>
 </div>
 
+<div class="floating-plots" id="floating-plots"></div>
+
 <div class="onthisday-banner" id="onthisday-banner" style="display:none;">
   <span id="onthisday-text"></span>
   <span class="onthisday-close" id="onthisday-close">&times;</span>
 </div>
 <div class="stats-card" id="stats-card">
-  <div class="stats-title">In view</div>
-  <div class="stats-row"><span>Spots</span><b id="s-count"></b></div>
-  <div class="stats-row"><span>Average</span><b id="s-avg"></b></div>
-  <div class="stats-row"><span>Median</span><b id="s-median"></b></div>
-  <div class="stats-row"><span>Std dev</span><b id="s-stddev"></b></div>
-  <div class="stats-row"><span>Range</span><b id="s-range"></b></div>
-  <div class="stats-curve" id="stats-hist"></div>
+  <div class="stats-title-row">
+    <div class="stats-title">In view</div>
+    <div class="stats-close" id="stats-close" title="Close" aria-label="Close">&times;</div>
+  </div>
+  <div class="stats-compact-grid">
+    <div class="stat-tile"><span class="stat-tile-k">Spots</span><b id="s-count"></b></div>
+    <div class="stat-tile"><span class="stat-tile-k">Average</span><b id="s-avg"></b></div>
+    <div class="stat-tile"><span class="stat-tile-k">Median</span><b id="s-median"></b></div>
+    <div class="stat-tile"><span class="stat-tile-k">Std dev</span><b id="s-stddev"></b></div>
+    <div class="stat-tile"><span class="stat-tile-k">Range</span><b id="s-range"></b></div>
+  </div>
+
+  <div class="stats-divider"></div>
+
+  <div class="clusters-section" id="clusters-section">
+    <div class="stats-row">
+      <span>Taste clusters <button class="mini-help" id="clusters-help-btn" type="button" aria-label="What does this mean?">?</button></span>
+      <b id="clusters-caption"></b>
+    </div>
+    <div class="mini-desc" id="clusters-desc"></div>
+    <svg class="clusters-pca" id="clusters-pca-svg" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="clusters-legend" id="clusters-legend"></div>
+  </div>
+
   <div class="stats-divider"></div>
   <div class="stats-fun-title">Just for fun</div>
   <div class="stats-row"><span>Cups had</span><b id="s-cups"></b></div>
   <div class="stats-row"><span>Est. caffeine</span><b id="s-caffeine"></b></div>
-  <div class="stats-row"><span>≈ Red Bulls</span><b id="s-redbulls"></b></div>
   <div class="stats-row"><span>Est. spent</span><b id="s-spent"></b></div>
   <div class="stats-row">
     <span>Price↔rating <button class="mini-help" id="corr-help-btn" type="button" aria-label="What does this mean?">?</button></span>
@@ -45,7 +63,6 @@
   </div>
   <div class="mini-desc" id="corr-desc">Pearson correlation between price and rating (&minus;1 to +1). Higher means you rate pricier spots better.</div>
   <div class="stats-row"><span>Crawl distance</span><b id="s-distance"></b></div>
-  <div class="stats-row"><span>≈ Earth laps</span><b id="s-earthlaps"></b></div>
   <div class="stats-row stack"><span>Most visited</span><b id="s-mostvisited"></b></div>
   <div class="stats-row stack"><span>Most beloved</span><b id="s-beloved"></b></div>
 </div>
@@ -154,7 +171,14 @@
         <span>Hotspot heatmap</span>
         <div class="switch on" id="switch-hotspot"><div class="switch-knob"></div></div>
       </div>
-      <p class="switch-caption">Renders a heatmap glow for frequently visited areas.</p>
+      <p class="switch-caption">Renders a heatmap for frequently visited areas.</p>
+    </div>
+    <div class="switch-block">
+      <div class="switch-row">
+        <span>Voronoi territories</span>
+        <div class="switch" id="switch-voronoi"><div class="switch-knob"></div></div>
+      </div>
+      <p class="switch-caption">Tiles the map into "closest shop" territories, tinted by rating.</p>
     </div>
     <div class="switch-block">
       <div class="switch-row">
@@ -164,17 +188,17 @@
         <div class="palette-swatch active" data-palette="roast" title="Roast">
           <span style="background:#C5AD9B"></span><span style="background:#A67D5E"></span><span style="background:#8F694D"></span><span style="background:#543D2B"></span>
         </div>
-        <div class="palette-swatch" data-palette="blossom" title="Blossom">
-          <span style="background:#E7C6C0"></span><span style="background:#CD8478"></span><span style="background:#B15E52"></span><span style="background:#652A26"></span>
-        </div>
         <div class="palette-swatch" data-palette="coldbrew" title="Cold Brew">
           <span style="background:#C9DCE3"></span><span style="background:#7CA8B9"></span><span style="background:#57879C"></span><span style="background:#2A4A61"></span>
+        </div>
+        <div class="palette-swatch" data-palette="mono" title="Noir">
+          <span style="background:#DEE2E4"></span><span style="background:#9FA5A8"></span><span style="background:#585D60"></span><span style="background:#0C0D0E"></span>
         </div>
       </div>
       <div class="palette-names">
         <span class="palette-name">Roast</span>
-        <span class="palette-name">Blossom</span>
         <span class="palette-name">Cold Brew</span>
+        <span class="palette-name">Noir</span>
       </div>
       <p class="switch-caption">Sets the color gradient used for rating bubbles.</p>
     </div>
@@ -356,7 +380,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script type="module" src="js/main.js"></script>
 </body>

@@ -2,7 +2,7 @@ import { S } from './state.js';
 import { displayRating } from './data.js';
 import { renderShopRadar } from './radar.js';
 import { syncGameSubmitButton } from './game.js';
-import { buildBubbleIcon } from './map.js';
+import { buildBubbleIcon, updateVoronoiLayer, refreshWorldCopyMirrors } from './map.js';
 import { updateInViewStats } from './stats.js';
 import { renderCompare } from './compare.js';
 
@@ -83,8 +83,30 @@ export function setupPanelPhotoNav(){
 // the overall-rating bits of an already-open panel without resetting the
 // photo carousel or anything else showPanel would otherwise re-render.
 export function updatePanelRatingFields(shop){
-  const el = document.getElementById('p-rating');
-  if(el) el.textContent = displayRating(shop.overall).toFixed(1);
+  const displayOverall = displayRating(shop.overall);
+  const numEl = document.getElementById('p-num-overall');
+  if(numEl) numEl.textContent = displayOverall.toFixed(1);
+  const fillEl = document.getElementById('p-fill-overall');
+  if(fillEl) fillEl.style.width = (displayOverall / 5 * 100) + '%';
+
+  // "N% above/below your average" — compares this shop's overall against
+  // the mean overall across every shop in the dataset (S.GLOBAL_AVG_RATING,
+  // computed once in map.js when the data loads). Both sides go through
+  // displayRating() so the comparison stays correct whether or not the
+  // "Normalize ratings" setting is on.
+  const contextEl = document.getElementById('p-context');
+  if(contextEl){
+    if(S.GLOBAL_AVG_RATING > 0){
+      const displayAvg = displayRating(S.GLOBAL_AVG_RATING);
+      const diffPct = Math.round(((displayOverall - displayAvg) / displayAvg) * 100);
+      contextEl.textContent = diffPct === 0
+        ? 'Right at your average'
+        : `${Math.abs(diffPct)}% ${diffPct > 0 ? 'above' : 'below'} your average`;
+    }else{
+      contextEl.textContent = '';
+    }
+  }
+
   const radarEl = document.getElementById('p-radar');
   if(radarEl) radarEl.innerHTML = renderShopRadar(shop);
 }
@@ -152,9 +174,12 @@ export function closeOtherSidePanels(exceptCardId){
 // and the compare card (if open) — same values, just re-rendered.
 export function refreshRatingDependentUI(){
   S.shopMarkers.forEach(entry => {
-    entry.marker.setIcon(buildBubbleIcon(entry.shop, entry.badgeCount, { animate: false }));
+    const icon = buildBubbleIcon(entry.shop, entry.badgeCount, { animate: false });
+    entry.marker.setIcon(icon);
+    entry.mirrors.forEach(mm => mm.setIcon(icon));
   });
   if(S.clusterGroup.refreshClusters) S.clusterGroup.refreshClusters();
+  updateVoronoiLayer(); // tier colors baked into its canvas depend on displayRating() too
   updateInViewStats();
   if(S.lastShownShop) updatePanelRatingFields(S.lastShownShop);
   if(document.getElementById('compare-card').classList.contains('show')) renderCompare();
@@ -171,9 +196,20 @@ export function wirePanelListeners(){
     document.getElementById('brand').classList.toggle('open');
   };
 
+  document.getElementById('stats-close').onclick = (e) => {
+    e.stopPropagation();
+    document.getElementById('stats-card').classList.remove('show');
+    document.getElementById('brand').classList.remove('open');
+  };
+
   document.getElementById('corr-help-btn').onclick = (e) => {
     e.stopPropagation();
     document.getElementById('corr-desc').classList.toggle('show');
+  };
+
+  document.getElementById('clusters-help-btn').onclick = (e) => {
+    e.stopPropagation();
+    document.getElementById('clusters-desc').classList.toggle('show');
   };
 
   document.getElementById('onthisday-close').onclick = () => {

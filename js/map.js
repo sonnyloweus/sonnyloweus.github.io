@@ -1,9 +1,10 @@
-/* global L */
+/* global L, d3 */
 import { S } from './state.js';
 import { loadData, tierClass, displayRating, computeRatingBounds, saveStoredSetting, applyPalette, earliestVisit } from './data.js';
-import { RATING_PALETTES, CLUSTER_ZOOM_STEP, POP_EASE, POP_IN_BASE_WAIT, MIN_ZOOM_FLOOR, MIN_ZOOM_CEILING, MIN_ZOOM_BUFFER, CARTO_API_KEY } from './constants.js';
+import { RATING_PALETTES, CLUSTER_ZOOM_STEP, POP_EASE, POP_IN_BASE_WAIT, MIN_ZOOM_FLOOR, MIN_ZOOM_CEILING, MIN_ZOOM_BUFFER, CARTO_API_KEY, TOPO_COLOR_STOPS, TOPO_THRESHOLDS, TOPO_BANDWIDTH_MIN, TOPO_BANDWIDTH_MAX, TOPO_FILL_ALPHA, TOPO_OUTERMOST_ALPHA, TOPO_OUTLIER_FLOOR_FRACTION, VORONOI_FILL_ALPHA_MIN, VORONOI_FILL_ALPHA_MAX, VORONOI_STROKE_ALPHA, VORONOI_STROKE_WIDTH, VORONOI_STROKE_COLOR } from './constants.js';
 import { renderIntroSlide } from './modal.js';
 import { showOnThisDay, updateInViewStats, showCountSpinner } from './stats.js';
+import { computeClusters, renderClusters } from './clusters.js';
 import { setupFilters, passesNonDateFilters } from './filters.js';
 import { setupCompare } from './compare.js';
 import { closeOtherSidePanels, refreshRatingDependentUI, hidePanel, showPanel } from './panel.js';
@@ -16,23 +17,6 @@ import { wireJourneyListeners } from './journey.js';
 export function activeGroup(){ return S.clusteringOn ? S.clusterGroup : S.plainGroup; }
 
 // ---- hotspot heatmap ----
-// A single continuous leaflet.heat layer (same plugin family behind
-// weather-radar overlays) instead of one shape per shop. Its point data is
-// rebuilt from scratch in updateHeatLayer() any time the visible set
-// changes — see refreshDependentUI() below, the same hook updateTrail()
-// uses — rather than incrementally added/removed like the pill markers,
-// since leaflet.heat has no per-point add/remove API worth relying on.
-// Gradient rides the active rating theme (see RATING_PALETTES) instead of
-// a fixed color — same 7-step gradient the pills use, just continuous.
-// Recomputed on the fly (heatGradientForPalette) rather than reading the
-// --tier-N CSS custom properties, since leaflet.heat renders to canvas and
-// needs literal color strings, not CSS values.
-export function heatGradientForPalette(key){
-  const palette = RATING_PALETTES[key] || RATING_PALETTES.roast;
-  const stops = {};
-  palette.colors.forEach((c, i) => { stops[(i + 1) / palette.colors.length] = c; });
-  return stops;
-}
 
 // Walks every recorded visit (not just each shop's earliest) in
 // chronological order, collapsing only *consecutive* repeats at the same
@@ -124,12 +108,261 @@ export function heatWeight(badgeCount){
 // Rebuilds the heat layer's point data from whichever shops are currently
 // active — called from refreshDependentUI() (see below) any time filters,
 // the date range, or clustering change what's visible, same trigger
-// updateTrail() uses.
+// updateTrail() uses. Feeds whichever heat style is actually on screen;
+// the other one just sits idle with stale data until switched back to.
 export function updateHeatLayer(){
-  const points = S.shopMarkers
-    .filter(e => S.activeSet.has(e.marker))
-    .map(e => [e.shop.lat, e.shop.lng, heatWeight(e.badgeCount)]);
-  S.heatLayer.setLatLngs(points);
+  const active = S.shopMarkers.filter(e => S.activeSet.has(e.marker));
+  // Include every materialized world-copy offset (see the world-copy
+  // mirroring block below) so the density field actually reappears in
+  // repeated copies as you scroll into them, not just around the
+  // canonical copy of the world — see worldOffsets().
+  const points = worldOffsets().flatMap(offset =>
+    active.map(e => [e.shop.lat, e.shop.lng + offset * WORLD_WIDTH, heatWeight(e.badgeCount)])
+  );
+  S.topoLayer.setData(points);
+}
+
+// ---- topo contour heatmap ----
+// A Leaflet layer that runs the shop points through d3.contourDensity()
+// (KDE + marching squares in one call) in *screen pixel* space and paints
+// the resulting density bands to a plain canvas, styled like a rainbow
+// topographic map. Recomputed on moveend/zoomend rather than continuously
+// during the drag/zoom animation, since contouring is meaningfully more
+// expensive than a simple radial blur — a stale frame that snaps into
+// place a beat after the map settles reads fine, whereas doing this on
+// every animation tick would visibly chug.
+export const TopoHeatLayer = L.Layer.extend({
+  onAdd(map){
+    this._map = map;
+    this._canvas = L.DomUtil.create('canvas', 'topo-heat-canvas');
+    this._canvas.style.position = 'absolute';
+    this._canvas.style.left = '0';
+    this._canvas.style.top = '0';
+    this.getPane().appendChild(this._canvas);
+    this._onReset = () => this._reset();
+    map.on('moveend zoomend resize', this._onReset);
+    this._reset();
+  },
+  onRemove(){
+    L.DomUtil.remove(this._canvas);
+    this._map.off('moveend zoomend resize', this._onReset);
+  },
+  setData(points){
+    this._points = points;
+    this._redraw();
+  },
+  _reset(){
+    const map = this._map;
+    const topLeft = map.containerPointToLayerPoint([0, 0]);
+    L.DomUtil.setPosition(this._canvas, topLeft);
+    const size = map.getSize();
+    this._canvas.width = size.x;
+    this._canvas.height = size.y;
+    this._redraw();
+  },
+  _redraw(){
+    if(!this._map || !this._canvas.width || !this._canvas.height) return;
+    const ctx = this._canvas.getContext('2d');
+    ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+    if(!this._points || !this._points.length) return;
+
+    const map = this._map;
+    const w = this._canvas.width, h = this._canvas.height;
+    const pad = 80; // keep points just off-screen so their density still bleeds into the visible edge
+    const pts = this._points
+      .map(([lat, lng, weight]) => {
+        const p = map.latLngToContainerPoint([lat, lng]);
+        return [p.x, p.y, weight];
+      })
+      .filter(([x, y]) => x > -pad && x < w + pad && y > -pad && y < h + pad);
+    if(pts.length < 3) return;
+
+    // Tighter bandwidth at high zoom (resolve individual neighborhoods)
+    // wider at low zoom (whole-world view reads as soft regional blobs
+    // rather than one speck per pin).
+    const zoom = map.getZoom();
+    const bandwidth = Math.max(TOPO_BANDWIDTH_MIN, Math.min(TOPO_BANDWIDTH_MAX, TOPO_BANDWIDTH_MAX - (zoom - 3) * 6));
+
+    // Built from density.contours(pts) rather than the one-shot
+    // .thresholds()(pts) pipeline, so each level can be requested by its
+    // *true* density value (contourFn.max is that scale's real ceiling)
+    // instead of guessing at d3's internal grid-cell scaling — passing
+    // raw values through .thresholds() as an array skips d3's own
+    // scaling step and was silently asking for impossibly high
+    // thresholds, producing empty rings for most of the gradient.
+    // d3.ticks() reproduces d3.contourDensity()'s own default "nice
+    // round numbers" spacing (proven to grade smoothly across a real
+    // hotspot); TOPO_OUTLIER_FLOOR_FRACTION adds one deliberately low
+    // extra rung below that so a lone far-off shop — whose peak density
+    // can be an order of magnitude under the rest of the ticks — still
+    // clears at least one level instead of rendering as nothing.
+    const contourFn = d3.contourDensity()
+      .x(d => d[0]).y(d => d[1])
+      .weight(d => d[2])
+      .size([w, h])
+      .bandwidth(bandwidth)
+      .contours(pts);
+    const trueMax = contourFn.max;
+    if(!trueMax) return;
+    const floor = trueMax * TOPO_OUTLIER_FLOOR_FRACTION;
+    const levels = [floor, ...d3.ticks(floor, trueMax, TOPO_THRESHOLDS - 1)].filter(v => v > 0 && v <= trueMax);
+    const contours = levels.map(v => contourFn(v));
+    if(!contours.length) return;
+
+    // Bands are drawn opaque, lowest-to-highest, onto an offscreen buffer
+    // first — each higher (smaller, brighter) band cleanly overwrites the
+    // ring below it there, the same as a solid-color contour map, so the
+    // rainbow stays crisp instead of the colors muddying together. Only
+    // that finished buffer gets faded, in one single globalAlpha pass, so
+    // "more transparent" thins the whole layer evenly rather than letting
+    // ~14 stacked translucent fills wash each other out into gray.
+    if(!this._buffer){ this._buffer = document.createElement('canvas'); }
+    if(this._buffer.width !== w || this._buffer.height !== h){
+      this._buffer.width = w;
+      this._buffer.height = h;
+    }
+    const bctx = this._buffer.getContext('2d');
+    bctx.clearRect(0, 0, w, h);
+
+    const maxValue = Math.max(...contours.map(c => c.value));
+    const color = d3.scaleSequential(d3.interpolateRgbBasis(TOPO_COLOR_STOPS)).domain([0, maxValue]);
+
+    // No stroke between bands — just the flat color fills. contours[0]
+    // is always the lowest ("floor") band, drawn first and then covered
+    // by every denser band above it, so it's the only one whose alpha
+    // actually survives to the outer edge of the whole shape — hence
+    // TOPO_OUTERMOST_ALPHA fading just that one instead of everything.
+    contours.forEach((c, i) => {
+      const path = new Path2D();
+      c.coordinates.forEach(polygon => {
+        polygon.forEach(ring => {
+          ring.forEach(([x, y], i) => { i === 0 ? path.moveTo(x, y) : path.lineTo(x, y); });
+          path.closePath();
+        });
+      });
+      bctx.fillStyle = color(c.value);
+      bctx.globalAlpha = i === 0 ? TOPO_OUTERMOST_ALPHA : 1;
+      bctx.fill(path, 'evenodd');
+      bctx.globalAlpha = 1;
+    });
+
+    ctx.globalAlpha = TOPO_FILL_ALPHA;
+    ctx.drawImage(this._buffer, 0, 0);
+    ctx.globalAlpha = 1;
+  }
+});
+
+// ---- Voronoi territories (alternate map overlay, off by default) ----
+// Tessellates the current view into "nearest shop" cells using
+// d3.Delaunay's Voronoi diagram, computed in plain screen-pixel space via
+// the map's own projection (map.latLngToContainerPoint) — Leaflet has
+// already done the real Mercator math for us, so this is an ordinary
+// Euclidean Voronoi diagram over on-screen positions, not a geodesic one.
+// Every active shop is included as a site even though only cells inside
+// the canvas get painted, because a far-off-screen shop can still be the
+// nearest one to a point right at the visible edge — leaving it out would
+// draw the wrong boundary there. Redrawn on the same moveend/zoomend/resize
+// cadence as TopoHeatLayer above, for the same reason (real Voronoi/contour
+// math is too expensive to redo on every drag/zoom animation frame).
+export const VoronoiTerritoryLayer = L.Layer.extend({
+  onAdd(map){
+    this._map = map;
+    this._canvas = L.DomUtil.create('canvas', 'voronoi-heat-canvas');
+    this._canvas.style.position = 'absolute';
+    this._canvas.style.left = '0';
+    this._canvas.style.top = '0';
+    this.getPane().appendChild(this._canvas);
+    this._onReset = () => this._reset();
+    map.on('moveend zoomend resize', this._onReset);
+    this._reset();
+  },
+  onRemove(){
+    L.DomUtil.remove(this._canvas);
+    this._map.off('moveend zoomend resize', this._onReset);
+  },
+  setData(points){
+    this._points = points;
+    this._redraw();
+  },
+  _reset(){
+    const map = this._map;
+    const topLeft = map.containerPointToLayerPoint([0, 0]);
+    L.DomUtil.setPosition(this._canvas, topLeft);
+    const size = map.getSize();
+    this._canvas.width = size.x;
+    this._canvas.height = size.y;
+    this._redraw();
+  },
+  _redraw(){
+    if(!this._map || !this._canvas.width || !this._canvas.height) return;
+    const ctx = this._canvas.getContext('2d');
+    ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+    if(!this._points || !this._points.length) return;
+
+    const map = this._map;
+    const w = this._canvas.width, h = this._canvas.height;
+    const pts = this._points.map(([lat, lng, tier]) => {
+      const p = map.latLngToContainerPoint([lat, lng]);
+      return [p.x, p.y, tier];
+    });
+
+    // Fill follows the *live* --tier-1..7 custom properties, not a fixed
+    // color table — read fresh every redraw so a rating-theme switch or the
+    // normalize toggle (both of which change what "tier 5" means) repaints
+    // this layer correctly. The border is a fixed neutral gray constant
+    // (not --dim) on purpose: --dim shifts with the active rating theme
+    // (e.g. "Noir" repaints it), and this boundary should read the same
+    // regardless of which theme is active.
+    const style = getComputedStyle(document.documentElement);
+    const tierColors = [1,2,3,4,5,6,7].map(t => style.getPropertyValue(`--tier-${t}`).trim());
+    const strokeColor = VORONOI_STROKE_COLOR;
+
+    let cells;
+    try{
+      const delaunay = d3.Delaunay.from(pts, d => d[0], d => d[1]);
+      cells = delaunay.voronoi([0, 0, w, h]);
+    }catch(e){ return; } // degenerate point sets (e.g. two shops at the exact same spot) — just skip this frame
+
+    // Borders off for now (fill-only look, being tried out) — stroke
+    // setup/draw commented rather than deleted so it's a one-line flip
+    // back if the no-border look doesn't stick.
+    // ctx.lineWidth = VORONOI_STROKE_WIDTH;
+    // ctx.strokeStyle = strokeColor;
+    pts.forEach((p, i) => {
+      const d = cells.renderCell(i);
+      if(!d) return;
+      const path = new Path2D(d);
+      const tier = Math.max(1, Math.min(7, Math.round(p[2])));
+      // Distance from the middle tier (4), normalized to 0-1, drives the
+      // fill's opacity — see VORONOI_FILL_ALPHA_MIN/MAX in constants.js.
+      const extremity = Math.abs(tier - 4) / 3;
+      ctx.fillStyle = tierColors[tier - 1] || tierColors[6];
+      ctx.globalAlpha = VORONOI_FILL_ALPHA_MIN + extremity * (VORONOI_FILL_ALPHA_MAX - VORONOI_FILL_ALPHA_MIN);
+      ctx.fill(path);
+      // ctx.globalAlpha = VORONOI_STROKE_ALPHA;
+      // ctx.stroke(path);
+      ctx.globalAlpha = 1;
+    });
+  }
+});
+
+// Rebuilds the Voronoi layer's site data from whichever shops are
+// currently active, same trigger (and same shape of caller) as
+// updateHeatLayer above. Also re-called whenever a shop's *displayed*
+// rating can change without a filter/viewport change — the normalize
+// toggle (see panel.js's refreshRatingDependentUI) and a rating-theme
+// swap (see wireRatingSettingsListeners below) — since both change which
+// tier a cell should be filled, and this layer bakes tier colors into
+// canvas pixels rather than reading them live like the CSS-driven pins do.
+export function updateVoronoiLayer(){
+  if(!S.voronoiLayer) return;
+  const active = S.shopMarkers.filter(e => S.activeSet.has(e.marker));
+  // Same world-copy expansion as updateHeatLayer above — otherwise the
+  // territory tessellation only ever exists around the canonical copy.
+  const points = worldOffsets().flatMap(offset =>
+    active.map(e => [e.shop.lat, e.shop.lng + offset * WORLD_WIDTH, +tierClass(displayRating(e.shop.overall)).slice(1)])
+  );
+  S.voronoiLayer.setData(points);
 }
 
 // ---- pop-in timing helper: given the entries about to be revealed,
@@ -199,7 +432,9 @@ export function syncBadgeCountsAndGetActive(){
     const dateOk = !hasDates || inRangeCount > 0;
 
     if(hasDates && inRangeCount !== entry.badgeCount){
-      entry.marker.setIcon(buildBubbleIcon(entry.shop, inRangeCount, { animate: false }));
+      const icon = buildBubbleIcon(entry.shop, inRangeCount, { animate: false });
+      entry.marker.setIcon(icon);
+      entry.mirrors.forEach(mm => mm.setIcon(icon));
       entry.badgeCount = inRangeCount;
     }
 
@@ -208,11 +443,102 @@ export function syncBadgeCountsAndGetActive(){
   return active;
 }
 
+// ---- horizontal world-copy mirroring (infinite east/west scroll) ----
+// maxBounds only caps latitude (see the L.map() init below) and Leaflet's
+// tile layer already repeats tiles forever across the antimeridian, but a
+// plain Leaflet marker only ever exists at the one longitude it was
+// created with — panning into a repeated copy of the tiles would show an
+// empty ocean where the pins should be. This keeps a clone marker for
+// every currently-active pin in every repeated world copy the user has
+// actually scrolled into, offset by whole 360°-longitude multiples, so
+// the same pins keep appearing as you keep scrolling in either direction
+// — no snap-back (that's what worldCopyJump does, and it's deliberately
+// off — see the map init below).
+//
+// Clones are always unclustered (plain L.marker, added straight to a
+// per-offset L.layerGroup) even when the canonical copy has clustering
+// on: replicating the real MarkerClusterGroup's clustering/zIndex/icon
+// logic for every repeated copy would multiply this file's complexity for
+// a case (a zoomed-out view of a *repeated* world) that's rare in
+// practice, and a scatter of individual pins reads fine there.
+const WORLD_WIDTH = 360;
+
+// [0, ...every nonzero offset currently materialized]. Shared by the pin
+// mirroring below and by updateHeatLayer/updateVoronoiLayer above, so all
+// three "what world copies actually exist right now" lists never drift
+// out of sync with each other.
+function worldOffsets(){
+  return [0, ...S.mirrorGroups.keys()];
+}
+
+function makeMirrorMarker(entry, offset){
+  const marker = L.marker([entry.shop.lat, entry.shop.lng + offset * WORLD_WIDTH], {
+    icon: entry.marker.getIcon(),
+    zIndexOffset: entry.marker.options.zIndexOffset
+  });
+  marker.bindTooltip(entry.shop.name, {direction:'top', offset:[0, -14 + S.BUBBLE_HIT_PAD.y], className:'mini-tip'});
+  marker.on('click', () => showPanel(entry.shop));
+  return marker;
+}
+
+// Reconciles every already-materialized world copy's mirror markers
+// against whichever pins are actually live on the canonical map right now
+// (S.activeSet). Idempotent and cheap enough (shops × materialized
+// copies) to just call after any bulk marker change — filters, the
+// staggered reveal, the clustering toggle, journey mode — rather than
+// trying to track every individual add/remove call site across the app.
+export function refreshWorldCopyMirrors(){
+  S.mirrorGroups.forEach((group, offset) => {
+    S.shopMarkers.forEach(entry => {
+      const isLive = S.activeSet.has(entry.marker);
+      const mirror = entry.mirrors.get(offset);
+      if(isLive && !mirror){
+        const mm = makeMirrorMarker(entry, offset);
+        group.addLayer(mm);
+        entry.mirrors.set(offset, mm);
+      }else if(!isLive && mirror){
+        group.removeLayer(mirror);
+        entry.mirrors.delete(offset);
+      }
+    });
+  });
+}
+
+// Called on every map move: figures out which repeated world copies are
+// currently in view (plus one extra on each side as a buffer, so
+// continuous panning never outruns materialization) and builds any that
+// don't exist yet. Once built, a copy is never torn back down — with a
+// personal-scale dataset the extra markers are cheap to keep around, and
+// it avoids constant add/remove churn while panning back and forth near a
+// boundary.
+function updateWorldCopyRange(map){
+  const bounds = map.getBounds();
+  const minOffset = Math.floor(bounds.getWest() / WORLD_WIDTH) - 1;
+  const maxOffset = Math.ceil(bounds.getEast() / WORLD_WIDTH) + 1;
+  let addedAny = false;
+  for(let k = minOffset; k <= maxOffset; k++){
+    if(k !== 0 && !S.mirrorGroups.has(k)){
+      S.mirrorGroups.set(k, L.layerGroup().addTo(map));
+      addedAny = true;
+    }
+  }
+  if(addedAny){
+    refreshWorldCopyMirrors();
+    // A newly materialized offset needs its points folded into the
+    // heatmap/Voronoi canvases too, or they'd only ever paint around the
+    // canonical copy of the world (see worldOffsets()).
+    updateHeatLayer();
+    updateVoronoiLayer();
+  }
+}
+
 export function refreshDependentUI(){
   S.currentVisible = S.shopMarkers.filter(e => S.activeSet.has(e.marker)).map(e => e.shop);
   updateTrail();
   updateHeatLayer();
+  updateVoronoiLayer();
   updateInViewStats();
+  refreshWorldCopyMirrors();
 }
 
 // The reveal: adds currently-eligible-but-not-yet-active markers to the
@@ -379,8 +705,8 @@ function wireRatingSettingsListeners(){
       sw.classList.add('active');
       S.activePalette = sw.dataset.palette;
       applyPalette(S.activePalette);
-      S.heatLayer.setOptions({ gradient: heatGradientForPalette(S.activePalette) });
       saveStoredSetting('palette', S.activePalette);
+      updateVoronoiLayer();
     };
   });
 
@@ -402,6 +728,8 @@ export async function initApp(){
   S.GLOBAL_DATA = data;
   S.GLOBAL_AVG_RATING = data.length ? data.reduce((sum, s) => sum + s.overall, 0) / data.length : 0;
   computeRatingBounds();
+  computeClusters();
+  renderClusters();
   if(S.introIndex === 1) renderIntroSlide(); // refresh the "Loading the tally…" placeholder if still on that slide
 
   showOnThisDay(data);
@@ -425,7 +753,18 @@ export async function initApp(){
     zoomControl:false,
     attributionControl:true,
     minZoom: 3,
-    maxBounds: [[-85, -180], [85, 180]],
+    // Latitude is still capped (no poles-and-beyond panning), but longitude
+    // is left unbounded so the map scrolls horizontally forever. Leaflet's
+    // tile layer already repeats tiles across the antimeridian by default
+    // (no noWrap set below). worldCopyJump is deliberately left OFF — it
+    // would silently snap the view back to the "canonical" copy of the
+    // world the moment you pan into a repeated one, which reads as a
+    // teleport. Instead, real (unclustered) clone pins are materialized
+    // into every repeated world copy you actually scroll into — see the
+    // "horizontal world-copy mirroring" block above refreshWorldCopyMirrors
+    // — so you keep scrolling in one continuous direction and the same
+    // pins keep showing up, no jump.
+    maxBounds: [[-85, -Infinity], [85, Infinity]],
     maxBoundsViscosity: 1.0
   });
   S.map = map;
@@ -445,6 +784,7 @@ export async function initApp(){
     map.setView([20, 0], 3); // whole-world fallback if there's no data yet
   }
   map.on('resize', refreshMinZoom); // covers window resizes and, via Leaflet's trackResize, orientation changes
+  map.on('move', () => updateWorldCopyRange(map)); // materializes repeated-world pin copies as you scroll into them
 
   // CARTO requires a free API key as of 2026 or every tile shows an
   // "api key required" watermark instead of the map. Get one at
@@ -459,11 +799,17 @@ export async function initApp(){
   setupZoomLimitFeedback(map);
 
   // The hotspot heatmap lives in its own pane, below Leaflet's default
-  // markerPane (zIndex 600) — so the heat blob can never paint over a
-  // rating pill or cluster bubble, no matter how it's layered.
-  const heatPane = map.createPane('heatPane');
-  heatPane.style.zIndex = 450;
-  heatPane.style.pointerEvents = 'none';
+  // markerPane (zIndex 600) — so it can never paint over a rating pill or
+  // cluster bubble, no matter how it's layered.
+  const topoPane = map.createPane('topoPane');
+  topoPane.style.zIndex = 450;
+  topoPane.style.pointerEvents = 'none';
+
+  // Sits below the hotspot heatmap (450) — if both overlays are ever on at
+  // once, visit density should still read as the top layer.
+  const voronoiPane = map.createPane('voronoiPane');
+  voronoiPane.style.zIndex = 440;
+  voronoiPane.style.pointerEvents = 'none';
 
   const clusterGroup = L.markerClusterGroup({
     // Was 2 ("basically only cluster pins that visually overlap"), which on
@@ -544,10 +890,13 @@ export async function initApp(){
 
   S.hotspotOn = S.storedSettings.hotspot !== false; // stored value only ever disables; unset/anything else defaults on
   document.getElementById('switch-hotspot').classList.toggle('on', S.hotspotOn);
-  S.heatLayer = L.heatLayer([], {
-    pane: 'heatPane', radius: 44, blur: 34, maxZoom: 15, minOpacity: 0.22, gradient: heatGradientForPalette(S.activePalette)
-  });
-  if(S.hotspotOn) map.addLayer(S.heatLayer);
+  S.topoLayer = new TopoHeatLayer({ pane: 'topoPane' });
+  if(S.hotspotOn) map.addLayer(S.topoLayer);
+
+  S.voronoiOn = !!S.storedSettings.voronoi; // stored value only ever enables; off by default, unlike the other overlays
+  document.getElementById('switch-voronoi').classList.toggle('on', S.voronoiOn);
+  S.voronoiLayer = new VoronoiTerritoryLayer({ pane: 'voronoiPane' });
+  if(S.voronoiOn) map.addLayer(S.voronoiLayer);
 
   setupFilters();
   setupCompare();
@@ -569,6 +918,7 @@ export async function initApp(){
     S.activeSet.forEach(m => { oldGroup.removeLayer(m); newGroup.addLayer(m); });
     map.removeLayer(oldGroup);
     map.addLayer(newGroup);
+    refreshWorldCopyMirrors();
 
     e.currentTarget.classList.toggle('on', S.clusteringOn);
     saveStoredSetting('clustering', S.clusteringOn);
@@ -592,7 +942,8 @@ export async function initApp(){
       // date filter entirely) — visitDays is what the range filter uses.
       earliestDay: earliestVisit(shop) !== null ? Math.floor(earliestVisit(shop) / 86400000) : null,
       visitDays: visitDaysForShop,
-      badgeCount: totalVisits
+      badgeCount: totalVisits,
+      mirrors: new Map() // offset -> clone marker in that repeated world copy; see refreshWorldCopyMirrors
     };
   });
   S.activeSet = new Set();
@@ -612,7 +963,14 @@ export async function initApp(){
     S.hotspotOn = !S.hotspotOn;
     e.currentTarget.classList.toggle('on', S.hotspotOn);
     saveStoredSetting('hotspot', S.hotspotOn);
-    if(S.hotspotOn){ map.addLayer(S.heatLayer); updateHeatLayer(); } else map.removeLayer(S.heatLayer);
+    if(S.hotspotOn){ map.addLayer(S.topoLayer); updateHeatLayer(); } else map.removeLayer(S.topoLayer);
+  };
+
+  document.getElementById('switch-voronoi').onclick = (e) => {
+    S.voronoiOn = !S.voronoiOn;
+    e.currentTarget.classList.toggle('on', S.voronoiOn);
+    saveStoredSetting('voronoi', S.voronoiOn);
+    if(S.voronoiOn){ map.addLayer(S.voronoiLayer); updateVoronoiLayer(); } else map.removeLayer(S.voronoiLayer);
   };
 
   wireJourneyListeners();

@@ -3,7 +3,7 @@ import { S } from './state.js';
 import { formatDay } from './data.js';
 import { haversineMiles } from './stats.js';
 import { JOURNEY_MIN_ZOOM, JOURNEY_MAX_ZOOM } from './constants.js';
-import { updateHeatLayer } from './map.js';
+import { updateHeatLayer, refreshWorldCopyMirrors } from './map.js';
 import { updateInViewStats } from './stats.js';
 import { applyFilters } from './filters.js';
 
@@ -42,6 +42,7 @@ export function populateStop(entry){
   S.clusterGroup.addLayer(entry.marker);
   S.activeSet.add(entry.marker);
   updateHeatLayer();
+  refreshWorldCopyMirrors();
   const el = entry.marker.getElement();
   const bubble = el && el.querySelector('.bubble');
   if(bubble){
@@ -127,6 +128,7 @@ export function startJourney(){
   S.clusterGroup.clearLayers();
   S.activeSet = new Set();
   updateHeatLayer();
+  refreshWorldCopyMirrors();
   S.currentVisible = [];
   if(S.trailLine){ S.map.removeLayer(S.trailLine); S.trailLine = null; }
   updateInViewStats();

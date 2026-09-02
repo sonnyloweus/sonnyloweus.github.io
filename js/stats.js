@@ -1,11 +1,11 @@
 import { S } from './state.js';
 import { displayRating, earliestVisit } from './data.js';
-import { buildHistCurveSvg } from './radar.js';
 import {
   PRICE_ESTIMATE, PRICE_RANK, MG_CAFFEINE_PER_CUP,
-  EARTH_RADIUS_MILES, EARTH_CIRCUMFERENCE_MILES, MG_CAFFEINE_PER_REDBULL
+  EARTH_RADIUS_MILES
 } from './constants.js';
 import { renderVisitHistogram } from './filters.js';
+import { renderFloatingPlots } from './floating-plots.js';
 
 // ---------- stats ----------
 export function computeStats(list){
@@ -41,9 +41,8 @@ export function renderStats(list){
   // front of this text.
   document.getElementById('count').textContent = stats ? `${stats.n} in view ${stats.avg.toFixed(1)} avg` : '0 in view';
   if(!stats){
-    ['s-count','s-avg','s-median','s-stddev','s-range','s-cups','s-caffeine','s-redbulls','s-spent','s-corr','s-beloved','s-distance','s-earthlaps','s-mostvisited']
+    ['s-count','s-avg','s-median','s-stddev','s-range','s-cups','s-caffeine','s-spent','s-corr','s-beloved','s-distance','s-mostvisited']
       .forEach(id => document.getElementById(id).textContent = '—');
-    document.getElementById('stats-hist').innerHTML = '';
     const emptyFilterHist = document.getElementById('filter-rating-hist');
     if(emptyFilterHist) emptyFilterHist.innerHTML = '';
     return;
@@ -54,11 +53,11 @@ export function renderStats(list){
   document.getElementById('s-stddev').textContent = stats.stddev.toFixed(2);
   document.getElementById('s-range').textContent = `${stats.min.toFixed(1)}–${stats.max.toFixed(1)}`;
   const maxBucket = Math.max(1, ...stats.buckets);
-  // Stats panel gets the smoothed rating-distribution curve; the filter
-  // panel keeps the plain bars above its range slider (a quick preview
-  // strip, not the "math" chart) — both still read off stats.buckets so
-  // they never drift out of sync with each other.
-  document.getElementById('stats-hist').innerHTML = buildHistCurveSvg(stats.buckets, stats.avg);
+  // The stats panel used to also show a smoothed rating-distribution curve
+  // here (buildHistCurveSvg, radar.js) — dropped now that the same
+  // distribution is already visible on the map itself via the floating
+  // plots. The filter panel keeps its own plain-bars preview below, still
+  // read off this same stats.buckets so the two never drift out of sync.
   const histBarsHtml = stats.buckets.map(c => `<div class="stats-bar" style="height:${Math.max(2,(c/maxBucket)*26)}px" title="${c}"></div>`).join('');
   const filterHist = document.getElementById('filter-rating-hist');
   if(filterHist) filterHist.innerHTML = histBarsHtml;
@@ -68,7 +67,6 @@ export function renderStats(list){
   document.getElementById('s-caffeine').textContent = fun.caffeineMg >= 1000
     ? (fun.caffeineMg/1000).toFixed(2) + 'g'
     : fun.caffeineMg + 'mg';
-  document.getElementById('s-redbulls').textContent = fun.redBulls.toFixed(1) + '×';
   document.getElementById('s-spent').textContent = '~$' + fun.spent.toFixed(0);
   document.getElementById('s-corr').textContent = fun.corr === null
     ? '—' : (fun.corr >= 0 ? '+' : '') + fun.corr.toFixed(2);
@@ -76,8 +74,6 @@ export function renderStats(list){
     ? `${fun.mostBeloved.name} (${displayRating(fun.mostBeloved.overall).toFixed(1)})` : '—';
   document.getElementById('s-distance').textContent = fun.distanceMiles > 0
     ? fun.distanceMiles.toFixed(1) + ' mi' : '—';
-  document.getElementById('s-earthlaps').textContent = fun.distanceMiles > 0
-    ? fun.earthLaps.toFixed(3) : '—';
   document.getElementById('s-mostvisited').textContent = fun.mostVisited
     ? `${fun.mostVisited.name} (×${fun.mostVisited.count})` : '—';
 }
@@ -149,9 +145,7 @@ export function computeFunStats(list){
 
   const caffeineMg = cups * MG_CAFFEINE_PER_CUP;
   return {
-    cups, spent, caffeineMg, corr, mostBeloved, distanceMiles, mostVisited,
-    redBulls: caffeineMg / MG_CAFFEINE_PER_REDBULL,
-    earthLaps: distanceMiles / EARTH_CIRCUMFERENCE_MILES
+    cups, spent, caffeineMg, corr, mostBeloved, distanceMiles, mostVisited
   };
 }
 
@@ -163,6 +157,7 @@ export function updateInViewStats(){
   const inView = S.currentVisible.filter(s => bounds.contains([s.lat, s.lng]));
   renderStats(inView);
   renderVisitHistogram(inView);
+  renderFloatingPlots(inView);
 }
 
 // ---- On this day: surface any past visit that lands on today's month/day ----

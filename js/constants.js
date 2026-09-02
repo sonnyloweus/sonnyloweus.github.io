@@ -2,13 +2,29 @@
 // Pure data — no DOM access, no state mutation.
 
 // ---------- rating color palettes ----------
-// Three 7-step gradients (lowest tier -> highest) that can be swapped onto
+// Two 7-step gradients (lowest tier -> highest) that can be swapped onto
 // the --tier-1..7 CSS custom properties driving bubble colors. "Roast" is
 // the original palette and stays the default.
 export const RATING_PALETTES = {
-  roast:    { label:'Roast',     colors:['#C5AD9B','#B6957C','#A67D5E','#8F694D','#72533C','#543D2B','#4A2A16'] },
-  blossom:  { label:'Blossom',   colors:['#E7C6C0','#DDA79D','#CD8478','#B15E52','#8B3F36','#652A26','#421A18'] },
-  coldbrew: { label:'Cold Brew', colors:['#C9DCE3','#A8C5D1','#7CA8B9','#57879C','#3C6780','#2A4A61','#1B2F40'] }
+  roast:    { label:'Roast',     colors:['#C5AD9B','#B6957C','#A67D5E','#8F694D','#72533C','#543D2B','#4A2A16'], accent:'#4A2A16' },
+  coldbrew: { label:'Cold Brew', colors:['#C9DCE3','#A8C5D1','#7CA8B9','#57879C','#3C6780','#2A4A61','#1B2F40'], accent:'#1B2F40' },
+  // "Noir" — a fully desaturated, cool-toned grayscale theme. Unlike the
+  // other two (which only swap the --tier-N bubble gradient + --accent),
+  // this one also overrides the neutral site-wide vars below (--bg, --ink,
+  // --dim, --crema*, --coffee-*, --ceramic*, --compare-*) so picking it
+  // turns the *entire* page monotone — buttons, title bar/brand pill,
+  // toggles, the coffee-cup radar — not just the rating bubbles. See
+  // applyPalette() in data.js, which reads these optional overrides and
+  // falls back to the default --root values below when a palette omits them.
+  // The gradient runs steep on purpose: the top tier sits just short of
+  // true black (#0C0D0E) so the highest-rated shops read as unmistakably
+  // "blackest of the black" against the lighter tiers below them.
+  mono:     { label:'Noir',      colors:['#DEE2E4','#C0C5C8','#9FA5A8','#7D8386','#585D60','#34383A','#0C0D0E'], accent:'#0C0D0E',
+              bg:'#F5F6F7', ink:'#15171A', dim:'#868C90',
+              crema:'#D7DADC', cremaLight:'#E6E8E9', cremaLightest:'#F1F2F3',
+              coffeeMid:'#4A4E52', coffeeDark:'#24272A',
+              ceramic:'#F3F4F5', ceramicEdge:'#D3D6D8',
+              compareA:'#FFFFFF', compareB:'#7B8288' }
 };
 
 // ---------- settings persistence ----------
@@ -116,3 +132,78 @@ export const CLUSTER_ZOOM_STEP = 3;
 // ---- Head to head compare ----
 export const COMPARE_COLOR_A = 'var(--compare-a)';
 export const COMPARE_COLOR_B = 'var(--compare-b)';
+
+// ---- Topo contour heatmap (alternate style for the hotspot layer) ----
+// Low-to-high density stops for the d3.contourDensity() render in map.js's
+// TopoHeatLayer. Ordered like a thermal/weather-radar ramp (cool -> hot)
+// rather than the rating palettes above, since this is about visit
+// density, not review scores, and stays fixed across all three rating
+// themes for that reason.
+export const TOPO_COLOR_STOPS = ['#241b52', '#1d4ed8', '#0891b2', '#16a34a', '#eab308', '#f97316', '#dc2626'];
+// Number of density bands d3.contourDensity() slices the field into —
+// more bands = finer rings (closer to the reference topo-map look), fewer
+// = chunkier and cheaper to redraw on every pan/zoom.
+export const TOPO_THRESHOLDS = 14;
+// KDE bandwidth in screen pixels at the map's *current* zoom, scaled by
+// zoomFactor in map.js (tighter clusters need a smaller radius to resolve
+// into separate peaks instead of one mega-blob). These are the floor/
+// ceiling that scaling is clamped to — i.e. the hotspot radius. Trimmed
+// down from the original 22/90 for a slightly tighter, less sprawling
+// effect.
+export const TOPO_BANDWIDTH_MIN = 15;
+export const TOPO_BANDWIDTH_MAX = 64;
+// TOPO_FILL_ALPHA is the *one* opacity knob for the whole topo layer —
+// TopoHeatLayer._redraw (map.js) paints every band fully opaque onto an
+// offscreen buffer first (so the rainbow stays crisp, band cleanly over
+// band, instead of ~14 translucent fills stacking into gray mush) and
+// only fades that finished buffer down by this amount in a single pass.
+// Low on purpose — this sits *under* the pins and basemap labels, so it
+// should read as a tint, not a solid layer of color.
+export const TOPO_FILL_ALPHA = 0.3;
+// The outermost band (TOPO_COLOR_STOPS[0], the lowest-density "floor"
+// ring) is painted into that same offscreen buffer at *this* reduced
+// alpha instead of fully opaque like every other band — see the i===0
+// case in TopoHeatLayer._redraw. It still gets multiplied by
+// TOPO_FILL_ALPHA on top like everything else, so its final on-page
+// opacity is TOPO_OUTERMOST_ALPHA * TOPO_FILL_ALPHA — noticeably fainter
+// than the rest of the gradient, so the outer edge fades out instead of
+// ending in a visible ring.
+export const TOPO_OUTERMOST_ALPHA = 0.25;
+// d3.contourDensity()'s default thresholds are linearly spaced from ~0 to
+// the single highest density value anywhere on the map. That's a problem
+// the moment one shop is geographically isolated (say, the only coffee
+// stop on a trip to China): its density peak can be an order of magnitude
+// below a tight home-city cluster's peak, so under linear spacing it
+// never crosses even the lowest band and renders with *no* color at all,
+// not just a faint one. TopoHeatLayer._redraw (map.js) fixes this by
+// carving out one deliberately low "floor" threshold — this fraction of
+// the map's single highest density value — so even a lone faint point
+// reliably clears it and shows up as a pale ring. The remaining bands
+// stay evenly (linearly) spaced above that floor, same as d3's default,
+// so dense clusters still get a smooth, evenly-graded rainbow rather than
+// having all their resolution crammed toward one end.
+export const TOPO_OUTLIER_FLOOR_FRACTION = 0.004;
+
+// ---- Voronoi territories (alternate map overlay, off by default) ----
+// Each cell is tinted by its own shop's rating tier — the same --tier-1..7
+// gradient the pins already use (read fresh off the DOM on every redraw, so
+// it follows the active rating theme and the normalize toggle automatically)
+// rather than a second, competing color system. The point is "which shop
+// is this closest to, and how did you rate it," not a new palette to learn.
+// Cells are tinted by their shop's rating tier — kept subtle so it reads
+// as a faint wash rather than competing with the markers. Fill alpha
+// isn't flat: it scales with how far the tier sits from the middle of
+// the 1-7 scale, so an average-rated shop's cell is nearly invisible
+// (ALPHA_MIN) while a standout-great or standout-bad one's cell reads
+// darker (ALPHA_MAX) — most cells stay very transparent, but the
+// extremes get enough contrast to actually notice. The border is a flat
+// neutral-gray constant (not read from --dim, since a palette like
+// "Noir" can repaint that var — this border should stay put regardless
+// of theme) at higher contrast so cell boundaries stay legible against
+// the light fill.
+export const VORONOI_FILL_ALPHA_MIN = 0.012;
+export const VORONOI_FILL_ALPHA_MAX = 0.10;
+export const VORONOI_STROKE_ALPHA = 0.55;
+export const VORONOI_STROKE_WIDTH = 0.6;
+export const VORONOI_STROKE_COLOR = '#8C8579';
+

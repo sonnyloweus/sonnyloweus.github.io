@@ -47,10 +47,23 @@ export const S = {
   clusterGroup: null,
   plainGroup: null, // used when clustering is toggled off
   clusteringOn: true,
-  heatLayer: null,
+  topoLayer: null,
   hotspotOn: true,
+  voronoiLayer: null,
+  voronoiOn: false, // stored value only ever enables; off by default (new/unfamiliar overlay)
+  clusters: null, // taste-space k-means/PCA result for the stats panel — see clusters.js
   activeSet: new Set(),
   shopMarkers: [],
+  // ---- horizontal world-copy mirroring (infinite east/west scroll) ----
+  // mirrorGroups: Map<offset (nonzero integer world-widths), L.LayerGroup>
+  // of every repeated-world copy currently built, each added to the map
+  // once materialized (see refreshWorldCopyMirrors/materializeWorldOffset
+  // in map.js). Repeated copies always show plain (unclustered) pins,
+  // regardless of the clustering toggle — see the comment above
+  // refreshWorldCopyMirrors for why. Each shopMarkers entry additionally
+  // grows its own `.mirrors` Map (offset -> that entry's clone marker for
+  // that copy), set up alongside `marker` when entries are built below.
+  mirrorGroups: new Map(),
   isMobileViewport: false,
   BUBBLE_HIT_PAD: {x: 0, y: 0},
   MAX_LIFETIME_VISITS: 1,
