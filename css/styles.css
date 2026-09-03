@@ -305,6 +305,35 @@
   .cluster-chip-n{ color:var(--dim); font-variant-numeric:tabular-nums; }
   .panel-radar svg text{ font-family:'Inter',sans-serif; }
 
+  /* ---- Halo effect — diverging correlation bars (js/stats.js
+     computeHaloStats/renderHaloBars): does craft/ambiance/character move
+     the perceived richness of the coffee itself. Same -1..1 Pearson scale
+     as the price\u2194rating stat, just laid out as three bars sharing one
+     zero-centered track so the three factors read against each other at a
+     glance instead of as separate numbers. */
+  .halo-section .stats-row{ margin-bottom:2px; }
+  .halo-bars{ display:flex; flex-direction:column; gap:7px; margin-top:6px; }
+  .halo-row{ display:grid; grid-template-columns:58px 1fr 40px; align-items:center; gap:8px; }
+  .halo-label{ font-size:10.5px; color:var(--dim); }
+  .halo-track{
+    position:relative; height:6px; border-radius:3px;
+    background:rgba(var(--accent-rgb),0.08);
+  }
+  .halo-center{
+    position:absolute; top:-2px; left:50%; width:1px; height:10px;
+    background:var(--line); transform:translateX(-0.5px);
+  }
+  .halo-fill{
+    position:absolute; top:0; height:100%; border-radius:3px;
+    background:var(--tier-6);
+  }
+  .halo-fill.neg{ background:var(--dim); }
+  .halo-val{
+    font-size:11px; font-weight:600; text-align:right;
+    font-variant-numeric:tabular-nums; color:var(--ink);
+  }
+
+
   /* .filter-card is shared by three panels — #filter-card, #compare-card,
      #settings-card — so this base rule set has to stay generic (padding,
      scroll, sizing all included) and match what compare/settings actually
@@ -994,6 +1023,15 @@
   }
   .switch.on{ background:var(--accent); }
   .switch.on .switch-knob{ left:16px; }
+
+  .heat-style-row{ display:flex; gap:6px; padding:2px 0 9px; }
+  .heat-style-btn{
+    flex:1; padding:5px 0; border-radius:7px; border:1px solid var(--line);
+    background:transparent; color:var(--dim); font-size:11px; font-family:inherit;
+    cursor:pointer; transition:border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  }
+  .heat-style-btn:hover{ color:var(--ink); }
+  .heat-style-btn.active{ border-color:var(--ink); color:var(--ink); background:rgba(var(--accent-rgb),0.08); }
 
   .palette-row{ display:flex; gap:8px; padding:2px 0 10px; }
   .palette-swatch{

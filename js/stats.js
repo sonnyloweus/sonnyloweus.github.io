@@ -6,6 +6,7 @@ import {
 } from './constants.js';
 import { renderVisitHistogram } from './filters.js';
 import { renderFloatingPlots } from './floating-plots.js';
+import { renderClusters } from './clusters.js';
 
 // ---------- stats ----------
 export function computeStats(list){
@@ -45,6 +46,8 @@ export function renderStats(list){
       .forEach(id => document.getElementById(id).textContent = '—');
     const emptyFilterHist = document.getElementById('filter-rating-hist');
     if(emptyFilterHist) emptyFilterHist.innerHTML = '';
+    const emptyHalo = document.getElementById('halo-bars');
+    if(emptyHalo) emptyHalo.innerHTML = '';
     return;
   }
   document.getElementById('s-count').textContent = stats.n;
@@ -61,6 +64,10 @@ export function renderStats(list){
   const histBarsHtml = stats.buckets.map(c => `<div class="stats-bar" style="height:${Math.max(2,(c/maxBucket)*26)}px" title="${c}"></div>`).join('');
   const filterHist = document.getElementById('filter-rating-hist');
   if(filterHist) filterHist.innerHTML = histBarsHtml;
+
+  const haloStats = computeHaloStats(list);
+  const haloBars = document.getElementById('halo-bars');
+  if(haloBars) haloBars.innerHTML = renderHaloBars(haloStats);
 
   const fun = computeFunStats(list);
   document.getElementById('s-cups').textContent = fun.cups;
@@ -97,6 +104,55 @@ export function pearsonCorrelation(xs, ys){
   }
   if(dx2 === 0 || dy2 === 0) return null;
   return num / Math.sqrt(dx2 * dy2);
+}
+
+// ---- Halo effect: does the *experience* color how rich the coffee tastes? ----
+// richness is the one axis that's actually about what's in the cup; craft,
+// ambiance, character and value are all things you register before/without
+// tasting anything, so correlating each of them against richness (across
+// whatever's currently in view) is a rough read on how much the room, the
+// theater, and the price are doing the coffee's job for it.
+const HALO_FACTORS = [
+  {key:'craft', label:'Craft'},
+  {key:'ambiance', label:'Ambiance'},
+  {key:'character', label:'Character'},
+  {key:'value', label:'Value'}
+];
+
+export function computeHaloStats(list){
+  return HALO_FACTORS.map(({key,label}) => {
+    const xs = [], ys = [];
+    list.forEach(shop => {
+      const r = shop.ratings;
+      if(r && typeof r[key] === 'number' && typeof r.richness === 'number'){
+        xs.push(r[key]); ys.push(r.richness);
+      }
+    });
+    return {key, label, n: xs.length, corr: pearsonCorrelation(xs, ys)};
+  });
+}
+
+// Diverging horizontal bars, one per non-coffee factor, on a shared -1..1
+// scale centered at 0 — mirrors the price↔rating single stat above but
+// laid out so three correlations can be compared by eye at once. Bars
+// growing right (positive) mean richness rides up with that factor; bars
+// growing left (negative) mean the opposite.
+export function renderHaloBars(haloStats){
+  return haloStats.map(({label, n, corr}) => {
+    const v = corr === null ? 0 : Math.max(-1, Math.min(1, corr));
+    const leftPct = 50 + Math.min(0, v) * 50;
+    const widthPct = Math.abs(v) * 50;
+    const valText = corr === null ? '—' : (corr >= 0 ? '+' : '') + corr.toFixed(2);
+    const fillClass = v < 0 ? 'halo-fill neg' : 'halo-fill';
+    return `<div class="halo-row">
+      <div class="halo-label">${label}</div>
+      <div class="halo-track">
+        <div class="halo-center"></div>
+        <div class="${fillClass}" style="left:${leftPct}%; width:${widthPct}%;"></div>
+      </div>
+      <div class="halo-val">${valText}</div>
+    </div>`;
+  }).join('');
 }
 
 export function computeFunStats(list){
@@ -179,6 +235,7 @@ export function updateInViewStats(){
   renderStats(inView);
   renderVisitHistogram(inView);
   renderFloatingPlots(inView);
+  if(S.clusters) renderClusters(inView); // gray out taste-cluster dots for shops panned/filtered out of view
   S.updateStatsScrollbar();
 }
 

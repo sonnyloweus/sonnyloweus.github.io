@@ -54,6 +54,16 @@
     </div>
 
     <div class="stats-divider"></div>
+
+    <div class="halo-section" id="halo-section">
+      <div class="stats-row">
+        <span>Halo effect <button class="mini-help" id="halo-help-btn" type="button" aria-label="What does this mean?">?</button></span>
+      </div>
+      <div class="mini-desc" id="halo-desc">Pearson correlation between richness and each non-coffee factor (&minus;1 to +1). Higher means a stronger link between the two.</div>
+      <div class="halo-bars" id="halo-bars"></div>
+    </div>
+
+    <div class="stats-divider"></div>
     <div class="stats-fun-title">Just for fun</div>
     <div class="stats-row"><span>Cups had</span><b id="s-cups"></b></div>
     <div class="stats-row"><span>Est. caffeine</span><b id="s-caffeine"></b></div>
@@ -174,9 +184,13 @@
     <div class="switch-block">
       <div class="switch-row">
         <span>Hotspot heatmap</span>
-        <div class="switch on" id="switch-hotspot"><div class="switch-knob"></div></div>
       </div>
-      <p class="switch-caption">Renders a heatmap for frequently visited areas.</p>
+      <div class="heat-style-row" id="heat-mode-row">
+        <button type="button" class="heat-style-btn" data-heat-mode="topo">Topo</button>
+        <button type="button" class="heat-style-btn" data-heat-mode="cloud">Cloud</button>
+        <button type="button" class="heat-style-btn" data-heat-mode="off">Off</button>
+      </div>
+      <p class="switch-caption">Renders a heatmap for frequently visited areas — topological bands, or a soft cloud-like glow.</p>
     </div>
     <div class="switch-block">
       <div class="switch-row">
@@ -403,6 +417,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script type="module" src="js/main.js"></script>

@@ -213,6 +213,11 @@ export function wirePanelListeners(){
     document.getElementById('clusters-desc').classList.toggle('show');
   };
 
+  document.getElementById('halo-help-btn').onclick = (e) => {
+    e.stopPropagation();
+    document.getElementById('halo-desc').classList.toggle('show');
+  };
+
   document.getElementById('onthisday-close').onclick = () => {
     document.getElementById('onthisday-banner').style.display = 'none';
   };

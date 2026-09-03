@@ -184,6 +184,18 @@ export const TOPO_OUTERMOST_ALPHA = 0.25;
 // having all their resolution crammed toward one end.
 export const TOPO_OUTLIER_FLOOR_FRACTION = 0.004;
 
+// ---- Cloud heatmap (the "Cloud" style — leaflet.heat) ----
+// Radius of each point's soft blob, in screen pixels — bumped up slightly
+// from leaflet.heat's typical default for a fuller, more overlapping glow.
+export const CLOUD_RADIUS = 50;
+export const CLOUD_BLUR = 34;
+// Caps how dark the glow's hottest spots can read. heatGradientForPalette
+// (map.js) lightens the gradient's top stop — the color the densest
+// pixels actually paint — by mixing it toward white by this fraction,
+// instead of ever hitting the rating palette's darkest tier color at
+// full strength.
+export const CLOUD_MAX_DARKNESS_LIGHTEN = 0.35;
+
 // ---- Voronoi territories (alternate map overlay, off by default) ----
 // Each cell is tinted by its own shop's rating tier — the same --tier-1..7
 // gradient the pins already use (read fresh off the DOM on every redraw, so

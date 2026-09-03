@@ -1,7 +1,7 @@
 /* global L, d3 */
 import { S } from './state.js';
 import { loadData, tierClass, displayRating, computeRatingBounds, saveStoredSetting, applyPalette, earliestVisit } from './data.js';
-import { RATING_PALETTES, CLUSTER_ZOOM_STEP, POP_EASE, POP_IN_BASE_WAIT, MIN_ZOOM_FLOOR, MIN_ZOOM_CEILING, MIN_ZOOM_BUFFER, CARTO_API_KEY, TOPO_COLOR_STOPS, TOPO_THRESHOLDS, TOPO_BANDWIDTH_MIN, TOPO_BANDWIDTH_MAX, TOPO_FILL_ALPHA, TOPO_OUTERMOST_ALPHA, TOPO_OUTLIER_FLOOR_FRACTION, VORONOI_FILL_ALPHA_MIN, VORONOI_FILL_ALPHA_MAX, VORONOI_STROKE_ALPHA, VORONOI_STROKE_WIDTH, VORONOI_STROKE_COLOR } from './constants.js';
+import { RATING_PALETTES, CLUSTER_ZOOM_STEP, POP_EASE, POP_IN_BASE_WAIT, MIN_ZOOM_FLOOR, MIN_ZOOM_CEILING, MIN_ZOOM_BUFFER, CARTO_API_KEY, TOPO_COLOR_STOPS, TOPO_THRESHOLDS, TOPO_BANDWIDTH_MIN, TOPO_BANDWIDTH_MAX, TOPO_FILL_ALPHA, TOPO_OUTERMOST_ALPHA, TOPO_OUTLIER_FLOOR_FRACTION, CLOUD_RADIUS, CLOUD_BLUR, CLOUD_MAX_DARKNESS_LIGHTEN, VORONOI_FILL_ALPHA_MIN, VORONOI_FILL_ALPHA_MAX, VORONOI_STROKE_ALPHA, VORONOI_STROKE_WIDTH, VORONOI_STROKE_COLOR } from './constants.js';
 import { renderIntroSlide } from './modal.js';
 import { showOnThisDay, updateInViewStats, showCountSpinner } from './stats.js';
 import { computeClusters, renderClusters } from './clusters.js';
@@ -17,6 +17,32 @@ import { wireJourneyListeners } from './journey.js';
 export function activeGroup(){ return S.clusteringOn ? S.clusterGroup : S.plainGroup; }
 
 // ---- hotspot heatmap ----
+// Mixes a hex color toward white by `amount` (0 = unchanged, 1 = white) —
+// used below to cap how dark the Cloud gradient's hottest spots can read.
+function lightenHex(hex, amount){
+  const n = hex.replace('#', '');
+  const r = parseInt(n.slice(0, 2), 16), g = parseInt(n.slice(2, 4), 16), b = parseInt(n.slice(4, 6), 16);
+  const mix = v => Math.round(v + (255 - v) * amount);
+  return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
+}
+// Gradient for the "Cloud" style (leaflet.heat) rides the active rating
+// theme (see RATING_PALETTES) instead of a fixed color — same 7-step
+// gradient the pills use, just continuous. Recomputed on the fly rather
+// than reading the --tier-N CSS custom properties, since leaflet.heat
+// renders to canvas and needs literal color strings, not CSS values. The
+// top stop — what the densest, most-overlapped pixels actually paint —
+// is lightened by CLOUD_MAX_DARKNESS_LIGHTEN rather than using the
+// palette's darkest tier color at full strength, so the glow's hottest
+// spots stay readably light instead of crowding toward near-black.
+export function heatGradientForPalette(key){
+  const palette = RATING_PALETTES[key] || RATING_PALETTES.roast;
+  const stops = {};
+  palette.colors.forEach((c, i) => {
+    const isTop = i === palette.colors.length - 1;
+    stops[(i + 1) / palette.colors.length] = isTop ? lightenHex(c, CLOUD_MAX_DARKNESS_LIGHTEN) : c;
+  });
+  return stops;
+}
 
 // Walks every recorded visit (not just each shop's earliest) in
 // chronological order, collapsing only *consecutive* repeats at the same
@@ -120,6 +146,24 @@ export function updateHeatLayer(){
     active.map(e => [e.shop.lat, e.shop.lng + offset * WORLD_WIDTH, heatWeight(e.badgeCount)])
   );
   S.topoLayer.setData(points);
+  S.heatLayer.setLatLngs(points);
+}
+
+// Three-way hotspot style: 'topo' (contour bands, default), 'cloud' (the
+// original leaflet.heat blur), or 'off'. Only one of S.topoLayer /
+// S.heatLayer is ever actually attached to the map at a time — switching
+// modes just swaps which one is, rather than toggling both independently,
+// so they can't both end up on screen together.
+function applyHeatMode(map, mode, opts = {}){
+  map.removeLayer(S.topoLayer);
+  map.removeLayer(S.heatLayer);
+  S.heatMode = mode;
+  document.querySelectorAll('#heat-mode-row .heat-style-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.heatMode === mode);
+  });
+  if(mode === 'topo'){ map.addLayer(S.topoLayer); updateHeatLayer(); }
+  else if(mode === 'cloud'){ map.addLayer(S.heatLayer); updateHeatLayer(); }
+  if(!opts.skipSave) saveStoredSetting('heatMode', mode);
 }
 
 // ---- topo contour heatmap ----
@@ -729,6 +773,7 @@ function wireRatingSettingsListeners(){
       sw.classList.add('active');
       S.activePalette = sw.dataset.palette;
       applyPalette(S.activePalette);
+      S.heatLayer.setOptions({ gradient: heatGradientForPalette(S.activePalette) });
       saveStoredSetting('palette', S.activePalette);
       updateVoronoiLayer();
     };
@@ -824,10 +869,15 @@ export async function initApp(){
 
   // The hotspot heatmap lives in its own pane, below Leaflet's default
   // markerPane (zIndex 600) — so it can never paint over a rating pill or
-  // cluster bubble, no matter how it's layered.
+  // cluster bubble, no matter how it's layered. Topo and Cloud share this
+  // same slot since only one of the two is ever actually on the map at a
+  // time (see setHeatMode below).
   const topoPane = map.createPane('topoPane');
   topoPane.style.zIndex = 450;
   topoPane.style.pointerEvents = 'none';
+  const heatPane = map.createPane('heatPane');
+  heatPane.style.zIndex = 450;
+  heatPane.style.pointerEvents = 'none';
 
   // Sits below the hotspot heatmap (450) — if both overlays are ever on at
   // once, visit density should still read as the top layer.
@@ -912,10 +962,18 @@ export async function initApp(){
   S.trailOn = S.storedSettings.trail !== false;
   document.getElementById('switch-trail').classList.toggle('on', S.trailOn);
 
-  S.hotspotOn = S.storedSettings.hotspot !== false; // stored value only ever disables; unset/anything else defaults on
-  document.getElementById('switch-hotspot').classList.toggle('on', S.hotspotOn);
   S.topoLayer = new TopoHeatLayer({ pane: 'topoPane' });
-  if(S.hotspotOn) map.addLayer(S.topoLayer);
+  S.heatLayer = L.heatLayer([], {
+    pane: 'heatPane', radius: CLOUD_RADIUS, blur: CLOUD_BLUR, maxZoom: 15, minOpacity: 0.22, gradient: heatGradientForPalette(S.activePalette)
+  });
+  // Legacy stored key ('hotspot': true/false) predates the three-way
+  // mode — false there now maps to 'off' so existing visitors who'd
+  // turned it off keep it off, rather than resurfacing as 'topo'.
+  const storedMode = S.storedSettings.heatMode;
+  S.heatMode = ['topo', 'cloud', 'off'].includes(storedMode) ? storedMode
+    : S.storedSettings.hotspot === false ? 'off'
+    : 'topo';
+  applyHeatMode(map, S.heatMode, {skipSave: true});
 
   S.voronoiOn = !!S.storedSettings.voronoi; // stored value only ever enables; off by default, unlike the other overlays
   document.getElementById('switch-voronoi').classList.toggle('on', S.voronoiOn);
@@ -989,12 +1047,12 @@ export async function initApp(){
     updateTrail();
   };
 
-  document.getElementById('switch-hotspot').onclick = (e) => {
-    S.hotspotOn = !S.hotspotOn;
-    e.currentTarget.classList.toggle('on', S.hotspotOn);
-    saveStoredSetting('hotspot', S.hotspotOn);
-    if(S.hotspotOn){ map.addLayer(S.topoLayer); updateHeatLayer(); } else map.removeLayer(S.topoLayer);
-  };
+  document.querySelectorAll('#heat-mode-row .heat-style-btn').forEach(btn => {
+    btn.onclick = () => {
+      if(btn.dataset.heatMode === S.heatMode) return;
+      applyHeatMode(map, btn.dataset.heatMode);
+    };
+  });
 
   document.getElementById('switch-voronoi').onclick = (e) => {
     S.voronoiOn = !S.voronoiOn;

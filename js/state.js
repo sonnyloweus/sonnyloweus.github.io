@@ -51,7 +51,8 @@ export const S = {
   plainGroup: null, // used when clustering is toggled off
   clusteringOn: true,
   topoLayer: null,
-  hotspotOn: true,
+  heatLayer: null,
+  heatMode: 'topo', // 'topo' (contour bands) | 'cloud' (leaflet.heat blur) | 'off'
   voronoiLayer: null,
   voronoiOn: false, // stored value only ever enables; off by default (new/unfamiliar overlay)
   clusters: null, // taste-space k-means/PCA result for the stats panel — see clusters.js

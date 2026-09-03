@@ -156,23 +156,43 @@ export function computeClusters(){
       color: CLUSTER_COLORS[ci % CLUSTER_COLORS.length]
     });
   }
-  S.clusters = {k: bestK, assign: bestResult.assign, scores, var1, var2, clusters};
+  // shops kept alongside (same order as scores/assign) so renderClusters
+  // can tell, dot by dot, whether that shop is in the current map
+  // viewport/filters — the clustering itself stays viewport-independent,
+  // only the *coloring* of an already-computed dot reacts to it.
+  S.clusters = {k: bestK, assign: bestResult.assign, scores, var1, var2, clusters, shops};
 }
+
+// Muted, out-of-palette gray for shops outside the current map
+// viewport/filters — deliberately not one of CLUSTER_COLORS (or the
+// coffee-brown --dim tone alone would look like a taste cluster of its
+// own) so "not in view" reads unambiguously as absence of color.
+const OUT_OF_VIEW_COLOR = '#B7B0A3';
 
 function highlightCluster(ci){
   document.querySelectorAll('#clusters-legend .cluster-chip').forEach(el => {
     el.classList.toggle('dim', ci !== null && +el.dataset.cluster !== ci);
   });
   document.querySelectorAll('#clusters-pca-svg .cluster-dot').forEach(el => {
-    el.setAttribute('fill-opacity', (ci === null || +el.dataset.cluster === ci) ? '0.85' : '0.15');
+    const inView = el.dataset.inview !== '0';
+    const match = (ci === null || +el.dataset.cluster === ci);
+    el.setAttribute('fill-opacity', match ? (inView ? '0.85' : '0.4') : (inView ? '0.15' : '0.08'));
   });
 }
 
 // Draws the PCA scatter (plain SVG string, same convention as radar.js/
 // floating-plots.js — no d3 DOM selections) and the cluster legend chips
-// into the stats panel. Called once, right after computeClusters() —
-// nothing here depends on the current map viewport or filters.
-export function renderClusters(){
+// into the stats panel. The clustering/projection itself never depends on
+// the map viewport or filters (see computeClusters above) — but which
+// dots are drawn in their cluster color vs. grayed out does: pass the
+// current in-view shop list (same array updateInViewStats already builds
+// from bounds+filters) and any shop not in it renders in
+// OUT_OF_VIEW_COLOR instead of its cluster's color. Called once with no
+// argument right after computeClusters() (map.js, before markers/filters
+// exist yet — everything renders in full color until the first real
+// viewport update lands), then again on every pan/zoom/filter change from
+// updateInViewStats (stats.js) with the live list.
+export function renderClusters(inView){
   const svgEl = document.getElementById('clusters-pca-svg');
   const legendEl = document.getElementById('clusters-legend');
   const captionEl = document.getElementById('clusters-caption');
@@ -202,9 +222,22 @@ export function renderClusters(){
     <text class="cluster-axis-label" x="${(originX+6).toFixed(1)}" y="${pad+7}">&#8593; PC2</text>
   `;
   const colorOf = ci => (clusters.find(c => c.ci === ci) || {}).color || '#8C8579';
-  const dots = scores.map((p, i) => (
-    `<circle class="cluster-dot" data-cluster="${assign[i]}" cx="${xOf(p[0]).toFixed(1)}" cy="${yOf(p[1]).toFixed(1)}" r="3.6" fill="${colorOf(assign[i])}" fill-opacity="0.85"/>`
-  )).join('');
+  const inViewSet = inView ? new Set(inView) : null;
+  const shops = S.clusters.shops;
+  // Grayed-out (out-of-view) dots drawn first so the still-colored,
+  // in-view dots stay on top and easy to pick out of the cloud.
+  const order = scores.map((_, i) => i).sort((a, b) => {
+    const aIn = !inViewSet || inViewSet.has(shops[a]);
+    const bIn = !inViewSet || inViewSet.has(shops[b]);
+    return (aIn === bIn) ? 0 : (aIn ? 1 : -1);
+  });
+  const dots = order.map(i => {
+    const p = scores[i];
+    const inViewFlag = !inViewSet || inViewSet.has(shops[i]);
+    const fill = inViewFlag ? colorOf(assign[i]) : OUT_OF_VIEW_COLOR;
+    const opacity = inViewFlag ? 0.85 : 0.4;
+    return `<circle class="cluster-dot" data-cluster="${assign[i]}" data-inview="${inViewFlag ? 1 : 0}" cx="${xOf(p[0]).toFixed(1)}" cy="${yOf(p[1]).toFixed(1)}" r="3.6" fill="${fill}" fill-opacity="${opacity}"/>`;
+  }).join('');
   svgEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
   svgEl.innerHTML = axes + dots;
 
