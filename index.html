@@ -28,43 +28,48 @@
   <span class="onthisday-close" id="onthisday-close">&times;</span>
 </div>
 <div class="stats-card" id="stats-card">
-  <div class="stats-title-row">
-    <div class="stats-title">In view</div>
-    <div class="stats-close" id="stats-close" title="Close" aria-label="Close">&times;</div>
-  </div>
-  <div class="stats-compact-grid">
-    <div class="stat-tile"><span class="stat-tile-k">Spots</span><b id="s-count"></b></div>
-    <div class="stat-tile"><span class="stat-tile-k">Average</span><b id="s-avg"></b></div>
-    <div class="stat-tile"><span class="stat-tile-k">Median</span><b id="s-median"></b></div>
-    <div class="stat-tile"><span class="stat-tile-k">Std dev</span><b id="s-stddev"></b></div>
-    <div class="stat-tile"><span class="stat-tile-k">Range</span><b id="s-range"></b></div>
-  </div>
-
-  <div class="stats-divider"></div>
-
-  <div class="clusters-section" id="clusters-section">
-    <div class="stats-row">
-      <span>Taste clusters <button class="mini-help" id="clusters-help-btn" type="button" aria-label="What does this mean?">?</button></span>
-      <b id="clusters-caption"></b>
+  <div class="filter-scroll" id="stats-scroll">
+    <div class="stats-title-row">
+      <div class="stats-title">In view</div>
+      <div class="stats-close" id="stats-close" title="Close" aria-label="Close">&times;</div>
     </div>
-    <div class="mini-desc" id="clusters-desc"></div>
-    <svg class="clusters-pca" id="clusters-pca-svg" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid meet"></svg>
-    <div class="clusters-legend" id="clusters-legend"></div>
-  </div>
+    <div class="stats-compact-grid">
+      <div class="stat-tile"><span class="stat-tile-k">Spots</span><b id="s-count"></b></div>
+      <div class="stat-tile"><span class="stat-tile-k">Average</span><b id="s-avg"></b></div>
+      <div class="stat-tile"><span class="stat-tile-k">Median</span><b id="s-median"></b></div>
+      <div class="stat-tile"><span class="stat-tile-k">Std dev</span><b id="s-stddev"></b></div>
+      <div class="stat-tile"><span class="stat-tile-k">Range</span><b id="s-range"></b></div>
+    </div>
 
-  <div class="stats-divider"></div>
-  <div class="stats-fun-title">Just for fun</div>
-  <div class="stats-row"><span>Cups had</span><b id="s-cups"></b></div>
-  <div class="stats-row"><span>Est. caffeine</span><b id="s-caffeine"></b></div>
-  <div class="stats-row"><span>Est. spent</span><b id="s-spent"></b></div>
-  <div class="stats-row">
-    <span>Price↔rating <button class="mini-help" id="corr-help-btn" type="button" aria-label="What does this mean?">?</button></span>
-    <b id="s-corr"></b>
+    <div class="stats-divider"></div>
+
+    <div class="clusters-section" id="clusters-section">
+      <div class="stats-row">
+        <span>Taste clusters <button class="mini-help" id="clusters-help-btn" type="button" aria-label="What does this mean?">?</button></span>
+        <b id="clusters-caption"></b>
+      </div>
+      <div class="mini-desc" id="clusters-desc"></div>
+      <svg class="clusters-pca" id="clusters-pca-svg" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="clusters-legend" id="clusters-legend"></div>
+    </div>
+
+    <div class="stats-divider"></div>
+    <div class="stats-fun-title">Just for fun</div>
+    <div class="stats-row"><span>Cups had</span><b id="s-cups"></b></div>
+    <div class="stats-row"><span>Est. caffeine</span><b id="s-caffeine"></b></div>
+    <div class="stats-row"><span>Est. spent</span><b id="s-spent"></b></div>
+    <div class="stats-row">
+      <span>Price↔rating <button class="mini-help" id="corr-help-btn" type="button" aria-label="What does this mean?">?</button></span>
+      <b id="s-corr"></b>
+    </div>
+    <div class="mini-desc" id="corr-desc">Pearson correlation between price and rating (&minus;1 to +1). Higher means you rate pricier spots better.</div>
+    <div class="stats-row"><span>Crawl distance</span><b id="s-distance"></b></div>
+    <div class="stats-row stack"><span>Most visited</span><b id="s-mostvisited"></b></div>
+    <div class="stats-row stack"><span>Most beloved</span><b id="s-beloved"></b></div>
   </div>
-  <div class="mini-desc" id="corr-desc">Pearson correlation between price and rating (&minus;1 to +1). Higher means you rate pricier spots better.</div>
-  <div class="stats-row"><span>Crawl distance</span><b id="s-distance"></b></div>
-  <div class="stats-row stack"><span>Most visited</span><b id="s-mostvisited"></b></div>
-  <div class="stats-row stack"><span>Most beloved</span><b id="s-beloved"></b></div>
+  <div class="filter-scrollbar-track" id="stats-scrollbar-track">
+    <div class="filter-scrollbar-thumb" id="stats-scrollbar-thumb"></div>
+  </div>
 </div>
 
 <div class="toggle-group">
@@ -215,12 +220,21 @@
 
 <div class="scrubber" id="scrubber" style="display:none;">
   <div class="scrubber-label"><b id="scrubber-lo"></b> &ndash; <b id="scrubber-hi"></b></div>
-  <div class="visit-hist" id="visit-hist"></div>
-  <div class="range-slider" id="range-slider">
-    <div class="range-track"></div>
-    <div class="range-fill" id="range-fill"></div>
-    <div class="range-handle" id="handle-low"></div>
-    <div class="range-handle" id="handle-high"></div>
+  <!-- Density mound + rug ticks (visit-hist) and the drag handles
+       (range-slider) are stacked in one shared box now instead of sitting
+       in separate rows — see .visit-hist-wrap / #range-slider in
+       styles.css. range-fill stays in the markup only so updateHandles()
+       in filters.js doesn't need a null check; it's hidden via CSS. -->
+  <div class="visit-hist-wrap">
+    <div class="visit-hist" id="visit-hist"></div>
+    <!-- Very light wash over the selected band — sits above the plot,
+         below the handles. Positioned in updateHandles() (filters.js). -->
+    <div class="range-highlight" id="range-highlight"></div>
+    <div class="range-slider" id="range-slider">
+      <div class="range-fill" id="range-fill"></div>
+      <div class="range-handle" id="handle-low"></div>
+      <div class="range-handle" id="handle-high"></div>
+    </div>
   </div>
   <div class="range-ticks" id="range-ticks"></div>
 </div>
@@ -250,9 +264,18 @@
     </div>
     <div class="modal-close" id="modal-close">Next</div>
     <div class="modal-actions" id="modal-actions" style="display:none;">
-      <button class="modal-btn modal-btn-primary" id="modal-explore-btn">Explore</button>
-      <button class="modal-btn modal-btn-secondary" id="modal-play-game-btn">Play Coffee-guessr</button>
-      <button class="modal-btn modal-btn-secondary" id="modal-follow-btn" disabled>Follow Sonny's Journey <span>(Coming soon)</span></button>
+      <div class="modal-action-row">
+        <p class="modal-action-caption">Trace Sonny's experiences and portfolio through coffee spots.</p>
+        <button class="modal-btn modal-btn-secondary" id="modal-follow-btn" disabled>Follow Sonny's Journey <span>(Coming soon)</span></button>
+      </div>
+      <div class="modal-action-row">
+        <p class="modal-action-caption">Play the custom Coffee-guessr game, inspired by GeoGuessr.</p>
+        <button class="modal-btn modal-btn-secondary" id="modal-play-game-btn">Play Coffee-guessr</button>
+      </div>
+      <div class="modal-action-row">
+        <p class="modal-action-caption">Explore the map to uncover detailed spot ratings, hidden easter-egg stories, custom views, and full-catalog search.</p>
+        <button class="modal-btn modal-btn-primary" id="modal-explore-btn">Explore</button>
+      </div>
     </div>
   </div>
 </div>

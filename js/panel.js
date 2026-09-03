@@ -194,6 +194,7 @@ export function wirePanelListeners(){
   document.getElementById('brand').onclick = () => {
     document.getElementById('stats-card').classList.toggle('show');
     document.getElementById('brand').classList.toggle('open');
+    S.updateStatsScrollbar();
   };
 
   document.getElementById('stats-close').onclick = (e) => {

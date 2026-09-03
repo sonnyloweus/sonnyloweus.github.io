@@ -149,15 +149,37 @@ export function computeFunStats(list){
   };
 }
 
+// Shops in view use their canonical lng, but the map itself may be
+// panned into a repeated ("mirrored") copy of the world — Leaflet's
+// worldCopyJump is deliberately off (see map.js) so panning is
+// continuous rather than snapping back. bounds.contains() alone can't
+// see that: once the view bounds shift by a multiple of 360° into a
+// repeated copy, a shop's canonical longitude no longer falls inside
+// them even though it's visibly on screen via its mirror marker. This
+// checks the shop's longitude shifted into whichever repeated world is
+// nearest the bounds' center (plus one world on each side, in case the
+// view is wide) before testing containment.
+function shopInBounds(bounds, lat, lng){
+  if(lat < bounds.getSouth() || lat > bounds.getNorth()) return false;
+  const west = bounds.getWest(), east = bounds.getEast();
+  const base = Math.round((bounds.getCenter().lng - lng) / 360);
+  for(let k = base - 1; k <= base + 1; k++){
+    const cand = lng + k * 360;
+    if(cand >= west && cand <= east) return true;
+  }
+  return false;
+}
+
 // Re-renders the stats panel (and visit histogram) with only the shops
 // currently on-screen (in the map viewport, passing the active filters) —
 // called any time the map pans/zooms or a filter changes.
 export function updateInViewStats(){
   const bounds = S.map.getBounds();
-  const inView = S.currentVisible.filter(s => bounds.contains([s.lat, s.lng]));
+  const inView = S.currentVisible.filter(s => shopInBounds(bounds, s.lat, s.lng));
   renderStats(inView);
   renderVisitHistogram(inView);
   renderFloatingPlots(inView);
+  S.updateStatsScrollbar();
 }
 
 // ---- On this day: surface any past visit that lands on today's month/day ----

@@ -38,6 +38,9 @@ export const S = {
   // setupFilters().
   updateSettingsScrollbar: () => {},
   updateCompareScrollbar: () => {},
+  // Same idea for the stats card's own scrollbar — read from stats.js/
+  // panel.js, wired up by filters.js's setupFilters().
+  updateStatsScrollbar: () => {},
 
   // ---------- modal.js ----------
   introIndex: 0,
@@ -55,14 +58,15 @@ export const S = {
   activeSet: new Set(),
   shopMarkers: [],
   // ---- horizontal world-copy mirroring (infinite east/west scroll) ----
-  // mirrorGroups: Map<offset (nonzero integer world-widths), L.LayerGroup>
-  // of every repeated-world copy currently built, each added to the map
-  // once materialized (see refreshWorldCopyMirrors/materializeWorldOffset
-  // in map.js). Repeated copies always show plain (unclustered) pins,
-  // regardless of the clustering toggle — see the comment above
-  // refreshWorldCopyMirrors for why. Each shopMarkers entry additionally
-  // grows its own `.mirrors` Map (offset -> that entry's clone marker for
-  // that copy), set up alongside `marker` when entries are built below.
+  // mirrorGroups: Map<offset (nonzero integer world-widths), true> — just
+  // tracks which repeated-world copies have been materialized (see
+  // updateWorldCopyRange/refreshWorldCopyMirrors in map.js). Their pins
+  // aren't held in a group of their own: they're added straight into
+  // whichever of clusterGroup/plainGroup is currently active, same as the
+  // canonical copy's pins, so a repeated copy clusters/unclusters exactly
+  // like the original. Each shopMarkers entry additionally grows its own
+  // `.mirrors` Map (offset -> that entry's clone marker for that copy),
+  // set up alongside `marker` when entries are built below.
   mirrorGroups: new Map(),
   isMobileViewport: false,
   BUBBLE_HIT_PAD: {x: 0, y: 0},

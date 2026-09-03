@@ -2,6 +2,7 @@ import { S } from './state.js';
 import { formatDay, earliestVisit } from './data.js';
 import { syncBadgeCountsAndGetActive, activeGroup, refreshDependentUI } from './map.js';
 import { closeOtherSidePanels } from './panel.js';
+import { smoothOpenPath } from './radar.js';
 
 // days (floored to UTC day number) for every visit belonging to a given
 // list of shops — shared by the full-dataset histogram and the
@@ -22,24 +23,63 @@ export function updateHandles(){
   S.handleHigh.style.left = hiP + '%';
   S.fillEl.style.left = loP + '%';
   S.fillEl.style.width = (hiP - loP) + '%';
+  // Very light wash across the selected band, sitting between the plot and
+  // the handles (see .range-highlight in styles.css) — same loP/hiP as
+  // everything else here, just one more element to keep positioned.
+  const highlightEl = document.getElementById('range-highlight');
+  if (highlightEl){
+    highlightEl.style.left = loP + '%';
+    highlightEl.style.width = (hiP - loP) + '%';
+  }
   document.getElementById('scrubber-lo').textContent = formatDay(S.lowDay);
   document.getElementById('scrubber-hi').textContent = formatDay(S.highDay);
   updateHistogramRange();
 }
 
-// ---- visit-frequency histogram (sits above the slider track) ----
-// One bar per calendar month, height = total visits that occurred in
-// that month among the given shops. Defaults to the full dataset, but
-// updateInViewStats() re-renders this with only the shops currently
-// on-screen (in the map viewport, passing the active filters) every time
-// the map pans/zooms or a filter changes — so the histogram tracks what's
-// actually visible rather than the whole collection. The x-axis scale
+// ---- visit-frequency "rug + density" plot, merged with the drag handles ----
+// A density mound for the given shops' visit days (defaults to the whole
+// dataset, but updateInViewStats() re-renders this with only the shops
+// currently on-screen every time the map pans/zooms or a filter changes),
+// with a rug tick for every individual visit day in a separate band just
+// below it — a small fixed gap keeps the two from touching. The x-axis
 // (dayToPct, driven by the full dataset's minDay/maxDay) stays fixed
-// either way, so the timeline itself doesn't rescale as you pan. Bars
-// inside the current [lowDay, highDay] selection are drawn at full
-// strength; bars outside it are dimmed, the same way the track's
-// unfilled portion is deemphasized — so the shape doubles as a live
-// preview of what dragging the handles will include.
+// either way, so the timeline itself doesn't rescale as you pan.
+//
+// The drag handles themselves are plain DOM elements (#handle-low/#handle-
+// high, styled in styles.css) absolutely positioned on top of this SVG —
+// see the .visit-hist-wrap / #range-slider rules — so this module doesn't
+// need to know anything about them beyond the [lowDay, highDay] values
+// that decide what's dimmed.
+//
+// The current [lowDay, highDay] selection is drawn at full strength (both
+// the mound, via a clip-path rect, and the individual rug ticks);
+// everything outside it is dimmed — so the shape doubles as a live preview
+// of what dragging the handles will include. updateHistogramRange() below
+// only moves that clip rect and toggles tick classes, so dragging the
+// handles never needs a full re-render.
+const VISIT_CURVE_BUCKETS = 48; // resolution of the smoothed mound — independent of how many days the full range spans
+const VISIT_PLOT_W = 300;
+const VISIT_PLOT_BASELINE = 34; // bottom of the density mound
+const VISIT_PLOT_AMP = 26;      // mound peak height above the baseline
+const VISIT_PLOT_GAP = 3;       // clear air between the mound's baseline and the rug band
+const VISIT_PLOT_RUG_TOP = VISIT_PLOT_BASELINE + VISIT_PLOT_GAP;
+const VISIT_PLOT_RUG_BOTTOM = VISIT_PLOT_RUG_TOP + 6;
+const VISIT_PLOT_H = VISIT_PLOT_RUG_BOTTOM + 3;
+
+function bucketVisitDays(days){
+  const buckets = new Array(VISIT_CURVE_BUCKETS).fill(0);
+  const span = Math.max(1, S.maxDay - S.minDay);
+  days.forEach(day => {
+    const idx = Math.min(VISIT_CURVE_BUCKETS - 1, Math.max(0, Math.floor(((day - S.minDay) / span) * VISIT_CURVE_BUCKETS)));
+    buckets[idx]++;
+  });
+  return buckets;
+}
+
+function fractionsFor(buckets, n){
+  return n ? buckets.map(c => c / n) : buckets.map(() => 0);
+}
+
 export function renderVisitHistogram(shops){
   const histEl = document.getElementById('visit-hist');
   if(!histEl) return;
@@ -48,36 +88,34 @@ export function renderVisitHistogram(shops){
   const days = daysFromShops(shops || S.GLOBAL_DATA);
   if(!days.length){ histEl.innerHTML = ''; histEl.style.display = 'block'; return; }
 
-  const buckets = new Map(); // 'Y-M' -> { startDay, endDay, count }
-  days.forEach(day => {
-    const dt = new Date(day * 86400000);
-    const y = dt.getUTCFullYear(), m = dt.getUTCMonth();
-    const key = y + '-' + m;
-    let b = buckets.get(key);
-    if(!b){
-      b = {
-        startDay: Math.floor(Date.UTC(y, m, 1) / 86400000),
-        endDay: Math.floor(Date.UTC(y, m + 1, 1) / 86400000),
-        count: 0
-      };
-      buckets.set(key, b);
-    }
-    b.count++;
-  });
+  const buckets = bucketVisitDays(days);
+  const fractions = fractionsFor(buckets, days.length);
+  const maxFrac = Math.max(1e-6, ...fractions);
+  const centers = fractions.map((_, i) => ((i + 0.5) / VISIT_CURVE_BUCKETS) * VISIT_PLOT_W);
+  const yOf = f => VISIT_PLOT_BASELINE - (f / maxFrac) * VISIT_PLOT_AMP;
 
-  const list = [...buckets.values()].sort((a, b) => a.startDay - b.startDay);
-  const maxCount = Math.max(...list.map(b => b.count));
+  const line = smoothOpenPath(
+    [[0, VISIT_PLOT_BASELINE], ...centers.map((x, i) => [x, yOf(fractions[i])]), [VISIT_PLOT_W, VISIT_PLOT_BASELINE]],
+    0.65
+  );
+  const area = line + ` L ${VISIT_PLOT_W},${VISIT_PLOT_BASELINE} L 0,${VISIT_PLOT_BASELINE} Z`;
 
-  histEl.innerHTML = list.map(b => {
-    const leftPct = dayToPct(b.startDay) * 100;
-    const rightPct = dayToPct(b.endDay) * 100;
-    const widthPct = Math.max(rightPct - leftPct, 0);
-    const heightPct = maxCount ? (b.count / maxCount) * 100 : 0;
-    const mid = (b.startDay + b.endDay) / 2;
-    const label = new Date(b.startDay * 86400000).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
-    const visitWord = b.count === 1 ? 'visit' : 'visits';
-    return `<div class="visit-hist-bar" data-mid="${mid}" style="left:calc(${leftPct}% + 1px); width:calc(${widthPct}% - 2px); height:${heightPct}%;" title="${label} · ${b.count} ${visitWord}"></div>`;
+  const rugTicks = days.map(day => {
+    const x = (dayToPct(day) * VISIT_PLOT_W).toFixed(1);
+    const on = day >= S.lowDay && day <= S.highDay;
+    return `<line class="visit-rug-tick${on ? ' in-range' : ''}" data-day="${day}" x1="${x}" y1="${VISIT_PLOT_RUG_TOP}" x2="${x}" y2="${VISIT_PLOT_RUG_BOTTOM}"/>`;
   }).join('');
+
+  const loFrac = dayToPct(S.lowDay), hiFrac = dayToPct(S.highDay);
+
+  histEl.innerHTML = `<svg viewBox="0 0 ${VISIT_PLOT_W} ${VISIT_PLOT_H}" preserveAspectRatio="none">
+    <clipPath id="visit-hist-range-clip" clipPathUnits="objectBoundingBox">
+      <rect id="visit-hist-range-clip-rect" x="${loFrac}" y="0" width="${Math.max(0, hiFrac - loFrac)}" height="1"/>
+    </clipPath>
+    <path class="visit-hist-area-dim" d="${area}"/>
+    <path class="visit-hist-area-focus" d="${area}" clip-path="url(#visit-hist-range-clip)"/>
+    <g>${rugTicks}</g>
+  </svg>`;
 
   histEl.style.display = 'block';
   updateHistogramRange();
@@ -86,9 +124,15 @@ export function renderVisitHistogram(shops){
 export function updateHistogramRange(){
   const histEl = document.getElementById('visit-hist');
   if(!histEl) return;
-  histEl.querySelectorAll('.visit-hist-bar').forEach(bar => {
-    const mid = parseFloat(bar.dataset.mid);
-    bar.classList.toggle('in-range', mid >= S.lowDay && mid <= S.highDay);
+  const clipRect = histEl.querySelector('#visit-hist-range-clip-rect');
+  if (clipRect){
+    const loFrac = dayToPct(S.lowDay), hiFrac = dayToPct(S.highDay);
+    clipRect.setAttribute('x', loFrac);
+    clipRect.setAttribute('width', Math.max(0, hiFrac - loFrac));
+  }
+  histEl.querySelectorAll('.visit-rug-tick').forEach(tick => {
+    const day = parseFloat(tick.dataset.day);
+    tick.classList.toggle('in-range', day >= S.lowDay && day <= S.highDay);
   });
 }
 
@@ -384,6 +428,11 @@ export function setupFilters(){
     document.getElementById('panel-scroll'),
     document.getElementById('panel-scrollbar-track'),
     document.getElementById('panel-scrollbar-thumb')
+  );
+  S.updateStatsScrollbar = setupCustomScrollbar(
+    document.getElementById('stats-scroll'),
+    document.getElementById('stats-scrollbar-track'),
+    document.getElementById('stats-scrollbar-thumb')
   );
 
   document.getElementById('filter-reset').onclick = () => {

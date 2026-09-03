@@ -51,7 +51,7 @@ export const INTRO_SLIDES = [
   },
   {
     title: "Cartography",
-    text: "Click on spots to see a detailed breakdown, find easter egg stories, customize the map to your liking, and search across the coffee catalog."
+    text: ""
   }
 ];
 

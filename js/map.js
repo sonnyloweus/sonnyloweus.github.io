@@ -455,12 +455,14 @@ export function syncBadgeCountsAndGetActive(){
 // — no snap-back (that's what worldCopyJump does, and it's deliberately
 // off — see the map init below).
 //
-// Clones are always unclustered (plain L.marker, added straight to a
-// per-offset L.layerGroup) even when the canonical copy has clustering
-// on: replicating the real MarkerClusterGroup's clustering/zIndex/icon
-// logic for every repeated copy would multiply this file's complexity for
-// a case (a zoomed-out view of a *repeated* world) that's rare in
-// practice, and a scatter of individual pins reads fine there.
+// Clones are added straight into whichever group is currently active
+// (activeGroup() — S.clusterGroup or S.plainGroup, same as the canonical
+// copy's pins), not into a group of their own, so a repeated world copy
+// clusters/unclusters exactly like the original: Leaflet.markercluster
+// groups by on-screen pixel distance, so clones in a repeated copy simply
+// form their own clusters out there rather than merging with the
+// canonical copy's (unless you're zoomed out far enough to see both at
+// once, which is correct too).
 const WORLD_WIDTH = 360;
 
 // [0, ...every nonzero offset currently materialized]. Shared by the pin
@@ -476,6 +478,12 @@ function makeMirrorMarker(entry, offset){
     icon: entry.marker.getIcon(),
     zIndexOffset: entry.marker.options.zIndexOffset
   });
+  // Mirrors now join the same real cluster group as the canonical copy
+  // (see refreshWorldCopyMirrors), and its iconCreateFunction reads
+  // marker.shopRating off every child marker to compute a cluster's
+  // average — without this the mirror's contribution is undefined and
+  // the whole average (and the cluster bubble's label) comes out NaN.
+  marker.shopRating = entry.shop.overall;
   marker.bindTooltip(entry.shop.name, {direction:'top', offset:[0, -14 + S.BUBBLE_HIT_PAD.y], className:'mini-tip'});
   marker.on('click', () => showPanel(entry.shop));
   return marker;
@@ -487,8 +495,13 @@ function makeMirrorMarker(entry, offset){
 // copies) to just call after any bulk marker change — filters, the
 // staggered reveal, the clustering toggle, journey mode — rather than
 // trying to track every individual add/remove call site across the app.
+// Always targets activeGroup() fresh (not a cached reference) so it stays
+// correct even if clustering was toggled since the last call — though the
+// toggle handler also moves already-existing mirrors over explicitly,
+// since this function alone only adds/removes, it doesn't relocate.
 export function refreshWorldCopyMirrors(){
-  S.mirrorGroups.forEach((group, offset) => {
+  const group = activeGroup();
+  S.mirrorGroups.forEach((_, offset) => {
     S.shopMarkers.forEach(entry => {
       const isLive = S.activeSet.has(entry.marker);
       const mirror = entry.mirrors.get(offset);
@@ -518,7 +531,7 @@ function updateWorldCopyRange(map){
   let addedAny = false;
   for(let k = minOffset; k <= maxOffset; k++){
     if(k !== 0 && !S.mirrorGroups.has(k)){
-      S.mirrorGroups.set(k, L.layerGroup().addTo(map));
+      S.mirrorGroups.set(k, true);
       addedAny = true;
     }
   }
@@ -566,7 +579,7 @@ export function revealMarkers(baseWaitSec){
   // seconds — see the `spread` cap below), so swap it for a spinner until
   // refreshDependentUI() below fills it back in for real.
   showCountSpinner();
-  const spread = Math.min(3.4, 0.65 + n * 0.05); // total fill duration, capped for huge lists
+  const spread = Math.min(2.6, 0.5 + n * 0.04); // total fill duration, capped for huge lists
   const delays = easedPopDelays(entries, spread);
 
   const datedChrono = entries
@@ -665,10 +678,21 @@ function setupZoomLimitFeedback(map){
     bounceT = setTimeout(() => el.classList.remove(cls), 340);
   }
 
+  // refreshMinZoom() (above) sets a *fractional* floor (fitZoom minus a
+  // fractional buffer), but the map's actual zoom level only ever sits on
+  // whole numbers — zoomSnap defaults to 1 and is never changed here — so
+  // the lowest zoom you can actually reach is the ceiling of that
+  // fraction, not the fraction itself. Comparing getZoom() straight
+  // against getMinZoom() (e.g. "3 <= 2.6") is always false, which is why
+  // this stopped firing once minZoom became dynamic: recompute the real,
+  // reachable floor each time instead of trusting the raw value.
+  function atMinZoom(){ return map.getZoom() <= Math.ceil(map.getMinZoom()); }
+  function atMaxZoom(){ return map.getZoom() >= Math.floor(map.getMaxZoom()); }
+
   // Trackpad/mouse-wheel zoom
   el.addEventListener('wheel', (e) => {
-    if(e.deltaY > 0 && map.getZoom() <= map.getMinZoom()) bounce('out');
-    else if(e.deltaY < 0 && map.getZoom() >= map.getMaxZoom()) bounce('in');
+    if(e.deltaY > 0 && atMinZoom()) bounce('out');
+    else if(e.deltaY < 0 && atMaxZoom()) bounce('in');
   }, {passive: true});
 
   // Touch pinch
@@ -685,8 +709,8 @@ function setupZoomLimitFeedback(map){
     const d = touchDist(e.touches);
     const delta = d - pinchDist;
     if(Math.abs(delta) < 12) return; // ignore jitter below a real pinch intent
-    if(delta < 0 && map.getZoom() <= map.getMinZoom()) bounce('out');
-    else if(delta > 0 && map.getZoom() >= map.getMaxZoom()) bounce('in');
+    if(delta < 0 && atMinZoom()) bounce('out');
+    else if(delta > 0 && atMaxZoom()) bounce('in');
     pinchDist = d; // reset baseline so a sustained pinch-past-the-limit can keep bouncing (throttled above)
   }, {passive: true});
   el.addEventListener('touchend', () => { pinchDist = null; }, {passive: true});
@@ -916,6 +940,12 @@ export async function initApp(){
     const newGroup = activeGroup();
 
     S.activeSet.forEach(m => { oldGroup.removeLayer(m); newGroup.addLayer(m); });
+    // World-copy mirrors live in activeGroup() too (see refreshWorldCopyMirrors)
+    // — move every already-materialized one over the same way, or they'd be
+    // stranded in the group that's about to come off the map.
+    S.shopMarkers.forEach(entry => {
+      entry.mirrors.forEach(mirror => { oldGroup.removeLayer(mirror); newGroup.addLayer(mirror); });
+    });
     map.removeLayer(oldGroup);
     map.addLayer(newGroup);
     refreshWorldCopyMirrors();

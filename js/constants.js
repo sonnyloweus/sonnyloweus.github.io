@@ -93,7 +93,7 @@ export const GAME_CLUE_TAB_LABELS = ['Radar', 'Price', 'Tags', 'Desc']; // short
 
 // ---- pop-in timing helper constants ----
 export const POP_EASE = 1.6;
-export const POP_IN_BASE_WAIT = 0.6; // pause after page load before the first pop, so the map/tiles settle first
+export const POP_IN_BASE_WAIT = 0.45; // pause after page load before the first pop, so the map/tiles settle first
 
 // ---- journey zoom bounds ----
 export const JOURNEY_MIN_ZOOM = 4;  // never zoom out further than this during a leg

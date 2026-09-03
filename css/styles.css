@@ -81,7 +81,10 @@
   .brand{
     position:fixed; top:calc(20px + var(--safe-t)); left:calc(20px + var(--safe-l)); z-index:500;
     font-size:13px; font-weight:500; letter-spacing:0.02em;
-    background:rgba(var(--accent-rgb),0.86); color:#fff;
+    /* Same glass recipe as .scrubber (the date-range card) — translucent
+       white + blur/saturate, rather than a solid espresso fill — so the
+       title reads as part of the map surface instead of a floating chip. */
+    background:rgba(255,255,255,0.38); color:var(--ink);
     -webkit-backdrop-filter:blur(16px) saturate(180%);
     backdrop-filter:blur(16px) saturate(180%);
     /* Fixed height (matching .toggle-icon's 32px — see the mobile override
@@ -98,7 +101,7 @@
     white-space:nowrap;
   }
   .brand span{
-    color:rgba(255,255,255,0.62); font-weight:400; margin-left:6px;
+    color:var(--dim); font-weight:400; margin-left:6px;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;
   }
   /* #count no longer needs its own leading margin — the .brand-gap either
@@ -111,7 +114,7 @@
      letter would. */
   .count-spinner{
     display:inline-block; width:9px; height:9px; vertical-align:-1.5px;
-    border:1.5px solid rgba(255,255,255,0.32); border-top-color:#fff;
+    border:1.5px solid rgba(var(--accent-rgb),0.25); border-top-color:var(--accent);
     border-radius:50%;
     animation:count-spin 0.7s linear infinite;
   }
@@ -127,7 +130,7 @@
      needed to outrank ".brand span" (class+type) so the title keeps the
      brand's full-opacity color and isn't shoved right by that rule's
      margin-left. */
-  .brand .brand-title{ flex:none; white-space:nowrap; color:#fff; margin-left:0; }
+  .brand .brand-title{ flex:none; white-space:nowrap; color:var(--ink); margin-left:0; }
   /* A dot lives inside its own flex item between two sections, rather than
      glued to the front of whichever section follows it. On mobile, where
      the bar is stretched full-width, this item's flex-grow soaks up the
@@ -146,16 +149,16 @@
      "icon cluster" rather than two separately-spread items. */
   .brand-icons{ display:inline-flex; align-items:center; flex:none; }
   .brand-sigma{
-    display:inline-flex; margin-left:0; color:rgba(255,255,255,0.62); flex:none;
+    display:inline-flex; margin-left:0; color:var(--dim); flex:none;
     transition:color 0.2s ease;
   }
   .brand-sigma svg{ width:13px; height:13px; }
-  .brand.open .brand-sigma{ color:#fff; }
+  .brand.open .brand-sigma{ color:var(--ink); }
   .brand-chevron{
-    display:inline-flex; margin-left:7px; color:rgba(255,255,255,0.62); flex:none;
-    transition:transform 0.2s ease;
+    display:inline-flex; margin-left:7px; color:var(--dim); flex:none;
+    transition:transform 0.2s ease, color 0.2s ease;
   }
-  .brand.open .brand-chevron{ transform:rotate(180deg); }
+  .brand.open .brand-chevron{ transform:rotate(180deg); color:var(--ink); }
 
   /* Floating, frameless distribution plots that sit directly on the map
      surface below the brand bar — no card, no border, no shadow. They read
@@ -165,21 +168,26 @@
      drag/pan that starts underneath them. */
   .floating-plots{
     position:fixed; top:calc(74px + var(--safe-t)); left:calc(30px + var(--safe-l)); z-index:450;
-    display:flex; flex-direction:column; gap:12px;
+    display:flex; flex-direction:column; gap:13px;
+    /* pointer-events:none all the way down (this container and every
+       descendant below) so the larger plot area still never intercepts a
+       click/tap or a map drag that starts underneath it — purely visual,
+       invisible to hit-testing/touch. */
     pointer-events:none; user-select:none;
-    width:148px;
+    width:168px;
   }
-  .floatplot{ display:flex; flex-direction:column; }
+  .floatplot{ display:flex; flex-direction:column; pointer-events:none; }
   .floatplot-label{
-    font-size:7px; font-weight:600; text-transform:lowercase; letter-spacing:.02em;
+    font-size:7.5px; font-weight:600; text-transform:lowercase; letter-spacing:.02em;
     color:rgba(21,18,16,0.42); margin-bottom:2px;
+    pointer-events:none;
   }
-  .floatplot-curve{ height:30px; }
-  .floatplot-curve svg{ width:100%; height:100%; display:block; overflow:visible; }
+  .floatplot-curve{ height:34px; pointer-events:none; }
+  .floatplot-curve svg{ width:100%; height:100%; display:block; overflow:visible; pointer-events:none; }
   .floatplot-axis-label{ font-size:8px; fill:rgba(21,18,16,0.4); font-family:'Inter',sans-serif; }
   @media (max-width:560px){
-    .floating-plots{ width:112px; gap:9px; }
-    .floatplot-curve{ height:24px; }
+    .floating-plots{ width:128px; gap:10px; }
+    .floatplot-curve{ height:27px; }
   }
 
   .onthisday-banner{
@@ -211,16 +219,25 @@
     position:fixed; top:calc(66px + var(--safe-t)); left:calc(20px + var(--safe-l)); z-index:510;
     width:min(340px, calc(100vw - 96px - var(--safe-l) - var(--safe-r))); /* 96px clears the fixed toggle-icon column on the right on narrow viewports */
     max-height:calc(100vh - 100px - var(--safe-t) - var(--safe-b));
-    overflow-y:auto;
+    overflow:hidden;
     background:rgba(255,255,255,0.38); border:none; border-radius:14px;
     box-shadow:0 24px 60px rgba(21,18,16,0.32);
-    padding:14px 16px 16px;
+    padding:0;
     opacity:0; transform:translateY(-6px); pointer-events:none;
     transition:opacity .18s ease, transform .18s ease;
     -webkit-backdrop-filter:blur(16px) saturate(180%);
     backdrop-filter:blur(16px) saturate(180%);
   }
   .stats-card.show{ opacity:1; transform:translateY(0); pointer-events:auto; }
+  /* Same custom always-visible scrollbar as #filter-card/#compare-card/
+     #settings-card (see the comment above .filter-card) — reuses the
+     .filter-scroll inner scroller and .filter-scrollbar-track/-thumb
+     classes with stats-specific ids for the JS hookup. */
+  #stats-card{ position:relative; }
+  #stats-card .filter-scroll{
+    max-height:calc(100vh - 100px - var(--safe-t) - var(--safe-b));
+    padding:14px 20px 16px 16px;
+  }
   .stats-title-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:9px; }
   .stats-title{
     font-size:10.5px; font-weight:600; text-transform:uppercase;
@@ -592,14 +609,22 @@
   .scrubber-label{ font-size:11px; color:var(--dim); text-align:center; margin-bottom:9px; }
   .scrubber-label b{ color:var(--ink); font-weight:600; }
 
-  .visit-hist{ position:relative; height:26px; margin-bottom:5px; }
-  .visit-hist-bar{
-    position:absolute; bottom:0; min-height:2px;
-    background:rgba(var(--accent-rgb),0.14);
-    border-radius:2px 2px 0 0;
-    transition:background 0.15s ease;
-  }
-  .visit-hist-bar.in-range{ background:rgba(var(--accent-rgb),0.55); }
+  /* Visit-frequency "rug + density" plot, merged with the drag handles:
+     a density mound (this scrubber's date range) sits above a separate
+     rug-tick band — a small fixed gap keeps the two from touching — and
+     the two drag handles are absolutely-positioned bars overlaid directly
+     on top of the whole thing, spanning its full height. That replaces
+     what used to be a second, bare slider row below the chart: every
+     pixel here is either data or a handle, nothing is empty track.
+     Colors lean on --accent rather than the flat ink the floating map
+     plots use, since this lives inside UI chrome, not on the map itself. */
+  .visit-hist-wrap{ position:relative; height:46px; margin-bottom:6px; }
+  .visit-hist{ position:absolute; inset:0; }
+  .visit-hist svg{ width:100%; height:100%; display:block; overflow:visible; }
+  .visit-hist-area-dim{ fill:rgba(var(--accent-rgb),0.14); }
+  .visit-hist-area-focus{ fill:rgba(var(--accent-rgb),0.42); transition:opacity 0.15s ease; }
+  .visit-rug-tick{ stroke:rgba(var(--accent-rgb),0.24); stroke-width:1; transition:stroke 0.15s ease; }
+  .visit-rug-tick.in-range{ stroke:rgba(var(--accent-rgb),0.78); }
 
   .range-slider{ position:relative; height:14px; }
   .range-track{
@@ -616,6 +641,38 @@
     box-shadow:0 1px 3px rgba(21,18,16,.3);
     transform:translate(-50%,-50%); cursor:pointer; touch-action:none;
   }
+
+  /* The date scrubber's own slider instance overrides the shared rules
+     above (which the rating slider in the filter panel still uses as-is)
+     — its track/fill are hidden entirely and its handles become full-
+     height bars with a small grip mark, sitting on the plot instead of a
+     thin line beneath it. Scoped by #range-slider's id, so specificity
+     alone keeps #rating-slider untouched. */
+  #range-slider{ position:absolute; inset:0; height:auto; }
+  #range-fill, #range-slider .range-track{ display:none; }
+
+  /* Very light wash across the selected band — sits between the plot and
+     the handles (see .visit-hist-wrap in index.html). A hint, not a
+     second fill color, but visible enough to read at a glance. */
+  .range-highlight{ position:absolute; top:0; bottom:0; background:rgba(255,255,255,0.4); pointer-events:none; }
+
+  /* Bar handle: a narrow rounded bar with a small "mini" shadow and one
+     centered grab dot — picked after comparing ten options live on the
+     site. Narrower than the original pill (8px) but not as thin as the
+     plainest blade option (3px). */
+  #range-slider .range-handle{
+    top:0; bottom:0; height:auto; width:6px; border-radius:3px; border:none;
+    transform:translateX(-50%);
+    background:var(--accent);
+    box-shadow:0 1px 2px rgba(21,18,16,0.28);
+    cursor:grab;
+  }
+  #range-slider .range-handle:active{ cursor:grabbing; }
+  #range-slider .range-handle::after{
+    content:''; position:absolute; top:50%; left:50%; width:3px; height:3px;
+    border-radius:50%; background:rgba(255,255,255,0.8); transform:translate(-50%,-50%);
+  }
+
   .range-ticks{ position:relative; height:13px; margin-top:3px; }
   .range-tick{
     position:absolute; top:0; width:1px; height:4px;
@@ -820,7 +877,9 @@
   .modal-overlay.show{ opacity:1; pointer-events:auto; }
   .modal{
     width:320px; max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
-    background:rgba(255,255,255,0.82); border-radius:16px;
+    /* Slightly more see-through than before (was .82) to match the
+       lighter glass now used for the brand pill / scrubber. */
+    background:rgba(255,255,255,0.68); border-radius:16px;
     padding:24px 24px 20px;
     box-shadow:0 24px 60px rgba(21,18,16,0.32);
     transform:translateY(10px);
@@ -885,7 +944,17 @@
     -webkit-backdrop-filter:blur(16px) saturate(180%);
     backdrop-filter:blur(16px) saturate(180%);
   }
-  .modal-actions{ display:flex; flex-direction:column; gap:8px; }
+  .modal-actions{ display:flex; flex-direction:column; gap:14px; }
+  /* ---- Cartography slide: three stacked sections, each its own
+     caption + single call-to-action, instead of one shared caption over
+     a row of buttons. ---- */
+  .modal-action-row{ display:flex; flex-direction:column; gap:6px; }
+  .modal-action-row:not(:last-child){
+    padding-bottom:14px; border-bottom:1px solid var(--line);
+  }
+  .modal p.modal-action-caption{
+    font-size:12px; line-height:1.45; color:var(--dim); margin:0; text-align:center;
+  }
   .modal-btn{
     width:100%; padding:11px; font-size:13px; font-weight:500;
     font-family:inherit; border-radius:8px; cursor:pointer; text-align:center;

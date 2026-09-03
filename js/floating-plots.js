@@ -120,7 +120,7 @@ export function renderFloatingPlots(list){
   let overall = '';
   if (overallVals.length){
     overall = `<div class="floatplot">
-      <div class="floatplot-label">overall (vs. all)</div>
+      <div class="floatplot-label">overall (in-view vs. all)</div>
       <div class="floatplot-curve">${curveFor(overallVals, 'overall', s => s.overall)}</div>
     </div>`;
   }
