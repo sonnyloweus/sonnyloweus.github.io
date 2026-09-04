@@ -31,7 +31,7 @@ export const RATING_PALETTES = {
 export const SETTINGS_KEY = 'coffeeMapSettings';
 
 // intro modal — shows automatically once, then only via the "?" button.
-export const INTRO_KEY = 'coffeeMapIntroSeen';
+export const INTRO_KEY = 'coffeeMapIntroSeen_v2';
 
 // Per-shop taste-profile "coffee cup" radar for the detail panel: the ratings
 // trace a patch of foam on a cup of coffee viewed from directly above, with

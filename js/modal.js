@@ -130,7 +130,12 @@ export function wireModalListeners(){
   document.getElementById('modal-explore-btn').onclick = () => { closeModal(); };
   // startGame() lives in game.js — imported above.
   document.getElementById('modal-play-game-btn').onclick = () => { closeModal(); startGame(); };
-  document.getElementById('modal-overlay').onclick = (e) => { if(e.target.id === 'modal-overlay') closeModal(); };
+  // Earlier slides require the Next button so visitors actually see each
+  // one, but on the last slide clicking the backdrop (i.e. the map behind
+  // it) is treated the same as hitting Explore.
+  document.getElementById('modal-overlay').onclick = (e) => {
+    if(e.target.id === 'modal-overlay' && S.introIndex === INTRO_SLIDES.length - 1) closeModal();
+  };
   document.getElementById('help-btn').onclick = openModal;
 }
 
