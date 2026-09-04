@@ -88,6 +88,22 @@ export async function loadData(){
   }
 }
 
+// journey.json is optional — a fork of this site (or a fresh clone before
+// any stops have been written with add-journey.html) simply won't have
+// one yet, and an empty/missing file should quietly mean "no journey,"
+// not a broken fetch. Any of those cases resolves to [], same as journey.json
+// containing an explicit empty array.
+export async function loadJourneyData(){
+  try{
+    const res = await fetch('journey.json');
+    if(!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  }catch(e){
+    return [];
+  }
+}
+
 export function tierClass(rating){
   if(rating >= 4.5) return 't7';
   if(rating >= 4.2) return 't6';

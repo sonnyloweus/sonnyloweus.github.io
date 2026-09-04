@@ -17,6 +17,17 @@ export function daysFromShops(shops){
 export function dayToPct(day){ return S.maxDay === S.minDay ? 0 : (day - S.minDay) / (S.maxDay - S.minDay); }
 export function pctToDay(p){ return Math.round(S.minDay + p * (S.maxDay - S.minDay)); }
 
+// The two date handles can never close all the way down onto each other —
+// besides being fiddly to land a zero-width selection on by touch, it
+// would also leave nothing for makeRangeDraggable (below) to grab, since
+// that drags the highlighted band between the handles. Scales with the
+// dataset's own span (3%) rather than a fixed day count, so this behaves
+// the same whether the whole history covers a few months or several years.
+const MIN_RANGE_FRACTION = 0.03;
+function minRangeDays(){
+  return Math.max(1, Math.round((S.maxDay - S.minDay) * MIN_RANGE_FRACTION));
+}
+
 export function updateHandles(){
   const loP = dayToPct(S.lowDay) * 100, hiP = dayToPct(S.highDay) * 100;
   S.handleLow.style.left = loP + '%';
@@ -144,8 +155,8 @@ export function makeDraggable(handle, isLow){
       let p = (ev.clientX - rect.left) / rect.width;
       p = Math.min(1, Math.max(0, p));
       let day = pctToDay(p);
-      if(isLow){ S.lowDay = Math.min(day, S.highDay); }
-      else { S.highDay = Math.max(day, S.lowDay); }
+      if(isLow){ S.lowDay = Math.min(day, S.highDay - minRangeDays()); }
+      else { S.highDay = Math.max(day, S.lowDay + minRangeDays()); }
       updateHandles();
       applyFilters();
     };
@@ -155,6 +166,41 @@ export function makeDraggable(handle, isLow){
     };
     handle.addEventListener('pointermove', move);
     handle.addEventListener('pointerup', up);
+  });
+}
+
+// Dragging the highlighted band itself (rather than either handle) pans
+// the whole [lowDay, highDay] window along the timeline, width unchanged —
+// the same "grab the middle to slide the range" gesture as any dual-handle
+// date picker. Pointer/touch-action handling mirrors makeDraggable above;
+// the width is fixed for the whole gesture and just gets reclamped against
+// the dataset's [minDay, maxDay] ends so it can slide right up to either
+// edge without ever getting clipped narrower.
+export function makeRangeDraggable(highlightEl){
+  if(!highlightEl) return;
+  highlightEl.addEventListener('pointerdown', e => {
+    highlightEl.setPointerCapture(e.pointerId);
+    highlightEl.classList.add('dragging');
+    const rect = S.sliderEl.getBoundingClientRect();
+    const startX = e.clientX;
+    const startLow = S.lowDay;
+    const width = S.highDay - S.lowDay;
+    const move = ev => {
+      const deltaDays = ((ev.clientX - startX) / rect.width) * (S.maxDay - S.minDay);
+      let newLow = Math.round(startLow + deltaDays);
+      newLow = Math.max(S.minDay, Math.min(S.maxDay - width, newLow));
+      S.lowDay = newLow;
+      S.highDay = newLow + width;
+      updateHandles();
+      applyFilters();
+    };
+    const up = () => {
+      highlightEl.classList.remove('dragging');
+      highlightEl.removeEventListener('pointermove', move);
+      highlightEl.removeEventListener('pointerup', up);
+    };
+    highlightEl.addEventListener('pointermove', move);
+    highlightEl.addEventListener('pointerup', up);
   });
 }
 
@@ -363,6 +409,7 @@ export function setupFilters(){
     renderVisitHistogram();
     makeDraggable(S.handleLow, true);
     makeDraggable(S.handleHigh, false);
+    makeRangeDraggable(document.getElementById('range-highlight'));
   }
 
   // ---- rating range (filter panel) ----

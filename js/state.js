@@ -101,11 +101,17 @@ export const S = {
   compareShopB: null,
 
   // ---------- journey.js ----------
+  // journeyStops: journey.json entries resolved against coffee data and
+  // sorted by start date — see resolveJourneyStops(). Each item is
+  // {entry, shopEntry}: entry is the raw journey.json object (type, title,
+  // dateStart/End, story, links, banner, and the type-specific block),
+  // shopEntry is its matching S.shopMarkers item (lat/lng/marker/shop).
   journeyOn: false,
   journeyStops: [],
+  journeyIndex: 0,   // which stop's story modal is currently open
+  journeySlideIndex: 0, // which slideshow photo (research/paper stops only) is showing
   journeyLines: [],
   journeyAnimFrame: null,
-  journeyPauseTimer: null,
 
   // ---------- game.js ----------
   gameTarget: null,

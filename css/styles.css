@@ -554,7 +554,9 @@
      espresso color/translucency, same backdrop-blur, white icon) instead of
      the default white toggle look, so it reads as the other fixed pill on
      the map rather than just another toolbar icon. */
-  #toggle-game{ background:rgba(var(--accent-rgb),0.86); color:#fff; }
+  #toggle-game, #toggle-journey{ background:rgba(var(--accent-rgb),0.86); color:#fff; }
+  #toggle-journey.on{ box-shadow:0 4px 14px rgba(var(--accent-rgb),0.55); }
+  #toggle-game.disabled, #toggle-journey.disabled{ opacity:0.45; cursor:not-allowed; pointer-events:none; }
   .toggle-icon{
     position:relative;
     width:32px; height:32px; padding:0;
@@ -677,13 +679,26 @@
      height bars with a small grip mark, sitting on the plot instead of a
      thin line beneath it. Scoped by #range-slider's id, so specificity
      alone keeps #rating-slider untouched. */
-  #range-slider{ position:absolute; inset:0; height:auto; }
+  /* pointer-events:none on the container itself — it spans the whole box
+     (inset:0) even though only the two handle bars are ever visible, and
+     without this it would sit on top of .range-highlight in the DOM and
+     silently eat every click meant for the drag-to-pan band underneath.
+     Each handle opts back into pointer-events:auto for itself below, so
+     they're unaffected. */
+  #range-slider{ position:absolute; inset:0; height:auto; pointer-events:none; }
   #range-fill, #range-slider .range-track{ display:none; }
 
-  /* Very light wash across the selected band — sits between the plot and
-     the handles (see .visit-hist-wrap in index.html). A hint, not a
-     second fill color, but visible enough to read at a glance. */
-  .range-highlight{ position:absolute; top:0; bottom:0; background:rgba(255,255,255,0.4); pointer-events:none; }
+  /* Light wash across the selected band — sits between the plot and the
+     handles (see .visit-hist-wrap in index.html). Also the drag target for
+     panning both handles together (makeRangeDraggable in filters.js): it
+     sits earlier in the DOM than #range-slider's handles, so their own
+     (enlarged, see ::before above) hit areas still win wherever the two
+     overlap, and only the open middle ever grabs the band itself. */
+  .range-highlight{
+    position:absolute; top:0; bottom:0; background:rgba(255,255,255,0.4);
+    cursor:grab; touch-action:none;
+  }
+  .range-highlight:active, .range-highlight.dragging{ cursor:grabbing; background:rgba(255,255,255,0.58); }
 
   /* Bar handle: a narrow rounded bar with a small "mini" shadow and one
      centered grab dot — picked after comparing ten options live on the
@@ -694,12 +709,22 @@
     transform:translateX(-50%);
     background:var(--accent);
     box-shadow:0 1px 2px rgba(21,18,16,0.28);
-    cursor:grab;
+    cursor:grab; pointer-events:auto;
   }
   #range-slider .range-handle:active{ cursor:grabbing; }
   #range-slider .range-handle::after{
     content:''; position:absolute; top:50%; left:50%; width:3px; height:3px;
     border-radius:50%; background:rgba(255,255,255,0.8); transform:translate(-50%,-50%);
+  }
+  /* Invisible touch target, well past the 6px-wide bar itself — on a
+     phone the two date handles sit close together and a narrow bar alone
+     is a genuinely fiddly thing to pinch with a fingertip. Pseudo-element
+     hit-testing still resolves to the handle (pointerdown listeners are
+     bound to .range-handle in filters.js), so this only widens what you
+     can land a tap on, never what's drawn. */
+  #range-slider .range-handle::before{
+    content:''; position:absolute; top:0; bottom:0; left:50%; width:30px;
+    transform:translateX(-50%); background:transparent;
   }
 
   .range-ticks{ position:relative; height:13px; margin-top:3px; }
@@ -754,24 +779,6 @@
     50%{ transform:scale(1.18); }
   }
 
-  .journey-bar{
-    position:fixed; bottom:calc(20px + var(--safe-b)); left:50%; transform:translateX(-50%); z-index:550;
-    display:flex; align-items:center; gap:14px;
-    background:rgba(255,255,255,0.38); border:none; border-radius:20px;
-    padding:10px 16px; box-shadow:0 24px 60px rgba(21,18,16,0.32);
-    max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
-    -webkit-backdrop-filter:blur(16px) saturate(180%);
-    backdrop-filter:blur(16px) saturate(180%);
-  }
-  .journey-info{ display:flex; flex-direction:column; line-height:1.35; }
-  .journey-info b{ font-size:12.5px; font-weight:600; white-space:nowrap; }
-  .journey-info span{ font-size:10.5px; color:var(--dim); white-space:nowrap; }
-  .journey-progress{ font-size:11px; color:var(--dim); white-space:nowrap; }
-  .journey-stop{
-    font-size:11px; padding:5px 11px; border-radius:999px;
-    border:1px solid var(--line); color:var(--dim); cursor:pointer; white-space:nowrap;
-  }
-  .journey-stop:hover{ color:var(--ink); }
   .bubble.cluster{ position:relative; font-size:12.5px; box-shadow:0 3px 8px rgba(21,18,16,0.32); }
   .cluster-count{
     position:absolute; top:-6px; right:-6px;
@@ -997,7 +1004,7 @@
     background:transparent; color:var(--dim); border:1px solid var(--line);
   }
   .modal-btn-secondary span{ font-size:11px; }
-  .modal-btn-secondary:disabled{ cursor:not-allowed; opacity:0.65; }
+  .modal-btn:disabled{ cursor:not-allowed; opacity:0.65; }
 
   .switch-block{ border-bottom:1px solid var(--line); }
   .switch-block:last-child{ border-bottom:none; }
@@ -1347,10 +1354,14 @@
   body.game-mode .scrubber,
   body.game-mode .stats-card,
   body.game-mode .onthisday-banner,
-  body.game-mode .journey-bar,
+  body.game-mode .journey-story-overlay,
   body.game-mode .filter-card,
   body.game-mode .compare-card,
   body.game-mode .settings-card{ display:none !important; }
+
+  /* Sonny's Journey hides the title bar too (same treatment as game
+     mode) — cleaner while the story card has the map's attention. */
+  body.journey-mode .brand{ display:none !important; }
   /* Pin hover tooltips and the panel title both show the shop's name —
      that's the whole answer, so both are blurred (not hidden) for the
      duration of a round. Every pin gets this, not just the target —
@@ -1434,3 +1445,239 @@
   .game-result-box.used{ background:var(--accent); }
   .game-result-answer{ font-size:11.5px; color:var(--dim); text-align:center; margin:0 0 12px; }
   .game-result-copied{ color:var(--accent); }
+
+  /* ---------------------------------------------------------------
+     Sonny's Journey — story modal (education/project/research/paper/
+     internship stops loaded from journey.json). Floats over the map
+     bottom-center, glass card in the same family as .panel/.modal —
+     no dark scrim behind it, so the pin/path just flown to stays
+     visible. #story-banner's --story-tint/--story-tint-2 custom
+     properties are set inline per stop (journey.js), from this
+     palette's own --tier-2..7 tokens so the accent still follows
+     whichever rating theme is active.
+     --------------------------------------------------------------- */
+  .journey-story-overlay{
+    position:fixed; inset:0; z-index:900;
+    display:flex; align-items:flex-end; justify-content:flex-start;
+    padding:0 0 calc(20px + var(--safe-b)) calc(20px + var(--safe-l));
+    opacity:0; pointer-events:none;
+    transition:opacity 0.2s ease;
+  }
+  .journey-story-overlay.show{ opacity:1; pointer-events:auto; }
+  .journey-story-card{
+    width:360px; max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
+    max-height:calc(100vh - 40px - var(--safe-t) - var(--safe-b));
+    display:flex; flex-direction:column;
+    background:rgba(255,255,255,0.5); border-radius:18px; overflow:hidden;
+    box-shadow:0 24px 60px rgba(21,18,16,0.32);
+    transform:translateY(10px);
+    transition:transform 0.22s ease;
+    -webkit-backdrop-filter:blur(20px) saturate(180%);
+    backdrop-filter:blur(20px) saturate(180%);
+  }
+  .journey-story-overlay.show .journey-story-card{ transform:translateY(0); }
+
+  .story-banner{
+    position:relative; height:130px; flex:none;
+    background:linear-gradient(135deg, var(--story-tint, var(--tier-4)), var(--story-tint-2, var(--accent)));
+  }
+  .story-banner img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .story-banner::after{
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(0deg, rgba(0,0,0,0.42), rgba(0,0,0,0) 60%);
+  }
+  .story-exit-btn{
+    position:absolute; top:10px; right:10px; z-index:2;
+    width:28px; height:28px; border-radius:50%; background:rgba(0,0,0,0.28); color:#fff;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .story-exit-btn svg{ width:13px; height:13px; }
+  .story-exit-btn:hover{ background:rgba(0,0,0,0.48); }
+  .story-banner-label{ position:absolute; left:16px; right:44px; bottom:10px; z-index:2; color:#fff; }
+  .story-kind{ font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; margin:0 0 2px; opacity:0.9; }
+  .story-place{ font-size:13.5px; font-weight:600; margin:0; text-shadow:0 1px 4px rgba(0,0,0,0.3); }
+
+  .story-body-wrap{ position:relative; flex:1; min-height:0; display:flex; }
+  .story-body{ flex:1; min-height:0; padding:16px 22px 0 18px; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; }
+  .story-body::-webkit-scrollbar{ width:0; height:0; display:none; }
+  .story-title{ font-family:'Fraunces', Georgia, serif; font-weight:500; font-size:18px; line-height:1.24; margin:0 0 4px; }
+  .story-meta{ font-size:11px; color:var(--dim); margin:0 0 12px; }
+
+  .story-chip-row{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+  .story-chip{
+    font-size:10.5px; font-weight:500; padding:4px 9px; border-radius:999px;
+    background:rgba(var(--accent-rgb),0.07); color:var(--ink); border:1px solid var(--line);
+  }
+  .story-chip.strong{ background:var(--story-tint, var(--tier-4)); color:#fff; border:none; }
+  /* Smaller, cooler-toned pill for the education "relevant courses" list —
+     visually distinct from the activities/roles chips (.story-chip above)
+     so the two lists read as two different kinds of thing at a glance,
+     not one long undifferentiated row. */
+  .story-chip-course{
+    font-size:9.5px; font-weight:500; padding:3px 7px; border-radius:999px;
+    background:var(--crema-light); color:var(--dim); border:none;
+  }
+  .story-fields-after .story-chip-row:last-child{ margin-bottom:14px; }
+
+  .story-callout{ background:var(--crema-light); border-radius:10px; padding:11px 13px; margin-bottom:12px; font-size:12.5px; line-height:1.55; }
+  .story-callout b{ display:block; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:var(--dim); font-weight:700; margin-bottom:4px; }
+
+  .story-text{ font-size:13px; line-height:1.62; color:var(--ink); margin:0 0 14px; white-space:pre-wrap; }
+
+  .story-slideshow{ margin-bottom:14px; }
+  .story-slide-frame{ position:relative; width:100%; aspect-ratio:4/3; border-radius:10px; overflow:hidden; background:var(--line); }
+  .story-slide-frame img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .story-slide-nav{
+    position:absolute; top:50%; transform:translateY(-50%); width:26px; height:26px; border-radius:50%;
+    background:rgba(0,0,0,0.35); color:#fff; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:15px; line-height:1; user-select:none;
+  }
+  .story-slide-nav:hover{ background:rgba(0,0,0,0.55); }
+  .story-slide-prev{ left:8px; }
+  .story-slide-next{ right:8px; }
+  .story-slide-dots{ display:flex; justify-content:center; gap:5px; margin-top:8px; }
+  .story-slide-dots .dot{ width:5px; height:5px; border-radius:3px; background:var(--line); cursor:pointer; transition:width 0.15s ease, background 0.15s ease; }
+  .story-slide-dots .dot.active{ width:14px; background:var(--story-tint, var(--accent)); }
+
+  /* ---- paper PDF preview: a small embedded frame with a hover expand
+     button, plus a filename/open bar underneath. Feeds the browser's own
+     PDF viewer both here and in the fullscreen lightbox rather than
+     re-implementing page rendering — simplest way to get something that
+     actually reads as "a paper" at a glance. ---- */
+  .story-pdf{ margin:0 0 14px; border-radius:12px; overflow:hidden; border:1px solid var(--line); background:#fff; box-shadow:0 4px 14px rgba(21,18,16,0.07); }
+  .story-pdf-frame-wrap{ position:relative; background:#e9e4de; }
+  .story-pdf-frame{ width:100%; height:190px; display:block; border:none; }
+  .story-pdf-expand-btn{
+    position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:7px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    background:rgba(21,18,16,0.55); color:#fff; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+  }
+  .story-pdf-expand-btn:hover{ background:rgba(21,18,16,0.75); }
+  .story-pdf-expand-btn svg{ width:13px; height:13px; }
+  .story-pdf-bar{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:8px 10px; border-top:1px solid var(--line);
+  }
+  .story-pdf-label{ font-size:11.5px; font-weight:500; color:var(--ink); display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden; }
+  .story-pdf-label svg{ flex:none; width:13px; height:13px; color:var(--dim); }
+  .story-pdf-label span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .story-pdf-open-link{ font-size:11px; font-weight:500; color:var(--story-tint, var(--accent)); text-decoration:none; flex:none; }
+  .story-pdf-open-link:hover{ text-decoration:underline; }
+
+  .story-links{ display:flex; flex-direction:column; gap:6px; margin-bottom:16px; }
+  .story-link-item{
+    display:flex; align-items:center; gap:7px; font-size:12.5px; font-weight:500;
+    color:var(--ink); text-decoration:none; padding:8px 10px; border-radius:9px;
+    background:rgba(var(--accent-rgb),0.045); border:1px solid var(--line);
+  }
+  .story-link-item svg{ width:13px; height:13px; flex:none; color:var(--story-tint, var(--accent)); }
+
+  .story-footer{
+    flex:none; display:flex; align-items:center; gap:10px;
+    padding:12px 18px calc(14px + var(--safe-b)); border-top:1px solid var(--line);
+  }
+  .story-nav-btn{ font-size:12.5px; font-weight:500; padding:9px 14px; border-radius:8px; cursor:pointer; white-space:nowrap; }
+  .story-nav-btn.ghost{ background:transparent; color:var(--dim); padding-left:2px; }
+  .story-nav-btn.ghost:hover{ color:var(--ink); }
+  .story-nav-btn.ghost.hidden{ visibility:hidden; }
+  .story-nav-btn.primary{ color:#fff; background:rgba(var(--accent-rgb),0.88); }
+  .story-progress-dots{ display:flex; gap:5px; margin:0 auto; }
+  .story-progress-dots .dot{ width:5px; height:5px; border-radius:50%; background:var(--line); transition:all 0.2s ease; }
+  .story-progress-dots .dot.active{ width:14px; border-radius:3px; background:var(--ink); }
+
+  /* ---- "Go to a stop" — a small button next to Next that opens a
+     popover of every stop, letting you jump straight there instead of
+     stepping through Back/Next. ---- */
+  .story-footer-right{ display:flex; align-items:center; gap:7px; margin-left:auto; }
+  .story-goto-btn{
+    width:32px; height:32px; flex:none; border-radius:8px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--dim); background:rgba(21,18,16,0.05);
+  }
+  .story-goto-btn:hover{ color:var(--ink); background:rgba(21,18,16,0.09); }
+  .story-goto-btn svg{ width:15px; height:15px; }
+
+  /* ---- "Go to a stop" modal — a real top-level overlay (same family as
+     .pdf-lightbox-overlay) rather than a popover anchored to the story
+     card, since an anchored popover had nowhere to go once the list of
+     stops outgrew the space near the button and just got clipped. This
+     one gets the whole viewport to work with and covers the story card,
+     same as the pdf lightbox does. ---- */
+  .goto-overlay{
+    position:fixed; inset:0; z-index:1100;
+    background:rgba(21,18,16,0.6);
+    display:flex; align-items:center; justify-content:center; padding:24px;
+    opacity:0; pointer-events:none; transition:opacity 0.16s ease;
+    -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
+  }
+  .goto-overlay.show{ opacity:1; pointer-events:auto; }
+  .goto-card{
+    width:min(380px, 100%); max-height:min(520px, 80vh);
+    background:#fff; border-radius:16px; overflow:hidden;
+    box-shadow:0 30px 80px rgba(0,0,0,0.35);
+    display:flex; flex-direction:column;
+    transform:scale(0.97); transition:transform 0.16s ease;
+  }
+  .goto-overlay.show .goto-card{ transform:scale(1); }
+  .goto-header{
+    flex:none; display:flex; align-items:center; justify-content:space-between;
+    gap:10px; padding:14px 16px; border-bottom:1px solid var(--line);
+  }
+  .goto-title{ font-size:14px; font-weight:600; color:var(--ink); }
+  .goto-close{
+    flex:none; width:28px; height:28px; border-radius:50%; cursor:pointer; color:var(--dim);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .goto-close:hover{ background:rgba(21,18,16,0.06); color:var(--ink); }
+  .goto-close svg{ width:14px; height:14px; }
+  .goto-list{ flex:1; min-height:0; overflow-y:auto; padding:8px; scrollbar-width:none; }
+  .goto-list::-webkit-scrollbar{ width:0; height:0; display:none; }
+  .story-goto-item{ display:flex; align-items:center; gap:10px; padding:10px 9px; border-radius:10px; cursor:pointer; }
+  .story-goto-item:hover{ background:rgba(59,42,30,0.06); }
+  .story-goto-item.current{ background:rgba(59,42,30,0.1); }
+  .story-goto-num{ font-size:11px; color:var(--dim); width:16px; text-align:right; flex:none; }
+  .story-goto-dot{ width:8px; height:8px; border-radius:50%; flex:none; }
+  .story-goto-info{ flex:1; min-width:0; }
+  .story-goto-title{ font-size:13px; font-weight:500; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .story-goto-meta{ font-size:11px; color:var(--dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  @media (max-width:640px){
+    .journey-story-card{ width:100%; }
+    .pdf-lightbox-overlay{ padding:0; }
+    .pdf-lightbox-card{ width:100vw; height:100vh; border-radius:0; }
+    .goto-overlay{ padding:14px; }
+    .goto-card{ max-height:min(520px, 78vh); }
+  }
+
+  /* ---- fullscreen expand of a paper's PDF, opened from .story-pdf-expand-btn.
+     A separate top-level overlay (not nested in the story card) so it can
+     use real viewport space instead of being capped by the card's own
+     max-height. ---- */
+  .pdf-lightbox-overlay{
+    position:fixed; inset:0; z-index:1200;
+    background:rgba(21,18,16,0.6);
+    display:flex; align-items:center; justify-content:center; padding:24px;
+    opacity:0; pointer-events:none; transition:opacity 0.18s ease;
+    -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
+  }
+  .pdf-lightbox-overlay.show{ opacity:1; pointer-events:auto; }
+  .pdf-lightbox-card{
+    width:min(880px, 94vw); height:min(1040px, 90vh);
+    background:#fff; border-radius:14px; overflow:hidden;
+    box-shadow:0 30px 80px rgba(0,0,0,0.4);
+    display:flex; flex-direction:column;
+    transform:scale(0.97); transition:transform 0.18s ease;
+  }
+  .pdf-lightbox-overlay.show .pdf-lightbox-card{ transform:scale(1); }
+  .pdf-lightbox-header{
+    flex:none; display:flex; align-items:center; justify-content:space-between;
+    gap:10px; padding:10px 14px; border-bottom:1px solid var(--line);
+  }
+  .pdf-lightbox-title{ font-size:12.5px; font-weight:600; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pdf-lightbox-close{
+    flex:none; width:26px; height:26px; border-radius:50%; cursor:pointer; color:var(--dim);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .pdf-lightbox-close:hover{ background:rgba(21,18,16,0.06); color:var(--ink); }
+  .pdf-lightbox-close svg{ width:13px; height:13px; }
+  .pdf-lightbox-frame{ flex:1; width:100%; border:none; }

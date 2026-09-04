@@ -1,6 +1,6 @@
 /* global L, d3 */
 import { S } from './state.js';
-import { loadData, tierClass, displayRating, computeRatingBounds, saveStoredSetting, applyPalette, earliestVisit } from './data.js';
+import { loadData, loadJourneyData, tierClass, displayRating, computeRatingBounds, saveStoredSetting, applyPalette, earliestVisit } from './data.js';
 import { RATING_PALETTES, CLUSTER_ZOOM_STEP, POP_EASE, POP_IN_BASE_WAIT, MIN_ZOOM_FLOOR, MIN_ZOOM_CEILING, MIN_ZOOM_BUFFER, CARTO_API_KEY, TOPO_COLOR_STOPS, TOPO_THRESHOLDS, TOPO_BANDWIDTH_MIN, TOPO_BANDWIDTH_MAX, TOPO_FILL_ALPHA, TOPO_OUTERMOST_ALPHA, TOPO_OUTLIER_FLOOR_FRACTION, CLOUD_RADIUS, CLOUD_BLUR, CLOUD_MAX_DARKNESS_LIGHTEN, VORONOI_FILL_ALPHA_MIN, VORONOI_FILL_ALPHA_MAX, VORONOI_STROKE_ALPHA, VORONOI_STROKE_WIDTH, VORONOI_STROKE_COLOR } from './constants.js';
 import { renderIntroSlide } from './modal.js';
 import { showOnThisDay, updateInViewStats, showCountSpinner } from './stats.js';
@@ -8,7 +8,7 @@ import { computeClusters, renderClusters } from './clusters.js';
 import { setupFilters, passesNonDateFilters } from './filters.js';
 import { setupCompare } from './compare.js';
 import { closeOtherSidePanels, refreshRatingDependentUI, hidePanel, showPanel } from './panel.js';
-import { wireJourneyListeners } from './journey.js';
+import { wireJourneyListeners, resolveJourneyStops } from './journey.js';
 
 // activeGroup / clusterGroup / plainGroup are read from many other modules
 // (filters.js's applyFilters, journey.js, panel.js's refreshRatingDependentUI),
@@ -614,10 +614,10 @@ export function refreshDependentUI(){
 // set (rather than trusting setTimeout firing order) keeps the drawn line
 // in true chronological order even if two close-together delays fire out
 // of sequence because of the jitter in easedPopDelays.
-export function revealMarkers(baseWaitSec){
+export function revealMarkers(baseWaitSec, onComplete){
   const entries = syncBadgeCountsAndGetActive().filter(e => !S.activeSet.has(e.marker));
   const n = entries.length;
-  if(!n){ refreshDependentUI(); return; }
+  if(!n){ refreshDependentUI(); if(onComplete) onComplete(); return; }
   // The "N in view · avg" readout is stale/inaccurate for the whole
   // stretch of time these pins are staggering onto the map (up to a few
   // seconds — see the `spread` cap below), so swap it for a spinner until
@@ -651,7 +651,7 @@ export function revealMarkers(baseWaitSec){
         S.trailLine.setLatLngs(pts);
       }
       remaining--;
-      if(remaining === 0) refreshDependentUI();
+      if(remaining === 0){ refreshDependentUI(); if(onComplete) onComplete(); }
     }, delay * 1000);
   });
 }
@@ -793,7 +793,7 @@ function wireRatingSettingsListeners(){
 // original inline script's `(async function init(){...})()` IIFE — this is
 // its direct replacement, called once from main.js. ----
 export async function initApp(){
-  const data = await loadData();
+  const [data, journeyRaw] = await Promise.all([loadData(), loadJourneyData()]);
   S.GLOBAL_DATA = data;
   S.GLOBAL_AVG_RATING = data.length ? data.reduce((sum, s) => sum + s.overall, 0) / data.length : 0;
   computeRatingBounds();
@@ -1036,7 +1036,47 @@ export async function initApp(){
   });
   S.activeSet = new Set();
 
-  revealMarkers(POP_IN_BASE_WAIT);
+  // Journey mode is driven by journey.json now, not just "does every shop
+  // have a dated visit" — resolveJourneyStops() matches each journey.json
+  // entry to its cafe in coffee.json (by name) and sorts what matches by
+  // start date. An empty/missing journey.json (a fresh fork, or before
+  // add-journey.html has been used yet) resolves to no stops at all, so
+  // the toggle and the intro modal's button both just stay disabled —
+  // clicking either one does nothing until there's at least one stop.
+  S.journeyStops = resolveJourneyStops(journeyRaw, S.shopMarkers);
+
+  // All of the welcome modal's action buttons (and their sidebar
+  // equivalents) reach into shop data the moment they're clicked —
+  // Coffee-guessr picks a random target from S.GLOBAL_DATA, Journey walks
+  // S.journeyStops — so every one of them starts disabled in the markup.
+  // They don't unlock the instant data is parsed, though: the pins
+  // themselves are still staggering onto the map for up to ~2.6s after
+  // that (see revealMarkers/easedPopDelays below), and a click mid-reveal
+  // would jump straight into the game or a journey while cafes are still
+  // visibly popping in behind it. So this is passed as revealMarkers'
+  // completion callback instead, and only runs once every pin has
+  // actually landed. Explore has no data dependency of its own, but it's
+  // grouped with the others in the UI, so it unlocks at the same moment
+  // rather than looking active first.
+  function unlockActionButtons(){
+    document.getElementById('modal-explore-btn').disabled = false;
+
+    const gameToggle = document.getElementById('toggle-game');
+    gameToggle.classList.remove('disabled');
+    gameToggle.title = 'Coffee-guessr';
+    gameToggle.setAttribute('aria-label', 'Play Coffee-guessr');
+    document.getElementById('modal-play-game-btn').disabled = false;
+
+    if(S.journeyStops.length){
+      const journeyToggle = document.getElementById('toggle-journey');
+      journeyToggle.classList.remove('disabled');
+      journeyToggle.title = "Follow Sonny's Journey";
+      journeyToggle.setAttribute('aria-label', "Follow Sonny's Journey");
+      document.getElementById('modal-follow-btn').disabled = false;
+    }
+  }
+
+  revealMarkers(POP_IN_BASE_WAIT, unlockActionButtons);
 
   S.replayMarkerPopIn = popInVisibleMarkers;
 

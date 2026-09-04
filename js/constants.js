@@ -96,8 +96,30 @@ export const POP_EASE = 1.6;
 export const POP_IN_BASE_WAIT = 0.45; // pause after page load before the first pop, so the map/tiles settle first
 
 // ---- journey zoom bounds ----
-export const JOURNEY_MIN_ZOOM = 4;  // never zoom out further than this during a leg
-export const JOURNEY_MAX_ZOOM = 15; // never zoom in closer than this, even for very short hops
+// Stops are tight-to-tight now (see journey.js's animateLeg) — every leg's
+// flyTo targets this same zoom at both ends, rather than zooming out to
+// frame the two points together. Leaflet's own flyTo still eases the zoom
+// down and back up for a long hop on its own (that's the whole point of
+// flyTo over setView), so the "zoom out, travel, zoom back in" motion
+// still happens — it's just driven by distance, not a deliberate
+// fit-both-points target.
+export const JOURNEY_MAX_ZOOM = 15;
+
+// ---- journey.json stop types ----
+// One label + one accent per type, shared between the story modal
+// (journey.js) and kept in sync by hand with add-journey.html's own copy
+// of this mapping (that editor runs standalone, with no import access to
+// this module). The colors are the site's own --tier-N tokens rather than
+// a separate palette, so a stop's accent still follows whichever rating
+// theme (Roast/Cold Brew/Noir) is active, and stays legible against it.
+export const JOURNEY_TYPE_LABELS = {
+  education: 'Education', project: 'Project', research: 'Research',
+  paper: 'Paper', internship: 'Internship'
+};
+export const JOURNEY_TYPE_COLOR_VARS = {
+  education: 'var(--tier-2)', project: 'var(--tier-4)', research: 'var(--tier-5)',
+  paper: 'var(--tier-6)', internship: 'var(--tier-7)'
+};
 
 // ---- dynamic minZoom ----
 // A fixed minZoom (the map's old behavior) means "fully zoomed out" shows

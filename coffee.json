@@ -1782,12 +1782,12 @@
     "type": "coffee",
     "lat": 40.3490224,
     "lng": -74.6626041,
-    "overall": 3.9,
+    "overall": 4,
     "ratings": {
       "richness": 3.9,
-      "craft": 4,
-      "ambiance": 4.1,
-      "character": 3.9,
+      "craft": 3.9,
+      "ambiance": 4.2,
+      "character": 4,
       "value": 3.7
     },
     "note": "Small, somewhat pricey spot whose coffee is overshadowed by its neighbors.",
@@ -1803,9 +1803,28 @@
     "visited": [
       "Nov 12, 2024",
       "Mar 29, 2025",
-      "Sep 6, 2025"
+      "Sep 6, 2025",
+      "Sep 4, 2026"
     ],
-    "state": "New Jersey"
+    "state": "New Jersey",
+    "photos": [
+      {
+        "src": "images/sakrid-coffee-roasters_2026-09-04.jpg",
+        "date": "Sep 4, 2026"
+      },
+      {
+        "src": "images/sakrid-coffee-roasters_2026-09-04-2.jpg",
+        "date": "Sep 4, 2026"
+      },
+      {
+        "src": "images/sakrid-coffee-roasters_2026-09-04-3.jpg",
+        "date": "Sep 4, 2026"
+      },
+      {
+        "src": "images/sakrid-coffee-roasters_2026-09-04-4.jpg",
+        "date": "Sep 4, 2026"
+      }
+    ]
   },
   {
     "name": "Rojo's Roastery",
@@ -1836,10 +1855,6 @@
     ],
     "state": "New Jersey",
     "photos": [
-      {
-        "src": "images/rojo-s-roastery_2024-04-08.jpg",
-        "date": "Apr 8, 2024"
-      },
       {
         "src": "images/rojo-s-roastery_2024-04-08-2.jpg",
         "date": "Apr 8, 2024"

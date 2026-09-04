@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add a journey stop</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAFAF8;
+    --ink:#151210;
+    --dim:#8C8579;
+    --accent:#3B2A1E;
+    --line:rgba(21,18,16,0.14);
+    --t-education:#B6957C;
+    --t-project:#8F694D;
+    --t-research:#72533C;
+    --t-paper:#543D2B;
+    --t-internship:#4A2A16;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    max-width:460px;
+    margin:0 auto;
+    padding:40px 20px 80px;
+  }
+  h1{ font-size:18px; font-weight:600; margin:0 0 4px; }
+  .sub{ font-size:13px; color:var(--dim); margin:0 0 24px; line-height:1.5; }
+  .section-label{
+    font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;
+    color:var(--dim); margin:26px 0 4px; padding-top:14px; border-top:1px solid var(--line);
+  }
+  label{ display:block; font-size:12px; color:var(--dim); margin:14px 0 6px; }
+  input, textarea, select{
+    width:100%; font-family:inherit; font-size:14px; padding:10px 12px;
+    border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink);
+  }
+  textarea{ resize:vertical; min-height:60px; }
+  select{ cursor:pointer; }
+  .row2{ display:flex; gap:10px; }
+  .row2 > div{ flex:1; }
+  .file-row{
+    margin-top:8px; padding:12px; border:1px dashed var(--line); border-radius:10px;
+    font-size:11.5px; color:var(--dim); line-height:1.5;
+  }
+  button{
+    width:100%; margin-top:28px; padding:13px; font-size:14px; font-weight:500;
+    font-family:inherit; color:#fff; background:var(--accent); border:none;
+    border-radius:8px; cursor:pointer;
+  }
+  button:active{ opacity:0.85; }
+  button.secondary{ margin-top:10px; color:var(--accent); background:transparent; border:1px solid var(--line); }
+  button.danger{ margin-top:10px; color:#a83232; background:transparent; border:1px solid rgba(168,50,50,0.35); }
+  #status{ margin-top:14px; font-size:12px; color:var(--dim); text-align:center; }
+  #preview{
+    margin-top:20px; font-size:11px; color:var(--dim); background:#fff; border:1px solid var(--line);
+    border-radius:8px; padding:12px; white-space:pre-wrap; word-break:break-word;
+    max-height:180px; overflow:auto; display:none;
+  }
+
+  /* ---------- ordered stop list ---------- */
+  .stop-list{
+    margin-top:10px; border:1px solid var(--line); border-radius:10px;
+    overflow:hidden; background:#fff;
+  }
+  .stop-row{
+    display:flex; align-items:center; gap:10px; padding:10px 12px;
+    border-bottom:1px solid var(--line); cursor:pointer;
+  }
+  .stop-row:last-child{ border-bottom:none; }
+  .stop-row:hover{ background:rgba(59,42,30,0.045); }
+  .stop-row.active{ background:rgba(59,42,30,0.08); }
+  .stop-order{ font-size:11px; color:var(--dim); width:16px; text-align:right; flex:none; }
+  .stop-dot{ width:8px; height:8px; border-radius:50%; flex:none; }
+  .stop-info{ flex:1; min-width:0; }
+  .stop-title-row{ font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .stop-meta-row{ font-size:11px; color:var(--dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .stop-type-tag{
+    font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;
+    padding:3px 6px; border-radius:5px; color:#fff; flex:none;
+  }
+  .stop-drag-handle{
+    cursor:grab; color:var(--dim); font-size:13px; line-height:1; flex:none;
+    padding:2px 3px; user-select:none; letter-spacing:-2px;
+  }
+  .stop-drag-handle:active{ cursor:grabbing; }
+  .stop-row.dragging{ opacity:0.4; }
+  .stop-row.drag-over-top{ box-shadow:inset 0 2px 0 0 var(--accent); }
+  .stop-row.drag-over-bottom{ box-shadow:inset 0 -2px 0 0 var(--accent); }
+  .empty-hint{ padding:16px; font-size:12px; color:var(--dim); text-align:center; }
+
+  /* ---------- photo dropzone / thumbs (banner + slideshow) ---------- */
+  .dropzone{
+    margin-top:8px; padding:16px 12px; border:1px dashed var(--line); border-radius:10px;
+    font-size:12px; color:var(--dim); line-height:1.5; text-align:center; cursor:pointer;
+    transition:background 0.12s ease, border-color 0.12s ease;
+  }
+  .dropzone.drag{ background:rgba(59,42,30,0.05); border-color:var(--accent); }
+  .photo-thumb-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .photo-thumb{
+    position:relative; width:64px; height:64px; border-radius:8px; overflow:hidden;
+    border:1px solid var(--line); background:var(--line);
+  }
+  .photo-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .photo-thumb .remove{
+    position:absolute; top:2px; right:2px; width:16px; height:16px; border-radius:50%;
+    background:rgba(0,0,0,0.6); color:#fff; font-size:11px; line-height:16px;
+    text-align:center; cursor:pointer;
+  }
+  .photo-hint{ font-size:11px; color:var(--dim); margin-top:6px; }
+
+  /* ---------- pdf chip (paper's uploaded PDF) ---------- */
+  .pdf-file-chip{
+    display:flex; align-items:center; gap:8px; margin-top:8px; padding:9px 11px;
+    border:1px solid var(--line); border-radius:9px; background:#faf8f6; font-size:12px;
+  }
+  .pdf-file-chip svg{ flex:none; width:16px; height:16px; color:var(--dim); }
+  .pdf-file-chip .pdf-file-name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pdf-file-chip .remove{ cursor:pointer; color:var(--dim); font-size:16px; line-height:1; flex:none; padding:0 2px; }
+  .pdf-file-chip .remove:hover{ color:var(--ink); }
+  .banner-thumb{ width:100%; aspect-ratio:2.6; border-radius:10px; }
+
+  /* ---------- repeatable link rows ---------- */
+  .link-row-item{ display:flex; gap:6px; margin-bottom:6px; align-items:center; }
+  .link-row-item input{ flex:1; }
+  .link-row-item input.link-label{ flex:0 0 34%; }
+  .link-remove-btn{
+    flex:none; width:36px; height:36px; border-radius:8px; border:1px solid var(--line);
+    background:#fff; color:var(--dim); cursor:pointer; font-size:15px; line-height:1;
+  }
+
+  /* ---------- type-specific field blocks ---------- */
+  .type-fields{ display:none; }
+  .type-fields.show{ display:block; }
+
+  .crop-overlay{
+    position:fixed; inset:0; background:rgba(21,18,16,0.55);
+    display:none; align-items:center; justify-content:center; z-index:1000; padding:20px;
+  }
+  .crop-overlay.show{ display:flex; }
+  .crop-modal{
+    background:#fff; border-radius:14px; padding:18px; width:100%; max-width:380px;
+    max-height:90vh; overflow:auto; box-shadow:0 24px 60px rgba(21,18,16,0.32);
+  }
+  .crop-modal h2{ font-size:14px; font-weight:600; margin:0 0 4px; }
+  .crop-modal .crop-sub{ font-size:11.5px; color:var(--dim); margin:0 0 14px; line-height:1.5; }
+  .crop-frame{
+    position:relative; width:100%; border-radius:10px; overflow:hidden; background:var(--line);
+    touch-action:none; cursor:grab; border:1px solid var(--line);
+  }
+  .crop-frame.dragging{ cursor:grabbing; }
+  .crop-frame img{
+    position:absolute; top:0; left:0; user-select:none; -webkit-user-drag:none;
+    pointer-events:none; transform-origin:top left; max-width:none;
+  }
+  .crop-zoom-row{ display:flex; align-items:center; gap:8px; margin-top:12px; }
+  .crop-zoom-row .crop-zoom-label{ font-size:11px; color:var(--dim); }
+  .crop-zoom-row input[type=range]{ flex:1; accent-color:var(--accent); }
+  .crop-buttons{ display:flex; gap:8px; margin-top:10px; }
+  .crop-buttons button{ margin-top:0; flex:1; font-size:13px; padding:10px; }
+  .crop-count{ font-size:11px; color:var(--dim); text-align:center; margin-top:10px; }
+
+  .lock-overlay{
+    position:fixed; inset:0; background:var(--bg); display:flex; align-items:center;
+    justify-content:center; z-index:2000; padding:20px;
+  }
+  .lock-overlay.unlocked{ display:none; }
+  .lock-box{
+    width:100%; max-width:320px; background:#fff; border:1px solid var(--line);
+    border-radius:14px; padding:22px; box-shadow:0 24px 60px rgba(21,18,16,0.18);
+  }
+  .lock-box h1{ font-size:16px; margin:0 0 4px; }
+  .lock-box p{ font-size:12.5px; color:var(--dim); margin:0 0 16px; line-height:1.5; }
+  .lock-box input{ margin-bottom:10px; }
+  .lock-error{ font-size:11.5px; color:#a83232; min-height:14px; margin:-2px 0 8px; }
+</style>
+</head>
+<body>
+
+<div class="lock-overlay" id="lock-overlay">
+  <div class="lock-box">
+    <h1>This page is locked</h1>
+    <p>Enter the password to add or edit journey stops.</p>
+    <input type="password" id="lock-password" placeholder="Password" autocomplete="off">
+    <div class="lock-error" id="lock-error"></div>
+    <button type="button" id="lock-submit">Unlock</button>
+  </div>
+</div>
+
+<h1>Sonny's Journey — editor</h1>
+<p class="sub">Runs entirely in your browser — nothing is uploaded anywhere. Fill in a stop, save straight back to your site folder as <code>journey.json</code>. Uses the same site folder as the review tool.</p>
+
+<label>Your site folder (contains coffee.json and images/)</label>
+<button type="button" class="secondary" id="use-last-btn" style="margin-top:6px; display:none;">Use last folder…</button>
+<button type="button" class="secondary" id="load-folder-btn" style="margin-top:6px;">Choose site folder…</button>
+<div id="folder-status" style="font-size:11px; color:var(--dim); margin-top:6px;"></div>
+
+<div class="section-label">All journey stops (in order)</div>
+<p style="font-size:11px; color:var(--dim); margin:-6px 0 8px;">Drag the &#8942;&#8942; handle to reorder — the new order saves automatically once your site folder is loaded (otherwise use Download/Copy to grab the updated file).</p>
+<div class="stop-list" id="stop-list"></div>
+
+<div class="section-label">Add or edit a stop</div>
+<label>New stop, or edit an existing one</label>
+<select id="stop-select">
+  <option value="" disabled selected>Select a type, or a stop to edit…</option>
+</select>
+
+<label>Cafe</label>
+<input id="cafe" placeholder="Small World Coffee" list="cafe-list" autocomplete="off">
+<datalist id="cafe-list"></datalist>
+<div id="cafe-match-status" style="font-size:11px; color:var(--dim); margin-top:4px;"></div>
+
+<label>Stop title</label>
+<input id="title" placeholder="Where the psets happened">
+
+<div class="row2">
+  <div>
+    <label>Start</label>
+    <input type="month" id="date-start">
+  </div>
+  <div>
+    <label>End (leave blank if one month)</label>
+    <input type="month" id="date-end">
+  </div>
+</div>
+<div class="file-row">Stops are ordered on the map automatically by start date — you don't need to reorder anything by hand.</div>
+
+<label>Banner photo</label>
+<div id="banner-existing" style="display:none;">
+  <div class="photo-thumb banner-thumb" id="banner-existing-thumb"></div>
+</div>
+<div class="dropzone" id="banner-dropzone">Drag a photo here, or click to choose one</div>
+<input type="file" id="banner-file-input" accept="image/*" style="display:none;">
+<div id="banner-pending"></div>
+<div class="photo-hint">Cropped to match the story-card banner. Drag to reposition or zoom if you want a different section.</div>
+
+<label>Story</label>
+<textarea id="story" placeholder="What happened here, in your own words"></textarea>
+
+<label>Links (optional)</label>
+<div id="links-list"></div>
+<button type="button" class="secondary" id="add-link-btn">+ Add a link</button>
+
+<!-- ---------- Education ---------- -->
+<div class="type-fields" data-types="education">
+  <div class="section-label">Education details</div>
+  <label>Major / minor (optional)</label>
+  <input id="edu-major-minor" placeholder="Computer Science / Statistics">
+  <label>Relevant courses (comma separated)</label>
+  <input id="edu-courses" placeholder="COS 226, MAT 202, ORF 350">
+  <label>Activities / roles (semicolon separated)</label>
+  <input id="edu-activities" placeholder="Varsity Track; President, Business Club; Lab TA; Grader; Academic Chair">
+</div>
+
+<!-- ---------- Project ---------- -->
+<div class="type-fields" data-types="project">
+  <div class="section-label">Project details</div>
+  <label>Tech stack (comma separated, optional)</label>
+  <input id="proj-stack" placeholder="Leaflet.js, D3, Vanilla JS">
+</div>
+
+<!-- ---------- Research ---------- -->
+<div class="type-fields" data-types="research">
+  <div class="section-label">Research details</div>
+  <label>Lab / advisor (optional)</label>
+  <input id="res-lab" placeholder="Vision Lab · Prof. Last Name">
+  <label>Key finding (optional, shown as a short highlight)</label>
+  <textarea id="res-finding" placeholder="One or two sentences on what you found"></textarea>
+</div>
+
+<!-- ---------- Paper ---------- -->
+<div class="type-fields" data-types="paper">
+  <div class="section-label">Paper details</div>
+  <label>Venue / year</label>
+  <input id="paper-venue" placeholder="Workshop on Efficient ML · 2025">
+  <label>Co-authors (comma separated, optional)</label>
+  <input id="paper-authors" placeholder="Jane Doe, John Smith">
+  <label>Abstract (short version, optional)</label>
+  <textarea id="paper-abstract" placeholder="The one-line version you'd actually say out loud"></textarea>
+  <label>Paper PDF (optional)</label>
+  <div id="paper-pdf-existing" style="display:none;">
+    <div id="paper-pdf-existing-chip"></div>
+  </div>
+  <div id="paper-pdf-pending"></div>
+  <div class="dropzone" id="pdf-dropzone">Drag a PDF here, or click to choose one</div>
+  <input type="file" id="pdf-file-input" accept="application/pdf" style="display:none;">
+  <div class="photo-hint">Shown as a small expandable preview in the story modal, with a link to open it full-size.</div>
+</div>
+
+<!-- ---------- shared slideshow (research + paper) ---------- -->
+<div class="type-fields" data-types="research,paper">
+  <div class="section-label">Image slideshow</div>
+  <label>Extra photos for this stop (beyond the banner)</label>
+  <div id="slideshow-existing" class="photo-thumb-row"></div>
+  <div class="dropzone" id="slideshow-dropzone">Drag photos here, or click to choose files</div>
+  <input type="file" id="slideshow-file-input" accept="image/*" multiple style="display:none;">
+  <div id="slideshow-pending"></div>
+</div>
+
+<!-- ---------- Internship ---------- -->
+<div class="type-fields" data-types="internship">
+  <div class="section-label">Internship details</div>
+  <label>Company (optional)</label>
+  <input id="intern-company" placeholder="Company name">
+  <label>Impact bullets (one per line, optional)</label>
+  <textarea id="intern-bullets" placeholder="Shipped a service that cut alert noise by a third&#10;Paired on a migration that had stalled for months"></textarea>
+</div>
+
+<button id="save-existing">Save to site folder</button>
+<button id="download-btn" class="secondary">Download journey.json</button>
+<button id="copy-json" class="secondary">Copy full JSON</button>
+<button id="delete-btn" class="danger" style="display:none;">Delete this stop</button>
+<div id="status"></div>
+<div id="preview"></div>
+
+<div class="crop-overlay" id="crop-overlay">
+  <div class="crop-modal">
+    <h2>Crop this photo</h2>
+    <p class="crop-sub">Auto-centered by default — drag to reposition or zoom to pick a different section, or just confirm as-is.</p>
+    <div class="crop-frame" id="crop-frame">
+      <img id="crop-img" alt="">
+    </div>
+    <div class="crop-zoom-row">
+      <span class="crop-zoom-label">Zoom</span>
+      <input type="range" id="crop-zoom" min="1" max="3" step="0.01" value="1">
+    </div>
+    <div class="crop-buttons">
+      <button type="button" class="secondary" id="crop-recenter">Auto-crop / recenter</button>
+    </div>
+    <div class="crop-buttons">
+      <button type="button" class="secondary" id="crop-skip">Skip this photo</button>
+      <button type="button" id="crop-confirm">Use this crop</button>
+    </div>
+    <div class="crop-count" id="crop-count"></div>
+  </div>
+</div>
+
+<script>
+// ==================================================================
+// Password gate — identical scheme to add-review.html (same salted
+// PBKDF2 hash, same localStorage key), so unlocking either editor
+// unlocks both, and there's only one password to remember.
+// ==================================================================
+const LOCK_SALT_HEX = '70b5b72ad08e0bacb43bc96e9b22e936';
+const LOCK_ITERATIONS = 150000;
+const LOCK_HASH = '56b165a9d866fff3287c9ab7611ff29a436101c905a3c727335857b7c6d808fe';
+const LOCK_STORAGE_KEY = 'coffee-review-unlocked';
+
+function hexToBytes(hex){
+  const bytes = new Uint8Array(hex.length / 2);
+  for(let i = 0; i < bytes.length; i++) bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+  return bytes;
+}
+function bytesToHex(bytes){
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function pbkdf2Hex(text){
+  const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(text), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt: hexToBytes(LOCK_SALT_HEX), iterations: LOCK_ITERATIONS, hash: 'SHA-256' },
+    keyMaterial, 256
+  );
+  return bytesToHex(new Uint8Array(bits));
+}
+const lockOverlayEl = document.getElementById('lock-overlay');
+const lockPasswordEl = document.getElementById('lock-password');
+const lockErrorEl = document.getElementById('lock-error');
+const lockSubmitEl = document.getElementById('lock-submit');
+async function tryUnlock(){
+  const value = lockPasswordEl.value;
+  if(!value) return;
+  lockSubmitEl.disabled = true;
+  lockErrorEl.textContent = 'Checking…';
+  const hash = await pbkdf2Hex(value);
+  lockSubmitEl.disabled = false;
+  if(hash === LOCK_HASH){
+    localStorage.setItem(LOCK_STORAGE_KEY, hash);
+    lockOverlayEl.classList.add('unlocked');
+    lockErrorEl.textContent = '';
+  }else{
+    lockErrorEl.textContent = 'Wrong password.';
+    lockPasswordEl.value = '';
+    lockPasswordEl.focus();
+  }
+}
+lockSubmitEl.onclick = tryUnlock;
+lockPasswordEl.addEventListener('keydown', e => { if(e.key === 'Enter') tryUnlock(); });
+(async () => {
+  const remembered = localStorage.getItem(LOCK_STORAGE_KEY);
+  if(remembered === LOCK_HASH) lockOverlayEl.classList.add('unlocked');
+  else lockPasswordEl.focus();
+})();
+
+// ==================================================================
+// State
+// ==================================================================
+let journeyData = [];      // the full journey.json array
+let coffeeNames = [];      // names pulled from coffee.json, for the cafe autocomplete
+let folderHandle = null;   // FileSystemDirectoryHandle for the site root
+let journeyImagesDir = null; // <site>/images/journey
+let journeyFilesDir = null;  // <site>/files/journey (paper PDFs)
+let currentEditId = null;  // null while composing a brand-new stop
+let currentType = 'education';
+let pendingBanner = null;    // {file, previewUrl} staged this session
+let pendingSlideshow = [];   // [{file, previewUrl}] staged this session
+let existingSlideshow = [];  // slideshow entries already on disk, for the entry being edited (paths, can be removed)
+let pendingPdf = null;       // {file} staged this session (paper only)
+let existingPdf = null;      // pdf path already on disk, for the entry being edited (string, or null)
+const supportsFileSystemAccess = 'showDirectoryPicker' in window;
+
+const TYPE_LABELS = { education:'Education', project:'Project', research:'Research', paper:'Paper', internship:'Internship' };
+const TYPE_COLORS = { education:'var(--t-education)', project:'var(--t-project)', research:'var(--t-research)', paper:'var(--t-paper)', internship:'var(--t-internship)' };
+
+function slugify(str){
+  return (str || '').toString().toLowerCase()
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'stop';
+}
+function extFromFile(file){
+  const m = /\.([a-zA-Z0-9]+)$/.exec(file.name || '');
+  if(m) return m[1].toLowerCase();
+  const map = {'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif','image/heic':'heic','application/pdf':'pdf'};
+  return map[file.type] || 'jpg';
+}
+function monthLabel(ym){
+  if(!ym) return '';
+  const [y, m] = ym.split('-').map(Number);
+  if(!y || !m) return ym;
+  return new Date(y, m - 1, 1).toLocaleDateString('en-US', {month:'short', year:'numeric'});
+}
+function dateRangeLabel(start, end){
+  if(!start) return '';
+  if(!end || end === start) return monthLabel(start);
+  return `${monthLabel(start)} – ${monthLabel(end)}`;
+}
+function csvToArray(str){ return (str || '').split(',').map(s => s.trim()).filter(Boolean); }
+function semiToArray(str){ return (str || '').split(';').map(s => s.trim()).filter(Boolean); }
+function linesToArray(str){ return (str || '').split('\n').map(s => s.trim()).filter(Boolean); }
+
+// ==================================================================
+// Remembering the site folder — same IndexedDB store as add-review.html
+// (same origin, same DB/key), so a folder picked in one editor is
+// already available in the other via "Use last folder…".
+// ==================================================================
+const HANDLE_DB = 'coffee-review-db', HANDLE_STORE = 'handles', HANDLE_KEY = 'lastSiteFolder';
+function idbOpen(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(HANDLE_DB, 1);
+    req.onupgradeneeded = () => { req.result.createObjectStore(HANDLE_STORE); };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbSet(key, val){
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(HANDLE_STORE, 'readwrite');
+    tx.objectStore(HANDLE_STORE).put(val, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function idbGet(key){
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(HANDLE_STORE, 'readonly');
+    const req = tx.objectStore(HANDLE_STORE).get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+const folderStatusEl = document.getElementById('folder-status');
+const useLastBtn = document.getElementById('use-last-btn');
+
+async function loadFromFolder(handle){
+  const jsonHandle = await handle.getFileHandle('coffee.json', {create:false}).catch(() => null);
+  if(jsonHandle){
+    try{
+      const file = await jsonHandle.getFile();
+      coffeeNames = Array.from(new Set(JSON.parse(await file.text()).map(s => (s.name || '').trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b));
+    }catch(err){ coffeeNames = []; }
+  }else{
+    coffeeNames = [];
+  }
+  refreshCafeDatalist();
+
+  const journeyHandle = await handle.getFileHandle('journey.json', {create:true});
+  const jFile = await journeyHandle.getFile();
+  const jText = await jFile.text();
+  try{ journeyData = jText.trim() ? JSON.parse(jText) : []; }
+  catch(err){ journeyData = []; }
+  ensureOrder();
+
+  const imagesRoot = await handle.getDirectoryHandle('images', {create:true});
+  journeyImagesDir = await imagesRoot.getDirectoryHandle('journey', {create:true});
+
+  const filesRoot = await handle.getDirectoryHandle('files', {create:true});
+  journeyFilesDir = await filesRoot.getDirectoryHandle('journey', {create:true});
+
+  folderHandle = handle;
+  folderStatusEl.textContent = `Loaded ${journeyData.length} journey stop(s) from ${handle.name}/journey.json` +
+    (coffeeNames.length ? ` and ${coffeeNames.length} cafe name(s) from coffee.json.` : ' — no coffee.json found, so cafe autocomplete is off (you can still type a name).');
+  renderStopList();
+  renderStopSelect();
+}
+
+(async () => {
+  if(!supportsFileSystemAccess){
+    folderStatusEl.textContent = 'Your browser doesn\'t support saving straight to a folder (this needs Chrome or Edge) — you can still fill the form and use Download/Copy.';
+    return;
+  }
+  try{
+    const handle = await idbGet(HANDLE_KEY);
+    if(!handle) return;
+    const perm = await handle.queryPermission({mode: 'readwrite'});
+    if(perm === 'granted'){
+      await loadFromFolder(handle);
+    }else{
+      useLastBtn.textContent = `Use last folder (${handle.name})…`;
+      useLastBtn.style.display = 'block';
+    }
+  }catch(err){ /* no remembered handle — ignore */ }
+})();
+
+useLastBtn.onclick = async () => {
+  try{
+    const handle = await idbGet(HANDLE_KEY);
+    if(!handle){ useLastBtn.style.display = 'none'; return; }
+    const ok = (await handle.queryPermission({mode: 'readwrite'})) === 'granted'
+      || (await handle.requestPermission({mode: 'readwrite'})) === 'granted';
+    if(!ok){ folderStatusEl.textContent = 'Permission to reuse that folder was denied.'; return; }
+    await loadFromFolder(handle);
+  }catch(err){ folderStatusEl.textContent = 'Could not reload the last folder — choose it manually instead.'; }
+};
+
+document.getElementById('load-folder-btn').onclick = async () => {
+  if(!supportsFileSystemAccess) return;
+  try{
+    const handle = await window.showDirectoryPicker({mode: 'readwrite'});
+    await loadFromFolder(handle);
+    await idbSet(HANDLE_KEY, handle);
+    useLastBtn.style.display = 'none';
+  }catch(err){
+    if(err.name !== 'AbortError') folderStatusEl.textContent = 'Could not read that folder — make sure it\'s your site\'s root folder.';
+  }
+};
+
+// ==================================================================
+// Cafe autocomplete
+// ==================================================================
+function refreshCafeDatalist(){
+  const dl = document.getElementById('cafe-list');
+  dl.innerHTML = '';
+  coffeeNames.forEach(n => { const opt = document.createElement('option'); opt.value = n; dl.appendChild(opt); });
+}
+document.getElementById('cafe').addEventListener('input', () => {
+  const val = document.getElementById('cafe').value.trim();
+  const statusEl = document.getElementById('cafe-match-status');
+  if(!val){ statusEl.textContent = ''; return; }
+  const match = coffeeNames.find(n => n.toLowerCase() === val.toLowerCase());
+  if(match) statusEl.textContent = '✓ matches a spot in coffee.json';
+  else if(coffeeNames.length) statusEl.textContent = 'No exact match in coffee.json yet — the map needs this name to match exactly to fly there.';
+  else statusEl.textContent = '';
+});
+
+// ==================================================================
+// The "new stop / edit existing" dropdown
+// ==================================================================
+const stopSelectEl = document.getElementById('stop-select');
+function sortedJourneyData(){
+  return journeyData.slice().sort((a, b) => {
+    const ao = typeof a.order === 'number' ? a.order : Infinity;
+    const bo = typeof b.order === 'number' ? b.order : Infinity;
+    if(ao !== bo) return ao - bo;
+    const as = a.dateStart || '', bs = b.dateStart || '';
+    if(as !== bs) return as.localeCompare(bs);
+    return (a.dateEnd || '').localeCompare(b.dateEnd || '');
+  });
+}
+// Stops carry an explicit `order` field so they can be dragged into any
+// order, independent of date. Existing journey.json files (or stops added
+// before this existed) won't have it yet — this backfills it once, from
+// the current chronological order, so nothing visibly jumps around the
+// first time this loads; any stragglers after that just go on the end.
+function ensureOrder(){
+  if(!journeyData.length) return;
+  const hasAnyOrder = journeyData.some(e => typeof e.order === 'number');
+  if(!hasAnyOrder){
+    const dateSorted = journeyData.slice().sort((a, b) => {
+      const as = a.dateStart || '', bs = b.dateStart || '';
+      if(as !== bs) return as.localeCompare(bs);
+      return (a.dateEnd || '').localeCompare(b.dateEnd || '');
+    });
+    dateSorted.forEach((e, i) => { e.order = i; });
+  }else{
+    let maxOrder = Math.max(-1, ...journeyData.filter(e => typeof e.order === 'number').map(e => e.order));
+    journeyData.filter(e => typeof e.order !== 'number').forEach(e => { maxOrder += 1; e.order = maxOrder; });
+  }
+}
+function renderStopSelect(){
+  const prevValue = stopSelectEl.value;
+  stopSelectEl.innerHTML = '<option value="" disabled>Select a type, or a stop to edit…</option>';
+  const newGroup = document.createElement('optgroup');
+  newGroup.label = 'New stop';
+  Object.keys(TYPE_LABELS).forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = `new:${t}`;
+    opt.textContent = `+ New — ${TYPE_LABELS[t]}`;
+    newGroup.appendChild(opt);
+  });
+  stopSelectEl.appendChild(newGroup);
+
+  const sorted = sortedJourneyData();
+  if(sorted.length){
+    const editGroup = document.createElement('optgroup');
+    editGroup.label = 'Edit existing';
+    sorted.forEach(entry => {
+      const opt = document.createElement('option');
+      opt.value = `edit:${entry.id}`;
+      opt.textContent = `${entry.title || '(untitled)'} — ${entry.cafe || '?'} (${dateRangeLabel(entry.dateStart, entry.dateEnd)})`;
+      editGroup.appendChild(opt);
+    });
+    stopSelectEl.appendChild(editGroup);
+  }
+  // restore selection if it still exists (e.g. after a save)
+  if([...stopSelectEl.options].some(o => o.value === prevValue)) stopSelectEl.value = prevValue;
+}
+stopSelectEl.addEventListener('change', () => {
+  const val = stopSelectEl.value;
+  if(val.startsWith('new:')) resetForm(val.slice(4));
+  else if(val.startsWith('edit:')) loadEntryIntoForm(val.slice(5));
+});
+
+// ==================================================================
+// Stop list (chronological, click to edit)
+// ==================================================================
+let draggingIndex = null; // index (within the currently-rendered sorted list) of the row being dragged
+
+function renderStopList(){
+  const listEl = document.getElementById('stop-list');
+  const sorted = sortedJourneyData();
+  if(!sorted.length){
+    listEl.innerHTML = '<div class="empty-hint">No journey stops yet — add your first one below.</div>';
+    return;
+  }
+  listEl.innerHTML = '';
+  sorted.forEach((entry, i) => {
+    const row = document.createElement('div');
+    row.className = 'stop-row' + (entry.id === currentEditId ? ' active' : '');
+    row.dataset.index = i;
+    row.innerHTML = `
+      <span class="stop-drag-handle" draggable="true" title="Drag to reorder">&#8942;&#8942;</span>
+      <span class="stop-order">${i + 1}</span>
+      <span class="stop-dot" style="background:${TYPE_COLORS[entry.type] || 'var(--dim)'}"></span>
+      <span class="stop-info">
+        <div class="stop-title-row">${(entry.title || '(untitled)').replace(/</g,'&lt;')}</div>
+        <div class="stop-meta-row">${(entry.cafe || '?').replace(/</g,'&lt;')} · ${dateRangeLabel(entry.dateStart, entry.dateEnd)}</div>
+      </span>
+      <span class="stop-type-tag" style="background:${TYPE_COLORS[entry.type] || 'var(--dim)'}">${TYPE_LABELS[entry.type] || entry.type}</span>
+    `;
+    row.addEventListener('click', () => {
+      stopSelectEl.value = `edit:${entry.id}`;
+      loadEntryIntoForm(entry.id);
+    });
+
+    // Only the grip handle starts a drag — the rest of the row stays a
+    // plain click target for editing, same as before.
+    const handle = row.querySelector('.stop-drag-handle');
+    handle.addEventListener('click', e => e.stopPropagation());
+    handle.addEventListener('dragstart', e => {
+      draggingIndex = i;
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', String(i));
+    });
+    handle.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      listEl.querySelectorAll('.stop-row').forEach(r => r.classList.remove('drag-over-top', 'drag-over-bottom'));
+      draggingIndex = null;
+    });
+
+    row.addEventListener('dragover', e => {
+      if(draggingIndex === null) return;
+      e.preventDefault();
+      const rect = row.getBoundingClientRect();
+      const before = (e.clientY - rect.top) < rect.height / 2;
+      row.classList.toggle('drag-over-top', before);
+      row.classList.toggle('drag-over-bottom', !before);
+    });
+    row.addEventListener('dragleave', () => {
+      row.classList.remove('drag-over-top', 'drag-over-bottom');
+    });
+    row.addEventListener('drop', e => {
+      if(draggingIndex === null) return;
+      e.preventDefault();
+      row.classList.remove('drag-over-top', 'drag-over-bottom');
+      const targetIndex = parseInt(row.dataset.index, 10);
+      const rect = row.getBoundingClientRect();
+      const before = (e.clientY - rect.top) < rect.height / 2;
+      let insertAt = before ? targetIndex : targetIndex + 1;
+      if(draggingIndex < insertAt) insertAt -= 1;
+      moveStop(draggingIndex, insertAt);
+    });
+
+    listEl.appendChild(row);
+  });
+}
+
+// Reorders the currently-displayed list and rewrites every stop's `order`
+// field to match (0..n-1) — the list is always re-sorted by `order` on
+// render, so this is what makes the new arrangement stick.
+function moveStop(fromIndex, toIndex){
+  const sorted = sortedJourneyData();
+  if(fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= sorted.length || toIndex >= sorted.length) return;
+  const [moved] = sorted.splice(fromIndex, 1);
+  sorted.splice(toIndex, 0, moved);
+  // sortedJourneyData() only shallow-copies the array, so these are the
+  // same entry objects as in journeyData — mutating .order here is enough.
+  sorted.forEach((entry, i) => { entry.order = i; });
+  renderStopList();
+  renderStopSelect();
+  persistOrderChange();
+}
+
+// Reordering is a distinct, easy-to-lose-track-of action, so — same as
+// Delete — try to save it straight to disk immediately rather than
+// waiting for the next explicit Save/Download/Copy.
+async function persistOrderChange(){
+  if(folderHandle && await verifyWritePermission(folderHandle).catch(() => false)){
+    try{
+      const json = JSON.stringify(journeyData, null, 2);
+      const jsonHandle = await folderHandle.getFileHandle('journey.json', {create:true});
+      const writable = await jsonHandle.createWritable();
+      await writable.write(json);
+      await writable.close();
+      document.getElementById('status').textContent = `Order updated and saved to ${folderHandle.name}/journey.json.`;
+    }catch(err){
+      document.getElementById('status').textContent = 'Order updated here, but couldn\'t save automatically — use Download or Copy to finish.';
+    }
+  }else{
+    document.getElementById('status').textContent = 'Order updated here — use Download or Copy (or Save, once a folder is loaded) to write this change.';
+  }
+}
+
+// ==================================================================
+// Type-specific field visibility
+// ==================================================================
+function updateTypeFieldsVisibility(type){
+  currentType = type;
+  document.querySelectorAll('.type-fields').forEach(el => {
+    const types = el.dataset.types.split(',');
+    el.classList.toggle('show', types.includes(type));
+  });
+}
+
+// ==================================================================
+// Links (repeatable label + url rows)
+// ==================================================================
+let linkRows = []; // [{label, url}]
+function renderLinkRows(){
+  const container = document.getElementById('links-list');
+  container.innerHTML = '';
+  linkRows.forEach((row, i) => {
+    const div = document.createElement('div');
+    div.className = 'link-row-item';
+    div.innerHTML = `
+      <input class="link-label" placeholder="Label" value="${(row.label||'').replace(/"/g,'&quot;')}">
+      <input class="link-url" placeholder="https://…" value="${(row.url||'').replace(/"/g,'&quot;')}">
+      <button type="button" class="link-remove-btn">×</button>
+    `;
+    const [labelInput, urlInput] = div.querySelectorAll('input');
+    labelInput.oninput = () => { linkRows[i].label = labelInput.value; };
+    urlInput.oninput = () => { linkRows[i].url = urlInput.value; };
+    div.querySelector('.link-remove-btn').onclick = () => { linkRows.splice(i, 1); renderLinkRows(); };
+    container.appendChild(div);
+  });
+}
+document.getElementById('add-link-btn').onclick = () => { linkRows.push({label:'', url:''}); renderLinkRows(); };
+
+// ==================================================================
+// Crop tool — generalized from add-review.html's version to accept a
+// target aspect ratio + output width, so it can serve the wide story
+// banner and the 4:3 slideshow photos with the same overlay/drag/zoom
+// logic instead of duplicating it.
+// ==================================================================
+const BANNER_ASPECT = 2.6, BANNER_OUTPUT_W = 1000;
+const SLIDESHOW_ASPECT = 4/3, SLIDESHOW_OUTPUT_W = 900;
+
+let cropQueue = []; // [{file, kind, aspect, outputW}]
+let cropState = null;
+
+const cropOverlayEl = document.getElementById('crop-overlay');
+const cropFrameEl = document.getElementById('crop-frame');
+const cropImgEl = document.getElementById('crop-img');
+const cropZoomEl = document.getElementById('crop-zoom');
+const cropCountEl = document.getElementById('crop-count');
+const cropConfirmBtn = document.getElementById('crop-confirm');
+const cropSkipBtn = document.getElementById('crop-skip');
+const cropRecenterBtn = document.getElementById('crop-recenter');
+
+function clampCropTranslate(){
+  const dispW = cropState.naturalW * cropState.baseScale * cropState.zoom;
+  const dispH = cropState.naturalH * cropState.baseScale * cropState.zoom;
+  const minX = Math.min(0, cropState.frameW - dispW);
+  const minY = Math.min(0, cropState.frameH - dispH);
+  cropState.tx = Math.min(0, Math.max(minX, cropState.tx));
+  cropState.ty = Math.min(0, Math.max(minY, cropState.ty));
+}
+function applyCropTransform(){
+  const dispW = cropState.naturalW * cropState.baseScale * cropState.zoom;
+  const dispH = cropState.naturalH * cropState.baseScale * cropState.zoom;
+  cropImgEl.style.width = dispW + 'px';
+  cropImgEl.style.height = dispH + 'px';
+  cropImgEl.style.transform = `translate(${cropState.tx}px, ${cropState.ty}px)`;
+}
+function recenterCrop(){
+  cropState.zoom = 1;
+  cropZoomEl.value = 1;
+  const dispW = cropState.naturalW * cropState.baseScale;
+  const dispH = cropState.naturalH * cropState.baseScale;
+  cropState.tx = (cropState.frameW - dispW) / 2;
+  cropState.ty = (cropState.frameH - dispH) / 2;
+  applyCropTransform();
+}
+function openCropper(file, aspect, outputW){
+  return new Promise(resolve => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      cropFrameEl.style.aspectRatio = aspect;
+      cropOverlayEl.classList.add('show');
+      const rect = cropFrameEl.getBoundingClientRect();
+      cropState = {
+        naturalW: img.naturalWidth, naturalH: img.naturalHeight,
+        baseScale: Math.max(rect.width / img.naturalWidth, rect.height / img.naturalHeight),
+        zoom: 1, tx: 0, ty: 0, frameW: rect.width, frameH: rect.height
+      };
+      cropImgEl.src = url;
+      recenterCrop();
+
+      const cleanup = (result) => {
+        cropOverlayEl.classList.remove('show');
+        URL.revokeObjectURL(url);
+        cropState = null;
+        cropConfirmBtn.onclick = null; cropSkipBtn.onclick = null; cropRecenterBtn.onclick = null;
+        resolve(result);
+      };
+      cropConfirmBtn.onclick = () => {
+        const outputH = Math.round(outputW / aspect);
+        const canvas = document.createElement('canvas');
+        canvas.width = outputW; canvas.height = outputH;
+        const ctx = canvas.getContext('2d');
+        const effScale = cropState.baseScale * cropState.zoom;
+        const sx = -cropState.tx / effScale, sy = -cropState.ty / effScale;
+        const sW = cropState.frameW / effScale, sH = cropState.frameH / effScale;
+        ctx.drawImage(img, sx, sy, sW, sH, 0, 0, outputW, outputH);
+        canvas.toBlob(blob => {
+          if(!blob){ cleanup(null); return; }
+          const baseName = (file.name || 'photo').replace(/\.[a-zA-Z0-9]+$/, '');
+          cleanup(new File([blob], `${baseName}-crop.jpg`, {type: 'image/jpeg'}));
+        }, 'image/jpeg', 0.85);
+      };
+      cropSkipBtn.onclick = () => cleanup(null);
+      cropRecenterBtn.onclick = () => recenterCrop();
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+let cropDragActive = false, cropDragStartX = 0, cropDragStartY = 0, cropDragOrigTx = 0, cropDragOrigTy = 0;
+cropFrameEl.addEventListener('pointerdown', e => {
+  if(!cropState) return;
+  cropDragActive = true;
+  cropFrameEl.classList.add('dragging');
+  cropFrameEl.setPointerCapture(e.pointerId);
+  cropDragStartX = e.clientX; cropDragStartY = e.clientY;
+  cropDragOrigTx = cropState.tx; cropDragOrigTy = cropState.ty;
+});
+cropFrameEl.addEventListener('pointermove', e => {
+  if(!cropDragActive || !cropState) return;
+  cropState.tx = cropDragOrigTx + (e.clientX - cropDragStartX);
+  cropState.ty = cropDragOrigTy + (e.clientY - cropDragStartY);
+  clampCropTranslate(); applyCropTransform();
+});
+function endCropDrag(){ cropDragActive = false; cropFrameEl.classList.remove('dragging'); }
+cropFrameEl.addEventListener('pointerup', endCropDrag);
+cropFrameEl.addEventListener('pointercancel', endCropDrag);
+cropFrameEl.addEventListener('wheel', e => {
+  if(!cropState) return;
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? -0.05 : 0.05;
+  cropZoomEl.value = Math.min(3, Math.max(1, parseFloat(cropZoomEl.value) + delta));
+  cropZoomEl.dispatchEvent(new Event('input'));
+}, {passive:false});
+cropZoomEl.addEventListener('input', () => {
+  if(!cropState) return;
+  cropState.zoom = parseFloat(cropZoomEl.value);
+  clampCropTranslate(); applyCropTransform();
+});
+
+async function processCropQueue(){
+  const total = cropQueue.length;
+  let done = 0;
+  while(cropQueue.length){
+    const item = cropQueue.shift();
+    done++;
+    cropCountEl.textContent = (cropQueue.length || total > 1) ? `Photo ${done} of ${done + cropQueue.length}` : '';
+    const cropped = await openCropper(item.file, item.aspect, item.outputW);
+    const finalFile = cropped || item.file;
+    if(item.kind === 'banner'){
+      if(pendingBanner) URL.revokeObjectURL(pendingBanner.previewUrl);
+      pendingBanner = { file: finalFile, previewUrl: URL.createObjectURL(finalFile) };
+      renderBannerPending();
+    }else{
+      pendingSlideshow.push({ file: finalFile, previewUrl: URL.createObjectURL(finalFile) });
+      renderSlideshowPending();
+    }
+  }
+}
+function queueFiles(fileList, kind, aspect, outputW){
+  const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+  if(!files.length) return;
+  const shouldStart = !cropQueue.length;
+  files.forEach(f => cropQueue.push({file: f, kind, aspect, outputW}));
+  if(shouldStart) processCropQueue();
+}
+
+// ---- banner dropzone ----
+const bannerDropzoneEl = document.getElementById('banner-dropzone');
+const bannerFileInputEl = document.getElementById('banner-file-input');
+bannerDropzoneEl.onclick = () => bannerFileInputEl.click();
+bannerDropzoneEl.addEventListener('dragover', e => { e.preventDefault(); bannerDropzoneEl.classList.add('drag'); });
+bannerDropzoneEl.addEventListener('dragleave', () => bannerDropzoneEl.classList.remove('drag'));
+bannerDropzoneEl.addEventListener('drop', e => {
+  e.preventDefault(); bannerDropzoneEl.classList.remove('drag');
+  queueFiles(e.dataTransfer.files, 'banner', BANNER_ASPECT, BANNER_OUTPUT_W);
+});
+bannerFileInputEl.addEventListener('change', e => {
+  queueFiles(e.target.files, 'banner', BANNER_ASPECT, BANNER_OUTPUT_W);
+  bannerFileInputEl.value = '';
+});
+function renderBannerPending(){
+  const container = document.getElementById('banner-pending');
+  container.innerHTML = '';
+  if(!pendingBanner) return;
+  const thumb = document.createElement('div');
+  thumb.className = 'photo-thumb banner-thumb';
+  thumb.innerHTML = `<img src="${pendingBanner.previewUrl}"><div class="remove">×</div>`;
+  thumb.querySelector('.remove').onclick = () => {
+    URL.revokeObjectURL(pendingBanner.previewUrl);
+    pendingBanner = null;
+    renderBannerPending();
+  };
+  container.appendChild(thumb);
+}
+
+// ---- slideshow dropzone (research / paper) ----
+const slideshowDropzoneEl = document.getElementById('slideshow-dropzone');
+const slideshowFileInputEl = document.getElementById('slideshow-file-input');
+slideshowDropzoneEl.onclick = () => slideshowFileInputEl.click();
+slideshowDropzoneEl.addEventListener('dragover', e => { e.preventDefault(); slideshowDropzoneEl.classList.add('drag'); });
+slideshowDropzoneEl.addEventListener('dragleave', () => slideshowDropzoneEl.classList.remove('drag'));
+slideshowDropzoneEl.addEventListener('drop', e => {
+  e.preventDefault(); slideshowDropzoneEl.classList.remove('drag');
+  queueFiles(e.dataTransfer.files, 'slideshow', SLIDESHOW_ASPECT, SLIDESHOW_OUTPUT_W);
+});
+slideshowFileInputEl.addEventListener('change', e => {
+  queueFiles(e.target.files, 'slideshow', SLIDESHOW_ASPECT, SLIDESHOW_OUTPUT_W);
+  slideshowFileInputEl.value = '';
+});
+function renderSlideshowPending(){
+  const container = document.getElementById('slideshow-pending');
+  container.innerHTML = '';
+  if(!pendingSlideshow.length) return;
+  const row = document.createElement('div');
+  row.className = 'photo-thumb-row';
+  pendingSlideshow.forEach((p, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'photo-thumb';
+    thumb.innerHTML = `<img src="${p.previewUrl}"><div class="remove">×</div>`;
+    thumb.querySelector('.remove').onclick = () => {
+      URL.revokeObjectURL(pendingSlideshow[i].previewUrl);
+      pendingSlideshow.splice(i, 1);
+      renderSlideshowPending();
+    };
+    row.appendChild(thumb);
+  });
+  container.appendChild(row);
+  const hint = document.createElement('div');
+  hint.className = 'photo-hint';
+  hint.textContent = `${pendingSlideshow.length} new slideshow photo${pendingSlideshow.length > 1 ? 's' : ''} ready — saved into images/journey/ when you submit.`;
+  container.appendChild(hint);
+}
+async function renderExistingSlideshow(){
+  const container = document.getElementById('slideshow-existing');
+  container.innerHTML = '';
+  for(let i = 0; i < existingSlideshow.length; i++){
+    const src = existingSlideshow[i];
+    const thumb = document.createElement('div');
+    thumb.className = 'photo-thumb';
+    const img = document.createElement('img');
+    thumb.appendChild(img);
+    const remove = document.createElement('div');
+    remove.className = 'remove'; remove.textContent = '×'; remove.title = 'Remove from this stop';
+    remove.onclick = () => { existingSlideshow.splice(i, 1); renderExistingSlideshow(); };
+    thumb.appendChild(remove);
+    container.appendChild(thumb);
+    if(journeyImagesDir){
+      const relPath = src.replace(/^images\/journey\//, '');
+      journeyImagesDir.getFileHandle(relPath).then(fh => fh.getFile()).then(f => { img.src = URL.createObjectURL(f); }).catch(() => { img.alt = 'missing'; });
+    }
+  }
+}
+// ---- pdf dropzone (paper only — no cropping, just staged as-is) ----
+const pdfDropzoneEl = document.getElementById('pdf-dropzone');
+const pdfFileInputEl = document.getElementById('pdf-file-input');
+pdfDropzoneEl.onclick = () => pdfFileInputEl.click();
+pdfDropzoneEl.addEventListener('dragover', e => { e.preventDefault(); pdfDropzoneEl.classList.add('drag'); });
+pdfDropzoneEl.addEventListener('dragleave', () => pdfDropzoneEl.classList.remove('drag'));
+pdfDropzoneEl.addEventListener('drop', e => {
+  e.preventDefault(); pdfDropzoneEl.classList.remove('drag');
+  queuePdf(e.dataTransfer.files);
+});
+pdfFileInputEl.addEventListener('change', e => {
+  queuePdf(e.target.files);
+  pdfFileInputEl.value = '';
+});
+function queuePdf(fileList){
+  const file = Array.from(fileList).find(f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
+  if(!file) return;
+  pendingPdf = { file };
+  renderPendingPdf();
+}
+function pdfChipHtml(name){
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M14 2v6h6"/></svg><span class="pdf-file-name">${name.replace(/</g,'&lt;')}</span><span class="remove" title="Remove">&times;</span>`;
+}
+function renderPendingPdf(){
+  const container = document.getElementById('paper-pdf-pending');
+  container.innerHTML = '';
+  if(!pendingPdf) return;
+  const chip = document.createElement('div');
+  chip.className = 'pdf-file-chip';
+  chip.innerHTML = pdfChipHtml(pendingPdf.file.name);
+  chip.querySelector('.remove').onclick = () => { pendingPdf = null; renderPendingPdf(); };
+  container.appendChild(chip);
+}
+function renderExistingPdf(){
+  const wrap = document.getElementById('paper-pdf-existing');
+  const holder = document.getElementById('paper-pdf-existing-chip');
+  holder.innerHTML = '';
+  if(!existingPdf){ wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  const chip = document.createElement('div');
+  chip.className = 'pdf-file-chip';
+  chip.innerHTML = pdfChipHtml(existingPdf.split('/').pop());
+  chip.querySelector('.remove').onclick = () => { existingPdf = null; renderExistingPdf(); };
+  holder.appendChild(chip);
+}
+
+async function renderExistingBanner(bannerSrc){
+  const wrap = document.getElementById('banner-existing');
+  const thumb = document.getElementById('banner-existing-thumb');
+  thumb.innerHTML = '';
+  if(!bannerSrc){ wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  const img = document.createElement('img');
+  thumb.appendChild(img);
+  if(journeyImagesDir){
+    const relPath = bannerSrc.replace(/^images\/journey\//, '');
+    try{
+      const fh = await journeyImagesDir.getFileHandle(relPath);
+      const f = await fh.getFile();
+      img.src = URL.createObjectURL(f);
+    }catch(err){ img.alt = 'missing'; }
+  }
+}
+
+// ==================================================================
+// Form reset / populate
+// ==================================================================
+function resetForm(type){
+  currentEditId = null;
+  updateTypeFieldsVisibility(type);
+  document.getElementById('cafe').value = '';
+  document.getElementById('cafe-match-status').textContent = '';
+  document.getElementById('title').value = '';
+  document.getElementById('date-start').value = '';
+  document.getElementById('date-end').value = '';
+  document.getElementById('story').value = '';
+  linkRows = []; renderLinkRows();
+  document.getElementById('edu-major-minor').value = '';
+  document.getElementById('edu-courses').value = '';
+  document.getElementById('edu-activities').value = '';
+  document.getElementById('proj-stack').value = '';
+  document.getElementById('res-lab').value = '';
+  document.getElementById('res-finding').value = '';
+  document.getElementById('paper-venue').value = '';
+  document.getElementById('paper-authors').value = '';
+  document.getElementById('paper-abstract').value = '';
+  document.getElementById('intern-company').value = '';
+  document.getElementById('intern-bullets').value = '';
+  if(pendingBanner) URL.revokeObjectURL(pendingBanner.previewUrl);
+  pendingBanner = null; renderBannerPending();
+  renderExistingBanner(null);
+  pendingSlideshow.forEach(p => URL.revokeObjectURL(p.previewUrl));
+  pendingSlideshow = []; renderSlideshowPending();
+  existingSlideshow = []; renderExistingSlideshow();
+  pendingPdf = null; renderPendingPdf();
+  existingPdf = null; renderExistingPdf();
+  document.getElementById('delete-btn').style.display = 'none';
+  document.getElementById('status').textContent = '';
+  renderStopList();
+}
+function loadEntryIntoForm(id){
+  const entry = journeyData.find(e => e.id === id);
+  if(!entry) return;
+  currentEditId = id;
+  updateTypeFieldsVisibility(entry.type);
+  document.getElementById('cafe').value = entry.cafe || '';
+  document.getElementById('cafe').dispatchEvent(new Event('input'));
+  document.getElementById('title').value = entry.title || '';
+  document.getElementById('date-start').value = entry.dateStart || '';
+  document.getElementById('date-end').value = entry.dateEnd || '';
+  document.getElementById('story').value = entry.story || '';
+  linkRows = (entry.links || []).map(l => ({label: l.label || '', url: l.url || ''}));
+  renderLinkRows();
+
+  const edu = entry.education || {};
+  document.getElementById('edu-major-minor').value = edu.majorMinor || '';
+  document.getElementById('edu-courses').value = (edu.courses || []).join(', ');
+  document.getElementById('edu-activities').value = (edu.activities || []).join('; ');
+
+  const proj = entry.project || {};
+  document.getElementById('proj-stack').value = (proj.stack || []).join(', ');
+
+  const res = entry.research || {};
+  document.getElementById('res-lab').value = res.lab || '';
+  document.getElementById('res-finding').value = res.finding || '';
+
+  const paper = entry.paper || {};
+  document.getElementById('paper-venue').value = paper.venue || '';
+  document.getElementById('paper-authors').value = (paper.authors || []).join(', ');
+  document.getElementById('paper-abstract').value = paper.abstract || '';
+
+  const intern = entry.internship || {};
+  document.getElementById('intern-company').value = intern.company || '';
+  document.getElementById('intern-bullets').value = (intern.bullets || []).join('\n');
+
+  if(pendingBanner) URL.revokeObjectURL(pendingBanner.previewUrl);
+  pendingBanner = null; renderBannerPending();
+  renderExistingBanner(entry.banner || null);
+
+  pendingSlideshow.forEach(p => URL.revokeObjectURL(p.previewUrl));
+  pendingSlideshow = []; renderSlideshowPending();
+  const typeData = entry[entry.type] || {};
+  existingSlideshow = (typeData.slideshow || []).slice();
+  renderExistingSlideshow();
+
+  pendingPdf = null; renderPendingPdf();
+  existingPdf = paper.pdf || null;
+  renderExistingPdf();
+
+  document.getElementById('delete-btn').style.display = 'block';
+  document.getElementById('status').textContent = '';
+  renderStopList();
+}
+
+// ==================================================================
+// Save / delete
+// ==================================================================
+async function uniqueImageFilename(dirHandle, seed, ext){
+  let n = 1;
+  while(true){
+    const filename = n === 1 ? `${seed}.${ext}` : `${seed}-${n}.${ext}`;
+    const exists = await dirHandle.getFileHandle(filename, {create:false}).then(() => true).catch(() => false);
+    if(!exists) return filename;
+    n++;
+  }
+}
+async function writeImageFile(dirHandle, filename, file){
+  const fh = await dirHandle.getFileHandle(filename, {create:true});
+  const writable = await fh.createWritable();
+  await writable.write(file);
+  await writable.close();
+}
+
+function collectEntry(){
+  const cafe = document.getElementById('cafe').value.trim();
+  const title = document.getElementById('title').value.trim();
+  const dateStart = document.getElementById('date-start').value;
+  let dateEnd = document.getElementById('date-end').value || dateStart;
+  if(!cafe || !title || !dateStart) return {error: 'Cafe, title, and a start date are required.'};
+
+  const entry = {
+    id: currentEditId || (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`),
+    type: currentType,
+    cafe, title, dateStart, dateEnd,
+    story: document.getElementById('story').value.trim(),
+    links: linkRows.filter(l => l.label.trim() || l.url.trim()).map(l => ({label: l.label.trim(), url: l.url.trim()}))
+  };
+  if(!entry.links.length) delete entry.links;
+
+  if(currentType === 'education'){
+    const majorMinor = document.getElementById('edu-major-minor').value.trim();
+    const courses = csvToArray(document.getElementById('edu-courses').value);
+    const activities = semiToArray(document.getElementById('edu-activities').value);
+    entry.education = {};
+    if(majorMinor) entry.education.majorMinor = majorMinor;
+    if(courses.length) entry.education.courses = courses;
+    if(activities.length) entry.education.activities = activities;
+  }else if(currentType === 'project'){
+    const stack = csvToArray(document.getElementById('proj-stack').value);
+    entry.project = {};
+    if(stack.length) entry.project.stack = stack;
+  }else if(currentType === 'research'){
+    const lab = document.getElementById('res-lab').value.trim();
+    const finding = document.getElementById('res-finding').value.trim();
+    entry.research = {};
+    if(lab) entry.research.lab = lab;
+    if(finding) entry.research.finding = finding;
+  }else if(currentType === 'paper'){
+    const venue = document.getElementById('paper-venue').value.trim();
+    const authors = csvToArray(document.getElementById('paper-authors').value);
+    const abstract = document.getElementById('paper-abstract').value.trim();
+    entry.paper = {};
+    if(venue) entry.paper.venue = venue;
+    if(authors.length) entry.paper.authors = authors;
+    if(abstract) entry.paper.abstract = abstract;
+  }else if(currentType === 'internship'){
+    const company = document.getElementById('intern-company').value.trim();
+    const bullets = linesToArray(document.getElementById('intern-bullets').value);
+    entry.internship = {};
+    if(company) entry.internship.company = company;
+    if(bullets.length) entry.internship.bullets = bullets;
+  }
+
+  return {entry};
+}
+
+async function buildUpdatedJson(){
+  const collected = collectEntry();
+  if(collected.error){ document.getElementById('status').textContent = collected.error; return null; }
+  const { entry } = collected;
+
+  const prevIndex = journeyData.findIndex(e => e.id === entry.id);
+  const prev = prevIndex > -1 ? journeyData[prevIndex] : null;
+  const seedBase = `${slugify(entry.cafe)}-${slugify(entry.title)}-${entry.dateStart}`;
+
+  // banner: write a new one if staged, otherwise keep whatever was there
+  if(pendingBanner){
+    if(!journeyImagesDir){
+      document.getElementById('status').textContent = 'No site folder loaded — the banner photo wasn\'t saved. Choose your site folder first.';
+    }else{
+      const ext = extFromFile(pendingBanner.file);
+      const filename = await uniqueImageFilename(journeyImagesDir, `${seedBase}-banner`, ext);
+      await writeImageFile(journeyImagesDir, filename, pendingBanner.file);
+      entry.banner = `images/journey/${filename}`;
+      URL.revokeObjectURL(pendingBanner.previewUrl);
+      pendingBanner = null; renderBannerPending();
+    }
+  }else if(prev && prev.banner){
+    entry.banner = prev.banner;
+  }
+  renderExistingBanner(entry.banner || null);
+
+  // slideshow (research/paper only): existing (possibly trimmed) + newly staged
+  if(currentType === 'research' || currentType === 'paper'){
+    let slideshowPaths = existingSlideshow.slice();
+    if(pendingSlideshow.length){
+      if(!journeyImagesDir){
+        document.getElementById('status').textContent = 'No site folder loaded — the slideshow photos weren\'t saved.';
+      }else{
+        for(let i = 0; i < pendingSlideshow.length; i++){
+          const p = pendingSlideshow[i];
+          const ext = extFromFile(p.file);
+          const filename = await uniqueImageFilename(journeyImagesDir, `${seedBase}-${i + 1}`, ext);
+          await writeImageFile(journeyImagesDir, filename, p.file);
+          slideshowPaths.push(`images/journey/${filename}`);
+          URL.revokeObjectURL(p.previewUrl);
+        }
+        pendingSlideshow = []; renderSlideshowPending();
+      }
+    }
+    if(slideshowPaths.length) entry[currentType].slideshow = slideshowPaths;
+    existingSlideshow = slideshowPaths;
+  }
+
+  // paper PDF: write a newly staged one, else keep whatever existingPdf
+  // says (including null, if the user removed it with the chip's ×)
+  if(currentType === 'paper'){
+    let pdfPath = existingPdf || null;
+    if(pendingPdf){
+      if(!journeyFilesDir){
+        document.getElementById('status').textContent = 'No site folder loaded — the PDF wasn\'t saved. Choose your site folder first.';
+      }else{
+        const filename = await uniqueImageFilename(journeyFilesDir, `${seedBase}-paper`, 'pdf');
+        await writeImageFile(journeyFilesDir, filename, pendingPdf.file);
+        pdfPath = `files/journey/${filename}`;
+        pendingPdf = null; renderPendingPdf();
+      }
+    }
+    if(pdfPath) entry.paper.pdf = pdfPath;
+    existingPdf = pdfPath;
+    renderExistingPdf();
+  }
+
+  // Preserve manual order on edit; new stops go on the end of the list
+  // (drag them into place afterward).
+  if(prev){
+    entry.order = prev.order;
+    journeyData[prevIndex] = entry;
+  }else{
+    const maxOrder = Math.max(-1, ...journeyData.filter(e => typeof e.order === 'number').map(e => e.order));
+    entry.order = maxOrder + 1;
+    journeyData.push(entry);
+  }
+  currentEditId = entry.id;
+
+  const json = JSON.stringify(journeyData, null, 2);
+  const preview = document.getElementById('preview');
+  preview.style.display = 'block';
+  preview.textContent = json;
+  renderStopList();
+  renderStopSelect();
+  stopSelectEl.value = `edit:${entry.id}`;
+  document.getElementById('delete-btn').style.display = 'block';
+  return { json, statusMsg: `${prev ? 'Updated' : 'Added'} "${entry.title}" at ${entry.cafe}.` };
+}
+
+async function verifyWritePermission(handle){
+  const opts = {mode: 'readwrite'};
+  if((await handle.queryPermission(opts)) === 'granted') return true;
+  if((await handle.requestPermission(opts)) === 'granted') return true;
+  return false;
+}
+
+document.getElementById('save-existing').onclick = async () => {
+  if(!supportsFileSystemAccess){
+    document.getElementById('status').textContent = 'Your browser doesn\'t support saving straight to a folder (needs Chrome or Edge) — use Download or Copy instead.';
+    return;
+  }
+  if(!folderHandle){
+    document.getElementById('status').textContent = 'No site folder loaded yet — click "Choose site folder" above first.';
+    return;
+  }
+  try{
+    const ok = await verifyWritePermission(folderHandle);
+    if(!ok){ document.getElementById('status').textContent = 'Permission to write to that folder was denied.'; return; }
+    const result = await buildUpdatedJson();
+    if(!result) return;
+    const jsonHandle = await folderHandle.getFileHandle('journey.json', {create:true});
+    const writable = await jsonHandle.createWritable();
+    await writable.write(result.json);
+    await writable.close();
+    document.getElementById('status').textContent = `${result.statusMsg} Saved directly to ${folderHandle.name}/journey.json.`;
+  }catch(err){
+    document.getElementById('status').textContent = 'Could not save to that folder. Try Download instead.';
+  }
+};
+
+document.getElementById('download-btn').onclick = async () => {
+  const result = await buildUpdatedJson();
+  if(!result) return;
+  const blob = new Blob([result.json], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'journey.json'; a.click();
+  document.getElementById('status').textContent = `${result.statusMsg} Downloaded journey.json with ${journeyData.length} total stop(s) — replace the old file on your site.`;
+};
+
+document.getElementById('copy-json').onclick = async () => {
+  const result = await buildUpdatedJson();
+  if(!result) return;
+  try{
+    await navigator.clipboard.writeText(result.json);
+    document.getElementById('status').textContent = `${result.statusMsg} Copied full JSON to your clipboard.`;
+  }catch(err){
+    document.getElementById('status').textContent = 'Could not copy automatically — select the text below and copy it manually.';
+  }
+};
+
+document.getElementById('delete-btn').onclick = async () => {
+  if(!currentEditId) return;
+  const entry = journeyData.find(e => e.id === currentEditId);
+  if(!entry) return;
+  if(!confirm(`Delete "${entry.title}" at ${entry.cafe}? This removes it from journey.json (image files on disk are left alone).`)) return;
+  journeyData = journeyData.filter(e => e.id !== currentEditId);
+  currentEditId = null;
+  renderStopList();
+  renderStopSelect();
+  resetForm(currentType);
+
+  if(folderHandle && await verifyWritePermission(folderHandle).catch(() => false)){
+    try{
+      const json = JSON.stringify(journeyData, null, 2);
+      const jsonHandle = await folderHandle.getFileHandle('journey.json', {create:true});
+      const writable = await jsonHandle.createWritable();
+      await writable.write(json);
+      await writable.close();
+      document.getElementById('status').textContent = `Deleted and saved — ${journeyData.length} stop(s) left.`;
+    }catch(err){
+      document.getElementById('status').textContent = 'Deleted here, but couldn\'t save automatically — use Download or Copy to finish.';
+    }
+  }else{
+    document.getElementById('status').textContent = 'Deleted here — use Download or Copy (or Save, once a folder is loaded) to write this change.';
+  }
+};
+
+// ---- initial state ----
+updateTypeFieldsVisibility('education');
+renderLinkRows();
+renderStopList();
+renderStopSelect();
+</script>
+</body>
+</html>

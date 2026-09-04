@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -229,7 +229,8 @@
 
   <div class="toggle toggle-icon" id="help-btn" title="Help" aria-label="Help"><i data-lucide="info"></i></div>
 
-  <div class="toggle toggle-icon" id="toggle-game" title="Coffee-guessr" aria-label="Play Coffee-guessr"><i data-lucide="gamepad-2"></i></div>
+  <div class="toggle toggle-icon disabled" id="toggle-game" title="Loading spots…" aria-label="Play Coffee-guessr (loading)"><i data-lucide="puzzle"></i></div>
+  <div class="toggle toggle-icon disabled" id="toggle-journey" title="Loading spots…" aria-label="Follow Sonny's Journey (loading)"><i data-lucide="footprints"></i></div>
 </div>
 
 <div class="scrubber" id="scrubber" style="display:none;">
@@ -253,16 +254,103 @@
   <div class="range-ticks" id="range-ticks"></div>
 </div>
 
-<div class="journey-bar" id="journey-bar" style="display:none;">
-  <div class="journey-info">
-    <b id="journey-name"></b>
-    <span id="journey-meta"></span>
+<div id="map"></div>
+
+<!-- Sonny's Journey — story modal. Floats over the map (no dark scrim,
+     unlike the intro/game modals) so the pin and path that were just
+     flown to stay visible behind the card. Content inside #story-fields
+     is rebuilt per stop by journey.js, switched on that stop's type. -->
+<div class="journey-story-overlay" id="journey-story-overlay">
+  <div class="journey-story-card" id="journey-story-card">
+    <div class="story-banner" id="story-banner">
+      <img id="story-banner-img" alt="" style="display:none;">
+      <div class="story-exit-btn" id="journey-exit-btn" title="Exit journey" aria-label="Exit journey">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </div>
+      <div class="story-banner-label">
+        <p class="story-kind" id="story-kind"></p>
+        <p class="story-place" id="story-place"></p>
+      </div>
+    </div>
+    <div class="story-body-wrap">
+      <div class="story-body" id="story-body">
+        <h2 class="story-title" id="story-title"></h2>
+        <p class="story-meta" id="story-meta"></p>
+        <div class="story-fields" id="story-fields"></div>
+        <p class="story-text" id="story-text"></p>
+        <div class="story-fields-after" id="story-fields-after"></div>
+        <div class="story-slideshow" id="story-slideshow" style="display:none;">
+          <div class="story-slide-frame">
+            <img id="story-slide-img" alt="">
+            <div class="story-slide-nav story-slide-prev" id="story-slide-prev">&#8249;</div>
+            <div class="story-slide-nav story-slide-next" id="story-slide-next">&#8250;</div>
+          </div>
+          <div class="story-slide-dots" id="story-slide-dots"></div>
+        </div>
+        <div class="story-pdf" id="story-pdf" style="display:none;">
+          <div class="story-pdf-frame-wrap">
+            <iframe class="story-pdf-frame" id="story-pdf-frame" title="Paper preview" loading="lazy"></iframe>
+            <div class="story-pdf-expand-btn" id="story-pdf-expand" title="Expand" aria-label="Expand paper preview">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H3v5M21 8V3h-5M3 16v5h5M16 21h5v-5"/></svg>
+            </div>
+          </div>
+          <div class="story-pdf-bar">
+            <span class="story-pdf-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M14 2v6h6"/></svg>
+              <span id="story-pdf-filename"></span>
+            </span>
+            <a class="story-pdf-open-link" id="story-pdf-open" href="#" target="_blank" rel="noopener">Open &#8599;</a>
+          </div>
+        </div>
+        <div class="story-links" id="story-links"></div>
+      </div>
+      <div class="filter-scrollbar-track" id="story-scrollbar-track">
+        <div class="filter-scrollbar-thumb" id="story-scrollbar-thumb"></div>
+      </div>
+    </div>
+    <div class="story-footer">
+      <div class="story-nav-btn ghost" id="journey-back-btn">&#8249; Back</div>
+      <div class="story-progress-dots" id="story-progress-dots"></div>
+      <div class="story-footer-right">
+        <div class="story-goto-btn" id="story-goto-btn" title="Go to a stop" aria-label="Go to a stop">
+          <i data-lucide="list-chevrons-up-down"></i>
+        </div>
+        <div class="story-nav-btn primary" id="journey-next-btn">Next &#8250;</div>
+      </div>
+    </div>
   </div>
-  <div class="journey-progress" id="journey-progress"></div>
-  <div class="journey-stop" id="journey-stop">Stop</div>
 </div>
 
-<div id="map"></div>
+<!-- "Go to a stop" — a proper modal (not an anchored popover, which was
+     getting clipped) that covers the story card so it always has room to
+     show every stop regardless of card size or viewport. -->
+<div class="goto-overlay" id="goto-overlay">
+  <div class="goto-card">
+    <div class="goto-header">
+      <span class="goto-title">Jump to a stop</span>
+      <div class="goto-close" id="goto-close" title="Close" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </div>
+    </div>
+    <div class="goto-list" id="goto-list"></div>
+  </div>
+</div>
+
+<!-- Fullscreen expand of a paper's PDF (opened from .story-pdf's expand
+     button) — a separate top-level overlay so it sits above the story
+     card instead of fighting its own scroll/height. -->
+<div class="pdf-lightbox-overlay" id="pdf-lightbox-overlay">
+  <div class="pdf-lightbox-card">
+    <div class="pdf-lightbox-header">
+      <span class="pdf-lightbox-title" id="pdf-lightbox-title"></span>
+      <div class="pdf-lightbox-close" id="pdf-lightbox-close" title="Close" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </div>
+    </div>
+    <iframe class="pdf-lightbox-frame" id="pdf-lightbox-frame" title="Paper (expanded)"></iframe>
+  </div>
+</div>
+
 
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
@@ -280,15 +368,15 @@
     <div class="modal-actions" id="modal-actions" style="display:none;">
       <div class="modal-action-row">
         <p class="modal-action-caption">Trace Sonny's experiences and portfolio through coffee spots.</p>
-        <button class="modal-btn modal-btn-secondary" id="modal-follow-btn" disabled>Follow Sonny's Journey <span>(Coming soon)</span></button>
+        <button class="modal-btn modal-btn-secondary" id="modal-follow-btn" disabled>Follow Sonny's Journey</button>
       </div>
       <div class="modal-action-row">
         <p class="modal-action-caption">Play the custom Coffee-guessr game, inspired by GeoGuessr.</p>
-        <button class="modal-btn modal-btn-secondary" id="modal-play-game-btn">Play Coffee-guessr</button>
+        <button class="modal-btn modal-btn-secondary" id="modal-play-game-btn" disabled>Play Coffee-guessr</button>
       </div>
       <div class="modal-action-row">
         <p class="modal-action-caption">Explore the map to uncover detailed spot ratings, hidden easter-egg stories, custom views, and full-catalog search.</p>
-        <button class="modal-btn modal-btn-primary" id="modal-explore-btn">Explore</button>
+        <button class="modal-btn modal-btn-primary" id="modal-explore-btn" disabled>Explore</button>
       </div>
     </div>
   </div>

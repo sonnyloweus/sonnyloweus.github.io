@@ -1,0 +1,242 @@
+[
+  {
+    "id": "90601020-fa5d-436e-895d-828dc530c434",
+    "type": "education",
+    "cafe": "Caffè Macs - Apple Park",
+    "title": "My Hometown and High School",
+    "dateStart": "2019-08",
+    "dateEnd": "2023-05",
+    "story": "I grew up in Cupertino, CA, attending Bellarmine College Preparatory for high school. I was jokingly dubbed \"the thinker\" in my high school yearbook. This Apple Cafe's location anchors my silicon valley hometown, and is one of the most beautiful cafes I have ever been to.",
+    "education": {
+      "majorMinor": "Beef Noodle Soup Connoisseur",
+      "activities": [
+        "Varsity Track",
+        "Varsity XC",
+        "Varsity Swim",
+        "President of Dev Club",
+        "President of Business Club",
+        "Blue Standard",
+        "Eagle Scout",
+        "HAM Radio Operator",
+        "Film Camera Repairman"
+      ]
+    },
+    "banner": "images/journey/caffe-macs-apple-park-my-hometown-and-high-school-2019-08-banner.jpg",
+    "order": 0
+  },
+  {
+    "id": "ae8f7ff0-a726-4c8a-9f35-8f2a7122fbc7",
+    "type": "education",
+    "cafe": "Small World Coffee",
+    "title": "College Years",
+    "dateStart": "2023-08",
+    "dateEnd": "2027-05",
+    "story": "I left the beautiful state of California to attend Princeton University, in the armpit of America. Here, I currently study math, focusing on quantum computing and mathematical physics. My thirst for coffee started right at Small World, where the ruckus of the cafe helped me focus on my psets.",
+    "education": {
+      "majorMinor": "Math / Computer Science",
+      "courses": [
+        "PHY506",
+        "ECE396",
+        "MAT425",
+        "MAT407",
+        "MAT330",
+        "MAT321",
+        "MAT345",
+        "MAT375",
+        "MAT378",
+        "MAT215",
+        "MAT204",
+        "MAT203"
+      ],
+      "activities": [
+        "COS Academic Chair",
+        "COS TA",
+        "Houck Lab",
+        "Nullset",
+        "IM Soccer",
+        "IM Basketball"
+      ]
+    },
+    "banner": "images/journey/small-world-coffee-college-years-2023-08-banner.jpg",
+    "order": 1
+  },
+  {
+    "id": "8979a71d-da50-4546-9985-b7fb04946b92",
+    "type": "project",
+    "cafe": "Blend",
+    "title": "STIK",
+    "dateStart": "2025-02",
+    "dateEnd": "2025-02",
+    "story": "Coming out of hackathon retirement, I teamed up with Ellie Lin at Stanford's Treehacks, where we built \"An AI-powered neuro-oncology tool for tracking and predicting spheroid tumor invasion kinetics\" called STIK, currently used by the Prolo Lab. We even won HRT's best data hack award, which wouldn't have been possible without the caffine boost from Blend.",
+    "links": [
+      {
+        "label": "Devpost",
+        "url": "https://devpost.com/software/tumor-invasion-kinetics-gui"
+      },
+      {
+        "label": "Github Repo",
+        "url": "https://github.com/ellielin23/STIK_GUI"
+      }
+    ],
+    "project": {
+      "stack": [
+        "Pyqt",
+        "Python",
+        "CVAT",
+        "YOLO"
+      ]
+    },
+    "banner": "images/journey/blend-stik-2025-02-banner.jpg",
+    "order": 3
+  },
+  {
+    "id": "e0eebf54-2a90-48ae-ae2b-1ff71d5a984e",
+    "type": "research",
+    "cafe": "Small World Coffee (Equad)",
+    "title": "Quantum what?",
+    "dateStart": "2024-01",
+    "dateEnd": "2024-08",
+    "story": "My introduction to the world of Quantum started in Prof. Sarang Gopalakrishnan's group, where I worked on Quantum AI models to predict dynamics (under many constraints), and Quantum Algorithms.",
+    "links": [
+      {
+        "label": "HHL Algo Repo",
+        "url": "https://github.com/sonnyloweus/HHL-Quantum-Linear-Algebra"
+      },
+      {
+        "label": "QDynamics Repo",
+        "url": "https://github.com/sonnyloweus/QuantumDynamicsAI"
+      }
+    ],
+    "research": {
+      "lab": "Prof. Gopalakrishnan Group",
+      "slideshow": [
+        "images/journey/small-world-coffee-equad-quantum-what-2024-01-1.jpg",
+        "images/journey/small-world-coffee-equad-quantum-what-2024-01-2.jpg",
+        "images/journey/small-world-coffee-equad-quantum-what-2024-01-3.jpg"
+      ]
+    },
+    "banner": "images/journey/small-world-coffee-equad-quantum-what-2024-01-banner.jpg",
+    "order": 2
+  },
+  {
+    "id": "fa8f5408-862c-4317-837c-0f328043c468",
+    "type": "internship",
+    "cafe": "Colectivo Coffee Wicker Park",
+    "title": "CTC SWE Internship",
+    "dateStart": "2025-06",
+    "dateEnd": "2025-08",
+    "story": "Interned as a software engineer on the vol stat arb systematic trading team at Chicago Trading Company (CTC). Although I didn't try many coffee spots, I was quite bullish on this Colectivo.",
+    "internship": {
+      "company": "Chicago Trading Company"
+    },
+    "banner": "images/journey/colectivo-coffee-wicker-park-ctc-swe-internship-2025-06-banner.jpg",
+    "order": 4
+  },
+  {
+    "id": "63ddfd9d-ca32-4fd4-a037-bad93cd3445f",
+    "type": "research",
+    "cafe": "Small World Coffee (Equad)",
+    "title": "Quantum Reprised - Houck Lab",
+    "dateStart": "2025-01",
+    "dateEnd": "2027-05",
+    "story": "Returning to the world of Quantum, I was taken under the wing of mentors at the Houck Lab, where I helped the Quantum Simulation team on a paper for a 8-qubit Triangle Lattice device. I also built a research tool called DESQ to interface and run experiments on our device. This was and still is one of the greatest learning opportunities of my life. More is to come...",
+    "links": [
+      {
+        "label": "Triangle Lattice Paper",
+        "url": "https://arxiv.org/abs/2603.16993"
+      },
+      {
+        "label": "HouckLab Repo",
+        "url": "https://github.com/houcklab/HouckLab_QICK"
+      },
+      {
+        "label": "DESQ",
+        "url": "https://sonnyloweus.github.io/DESQ/index.html"
+      }
+    ],
+    "research": {
+      "lab": "Houck Lab",
+      "slideshow": [
+        "images/journey/small-world-coffee-equad-quantum-reprised-houck-lab-2025-01-1.jpg",
+        "images/journey/small-world-coffee-equad-quantum-reprised-houck-lab-2025-01-2.jpg",
+        "images/journey/small-world-coffee-equad-quantum-reprised-houck-lab-2025-01-3.jpg",
+        "images/journey/small-world-coffee-equad-quantum-reprised-houck-lab-2025-01-4.jpg"
+      ]
+    },
+    "banner": "images/journey/small-world-coffee-equad-quantum-reprised-houck-lab-2025-01-banner.jpg",
+    "order": 5
+  },
+  {
+    "id": "45c1b399-6ad6-4abd-bcec-c1a7838f7f11",
+    "type": "education",
+    "cafe": "Einstein & Zweistein",
+    "title": "ETH Zürich Abroad",
+    "dateStart": "2026-02",
+    "dateEnd": "2026-06",
+    "story": "Studied abroad at ETH Zürich... emphasis on \"studied.\" This was probably one of the busiest semesters of my life, I did too many things at once and fell deeper down the coffee rabbit hole along the way. I would do it again without hesitation! This particular cafe was the one on campus made for studying.",
+    "education": {
+      "majorMinor": "Mathematics Exchange Student",
+      "courses": [
+        "Computational QM",
+        "Hilbert Spaces & Fourier Analysis",
+        "Brownian Motion & Stochastic Calculus",
+        "Philosophy of Math"
+      ],
+      "activities": [
+        "Research",
+        "Running Races",
+        "Cooking"
+      ]
+    },
+    "banner": "images/journey/einstein-zweistein-eth-zurich-abroad-2026-02-banner.jpg",
+    "order": 6
+  },
+  {
+    "id": "e81843a5-7c68-4b77-9cc6-73a639fdb4f3",
+    "type": "paper",
+    "cafe": "MAME Seefeld",
+    "title": "Mathematical Physics",
+    "dateStart": "2026-02",
+    "dateEnd": "2026-05",
+    "story": "My first true deep dive into mathematical physics was through symplectic geometry and graph theory, leveraging them to constructively prove that all electrical circuits (mainly quantum superconducting ones) are hamiltonian dynamical systems. I was mentored by an amazing Postdoc in the Houck Lab. I worked on this paper at MAME Seefeld so often that I eventually became friends with the barista.",
+    "paper": {
+      "venue": "Electrical Circuit Systems are Hamiltonian / 2026",
+      "authors": [
+        "Andrew Osborne",
+        "Andrew Houck"
+      ],
+      "abstract": "We develop a graph-theoretic and symplectic framework for describing non-dissipative circuits as Hamiltonian systems. The framework makes gauge redundancy and flux-charge symmetry explicit and recovers standard LC theory as a special case. We prove that every finite non-dissipative circuit with smooth constitutive relations admits a Hamiltonian description.",
+      "pdf": "files/journey/mame-seefeld-mathematical-physics-2026-02-paper.pdf"
+    },
+    "banner": "images/journey/mame-seefeld-mathematical-physics-2026-02-banner.jpg",
+    "order": 7
+  },
+  {
+    "id": "3910d5f6-1b5f-4d2f-8d3b-d1679b71f36f",
+    "type": "internship",
+    "cafe": "787 Coffee - Tribecca",
+    "title": "Jane Street SWE Internship",
+    "dateStart": "2026-05",
+    "dateEnd": "2026-08",
+    "story": "Junior summer internship at Jane Street as a software engineer working on the Options Proprietary Trading Strategies team. An Apollo Bagels lox bagel and 787 coffee was my go-to weekend brunch with friends.",
+    "internship": {
+      "company": "Jane Street"
+    },
+    "banner": "images/journey/787-coffee-tribecca-jane-street-swe-internship-2026-05-banner.jpg",
+    "order": 8
+  },
+  {
+    "id": "e97d1667-3d44-4acc-b152-8f2ea46289ec",
+    "type": "education",
+    "cafe": "Small World Coffee",
+    "title": "Now...",
+    "dateStart": "2023-08",
+    "dateEnd": "2027-05",
+    "story": "Now, after 9 months away, I have returned to Princeton to finish my Senior year of college. We have started on a new project at the Houck Lab and I will be working on my senior thesis as well... and as always, looking to try out new coffee spots and expand my growing coffee repertoire.",
+    "education": {
+      "majorMinor": "Math / Computer Science"
+    },
+    "banner": "images/journey/small-world-coffee-now-2023-08-banner.jpg",
+    "order": 9
+  }
+]

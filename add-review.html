@@ -1096,7 +1096,7 @@ async function refreshExistingPhotosPreview(){
   if(!photos.length) return;
 
   existingPhotosLabelEl.textContent = `Already saved for "${match.name}":`;
-  for(const p of photos){
+  photos.forEach((p, i) => {
     const thumb = document.createElement('div');
     thumb.className = 'photo-thumb';
     const img = document.createElement('img');
@@ -1107,14 +1107,49 @@ async function refreshExistingPhotosPreview(){
       cap.textContent = p.date;
       thumb.appendChild(cap);
     }
+    const remove = document.createElement('div');
+    remove.className = 'remove';
+    remove.textContent = '\u00d7';
+    remove.title = 'Delete this photo';
+    remove.onclick = () => removeExistingPhoto(match, i);
+    thumb.appendChild(remove);
     existingPhotosRowEl.appendChild(thumb);
     const relPath = (p.src || '').replace(/^images\//, '');
     imagesDirHandle.getFileHandle(relPath)
       .then(fh => fh.getFile())
       .then(f => { img.src = URL.createObjectURL(f); })
       .catch(() => { img.alt = 'missing'; });
-  }
+  });
   existingPhotosEl.style.display = 'block';
+}
+
+// Delete a saved photo: removes it from the entry's photos list (so it drops
+// out of coffee.json next save) and deletes the actual file from images/, if
+// we have a writable handle for it. A missing/already-gone file isn't an
+// error -- the list entry still gets cleaned up either way.
+async function removeExistingPhoto(match, index){
+  const photos = match.photos || (match.photo ? [{src: match.photo}] : []);
+  const photo = photos[index];
+  if(!photo) return;
+  if(!confirm(`Delete this photo${photo.date ? ` (${photo.date})` : ''}? This removes the file too.`)) return;
+
+  if(imagesDirHandle){
+    const relPath = (photo.src || '').replace(/^images\//, '');
+    try{
+      await imagesDirHandle.removeEntry(relPath);
+    }catch(err){
+      // File already missing, or the handle isn't writable -- either way we
+      // still want the JSON entry cleaned up, so don't block on this.
+      console.warn('Could not delete image file', relPath, err);
+    }
+  }
+
+  photos.splice(index, 1);
+  if(photos.length) match.photos = photos;
+  else{ delete match.photos; delete match.photo; }
+
+  photoStatusEl.textContent = `Removed photo -- "Save to existing file" (or Download) to write this change to coffee.json.`;
+  refreshExistingPhotosPreview();
 }
 
 // If the typed name exactly matches a spot already in coffee.json, pull in
