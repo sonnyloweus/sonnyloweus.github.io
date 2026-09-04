@@ -121,6 +121,7 @@ export const JOURNEY_TYPE_COLOR_VARS = {
   paper: 'var(--tier-6)', internship: 'var(--tier-7)'
 };
 
+
 // ---- dynamic minZoom ----
 // A fixed minZoom (the map's old behavior) means "fully zoomed out" shows
 // a fixed amount of *screen width*, not a fixed amount of *world* — on a

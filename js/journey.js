@@ -5,6 +5,7 @@ import { JOURNEY_MAX_ZOOM, JOURNEY_TYPE_LABELS, JOURNEY_TYPE_COLOR_VARS } from '
 import { updateHeatLayer, refreshWorldCopyMirrors } from './map.js';
 import { updateInViewStats } from './stats.js';
 import { applyFilters, setupCustomScrollbar } from './filters.js';
+import { hidePanel } from './panel.js';
 
 // ---- Sonny's Journey ----
 // A curated, manually-paced tour through journey.json: fly tight-to-tight
@@ -298,9 +299,19 @@ function renderStoryModal(){
     `<a class="story-link-item" href="${escapeHtml(l.url)}" target="_blank" rel="noopener">${EXTERNAL_LINK_ICON}${escapeHtml(l.label || l.url)}</a>`
   ).join('');
 
-  document.getElementById('story-progress-dots').innerHTML = S.journeyStops.map((_, i) =>
+  // Always dots (a plain count read as too sterile) — the container has
+  // a fixed max-width and fades out at its edges via a mask (see the CSS),
+  // so a long journey just scrolls its dot strip instead of crowding the
+  // footer. Center the active dot in that fixed window on every render so
+  // it's always visible, with neighbors trailing off into the fade.
+  const progressEl = document.getElementById('story-progress-dots');
+  progressEl.innerHTML = S.journeyStops.map((_, i) =>
     `<div class="dot${i === S.journeyIndex ? ' active' : ''}"></div>`
   ).join('');
+  const activeDot = progressEl.querySelector('.dot.active');
+  if(activeDot){
+    progressEl.scrollLeft = activeDot.offsetLeft - (progressEl.clientWidth / 2) + (activeDot.clientWidth / 2);
+  }
   const backBtn = document.getElementById('journey-back-btn');
   backBtn.classList.toggle('hidden', S.journeyIndex === 0);
   const nextBtn = document.getElementById('journey-next-btn');
@@ -402,6 +413,15 @@ export function startJourney(){
   document.getElementById('toggle-journey').classList.add('on');
   document.body.classList.add('journey-mode');
   S.scrubberEl.style.display = 'none';
+
+  // The journey is exclusive with every other overlay/side-panel — close
+  // whatever might already be open (a coffee spot's detail panel most of
+  // all) before flying off, same as game mode does in startGame().
+  hidePanel();
+  document.getElementById('stats-card').classList.remove('show');
+  document.getElementById('brand').classList.remove('open');
+  ['filter-card','compare-card','settings-card'].forEach(id => document.getElementById(id).classList.remove('show'));
+  ['toggle-filter','toggle-compare','toggle-settings'].forEach(id => document.getElementById(id).classList.remove('on'));
 
   S.clusterGroup.clearLayers();
   // clearLayers() wipes leaflet.markercluster's internal bookkeeping for
