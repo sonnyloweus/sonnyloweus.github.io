@@ -22,11 +22,26 @@ export function buildNameMarquee(){
 
 export const INTRO_SLIDES = [
   {
-    icon: `<svg viewBox="0 0 48 48" fill="none" width="100%" height="100%">
-      <path d="M11 18h21v9a10.5 10.5 0 01-10.5 10.5v0A10.5 10.5 0 0111 27.5V18z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-      <path d="M32 20.5h2.5a4.5 4.5 0 010 9H32" stroke="currentColor" stroke-width="2"/>
-      <path d="M16 12c0-1.8 1.8-1.8 1.8-3.6S16 6.8 16 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M22 12c0-1.8 1.8-1.8 1.8-3.6S22 6.8 22 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    icon: `<svg viewBox="0 0 120 120" width="100%" height="100%">
+      <defs>
+        <filter id="sketchModalIcon" x="-30%" y="-30%" width="160%" height="160%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="11" result="n"/>
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+      </defs>
+      <g transform="translate(63,61) scale(1.14) translate(-64.5,-54.5)" filter="url(#sketchModalIcon)" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.5">
+        <path d="M60,20 L60,10"/>
+        <path d="M45,24 L39,16"/>
+        <path d="M75,24 L81,16"/>
+        <path d="M34,35 L25,30"/>
+        <path d="M86,35 L95,30"/>
+        <circle cx="60" cy="50" r="17"/>
+        <path d="M45,58 C50,55 54,61 58,58 C62,55 64,60 68,58 C71,56 74,59 76,57" stroke-width="3.2"/>
+        <ellipse cx="60" cy="58" rx="28" ry="9.5"/>
+        <path d="M33,58 C31,73 33,89 42,96 L78,96 C87,89 89,73 87,58 Z"/>
+        <path d="M45,96 C50,99 70,99 75,96"/>
+        <path d="M87,66 C101,63 104,83 91,88 C85,90 80,88 79,84"/>
+      </g>
     </svg>`,
     title: "Caffinated Sonny",
     text: "My ongoing coffee exploration from around the world."
