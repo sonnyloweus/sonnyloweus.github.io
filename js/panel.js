@@ -2,6 +2,7 @@ import { S } from './state.js';
 import { displayRating } from './data.js';
 import { renderShopRadar } from './radar.js';
 import { syncGameSubmitButton } from './game.js';
+import { trackEvent } from './analytics.js';
 import { buildBubbleIcon, updateVoronoiLayer, refreshWorldCopyMirrors } from './map.js';
 import { updateInViewStats } from './stats.js';
 import { renderCompare } from './compare.js';
@@ -112,6 +113,10 @@ export function updatePanelRatingFields(shop){
 }
 
 export function showPanel(shop){
+  // Coffee-guessr reuses this same panel for its blurred guess preview —
+  // that's a guess, not a real visitor browsing a shop, so it's excluded
+  // from the shop_view event to keep "most viewed shops" meaningful.
+  if(!window.gameActive) trackEvent('shop_view', { shop_name: shop.name });
   S.lastShownShop = shop;
   S.panelPhotos = getShopPhotos(shop);
   S.panelPhotoIndex = 0;

@@ -2,6 +2,7 @@ import { S } from './state.js';
 import { renderShopRadar } from './radar.js';
 import { haversineMiles } from './stats.js';
 import { hidePanel, getShopPhotos } from './panel.js';
+import { trackEvent } from './analytics.js';
 import {
   GOOGLE_STREETVIEW_API_KEY, STREETVIEW_RADIUS_TIERS_METERS,
   GAME_MAX_GUESSES, GAME_MAX_CLUES, GAME_CLUE_LABELS, GAME_CLUE_TAB_LABELS
@@ -187,6 +188,8 @@ export function startGame(){
   S.gameHudCollapsed = false;
   window.gameActive = true;
 
+  trackEvent('game_start');
+
   S.gameStartTime = Date.now();
   S.gameElapsedSeconds = 0;
   clearInterval(S.gameTimerInterval);
@@ -367,6 +370,12 @@ export function handleGameGuessSubmit(shop){
     // Freeze the exact elapsed time right now, rather than however stale
     // the last once-a-second tick happened to be.
     S.gameElapsedSeconds = Math.floor((Date.now() - S.gameStartTime) / 1000);
+    trackEvent('game_end', {
+      result: correct ? 'win' : 'loss',
+      guesses: S.gameGuesses.length,
+      clues_used: S.gameCluesRevealed,
+      time_seconds: S.gameElapsedSeconds
+    });
     finishGame();
     return;
   }

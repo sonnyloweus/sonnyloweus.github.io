@@ -6,6 +6,7 @@ import { updateHeatLayer, refreshWorldCopyMirrors } from './map.js';
 import { updateInViewStats } from './stats.js';
 import { applyFilters, setupCustomScrollbar } from './filters.js';
 import { hidePanel } from './panel.js';
+import { trackEvent } from './analytics.js';
 
 // ---- Sonny's Journey ----
 // A curated, manually-paced tour through journey.json: fly tight-to-tight
@@ -407,6 +408,8 @@ export function startJourney(){
   // means the toggle/button quietly do nothing, same as before they were
   // enabled (see the eligibility check in map.js's initApp).
   if(!S.journeyStops.length) return;
+
+  trackEvent('journey_view');
 
   S.journeyOn = true;
   S.journeyIndex = 0;
