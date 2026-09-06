@@ -20,8 +20,51 @@ import { trackEvent } from './analytics.js';
 // coffee panel's #panel-scroll (setupCustomScrollbar in filters.js). Wired
 // lazily on first render since the elements only need to exist by then.
 let updateStoryScrollbar = null;
+let storyTouchScrollWired = false;
 
-const EXTERNAL_LINK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>';
+// ---- manual touch-drag scroll for #story-body ----
+// #story-body is overflow-y:auto several flex levels deep inside a fixed,
+// translate/backdrop-filtered overlay (.journey-story-overlay >
+// .journey-story-card > .story-body-wrap > #story-body) — a nesting shape
+// none of the site's other scrollable panels have (their scroll box is a
+// direct child of the fixed panel itself, see .filter-scroll). On at
+// least some mobile browsers a touch-drag that starts over that nested
+// box isn't being recognized as "this box's own scroll gesture" at all —
+// native momentum scrolling never kicks in, only the custom scrollbar
+// thumb (which sets scrollTop directly in JS, bypassing gesture
+// recognition entirely) visibly moves the text. Rather than keep
+// fighting whatever the browser is attributing the gesture to, this
+// drives #story-body's scrollTop by hand from the raw touch points —
+// preventDefault on the touchmove stops the browser from also trying
+// (and failing) to hand the gesture to the map or the page underneath.
+function wireStoryTouchScroll(scrollEl){
+  if(storyTouchScrollWired) return;
+  storyTouchScrollWired = true;
+  let dragging = false, lastY = 0;
+  scrollEl.addEventListener('touchstart', e => {
+    if(e.touches.length !== 1) return;
+    dragging = true;
+    lastY = e.touches[0].clientY;
+  }, {passive: true});
+  scrollEl.addEventListener('touchmove', e => {
+    if(!dragging || e.touches.length !== 1) return;
+    const maxScroll = scrollEl.scrollHeight - scrollEl.clientHeight;
+    if(maxScroll <= 0) return; // nothing to scroll — leave the gesture alone
+    const y = e.touches[0].clientY;
+    const dy = lastY - y;
+    lastY = y;
+    scrollEl.scrollTop = Math.min(maxScroll, Math.max(0, scrollEl.scrollTop + dy));
+    // Claiming the gesture here is what stops the browser from also
+    // trying (and failing) to hand it to the map/page underneath — see
+    // the comment above wireStoryTouchScroll for why that hand-off was
+    // the actual bug.
+    if(e.cancelable) e.preventDefault();
+  }, {passive: false});
+  scrollEl.addEventListener('touchend', () => { dragging = false; }, {passive: true});
+  scrollEl.addEventListener('touchcancel', () => { dragging = false; }, {passive: true});
+}
+
+const STORY_LINK_PROMPT = '<span class="story-link-prompt">&gt;</span>';
 
 function escapeHtml(str){
   return String(str == null ? '' : str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -66,6 +109,29 @@ export function resolveJourneyStops(rawEntries, shopMarkers){
     return (a.entry.dateEnd || '').localeCompare(b.entry.dateEnd || '');
   });
   return stops;
+}
+
+// On the mobile bottom-sheet layout (see the story modal's max-width:640px
+// CSS) the story card covers the bottom ~3/5 of the screen, so centering
+// the destination pin the normal way tucks it right behind the sheet.
+// journeyFlyTarget() nudges the actual flyTo destination so the pin's
+// on-screen position lands in the middle of the visible top third instead
+// -- the arc line and marker itself still use the real shop coordinates,
+// only the camera's aim point shifts.
+function isMobileJourneyLayout(){
+  return window.matchMedia('(max-width: 640px)').matches;
+}
+function journeyFlyTarget(shop){
+  if(!isMobileJourneyLayout()) return [shop.lat, shop.lng];
+  const map = S.map;
+  const size = map.getSize();
+  if(!size.x || !size.y) return [shop.lat, shop.lng];
+  const zoom = JOURNEY_MAX_ZOOM;
+  const markerPoint = map.project([shop.lat, shop.lng], zoom);
+  const targetContainerPoint = L.point(size.x / 2, size.y / 6);
+  const centerPoint = markerPoint.add(size.divideBy(2)).subtract(targetContainerPoint);
+  const centerLatLng = map.unproject(centerPoint, zoom);
+  return [centerLatLng.lat, centerLatLng.lng];
 }
 
 // ---- the traveling arc between two stops (purely visual — camera motion
@@ -118,7 +184,7 @@ function animateLeg(fromShopEntry, toShopEntry){
     const flyDuration = Math.min(2600, 900 + Math.log(distanceMi + 1) * 300);
     const drawDuration = 450;
 
-    S.map.flyTo([toShop.lat, toShop.lng], JOURNEY_MAX_ZOOM, {duration: flyDuration / 1000});
+    S.map.flyTo(journeyFlyTarget(toShop), JOURNEY_MAX_ZOOM, {duration: flyDuration / 1000});
 
     let landed = false;
     function onLanded(){
@@ -297,7 +363,7 @@ function renderStoryModal(){
 
   const links = entry.links || [];
   document.getElementById('story-links').innerHTML = links.map(l =>
-    `<a class="story-link-item" href="${escapeHtml(l.url)}" target="_blank" rel="noopener">${EXTERNAL_LINK_ICON}${escapeHtml(l.label || l.url)}</a>`
+    `<a class="story-link-item" href="${escapeHtml(l.url)}" target="_blank" rel="noopener">${STORY_LINK_PROMPT}<span class="story-link-text">${escapeHtml(l.label || l.url)}</span><span class="story-link-caret"></span></a>`
   ).join('');
 
   // Always dots (a plain count read as too sterile) — the container has
@@ -321,11 +387,13 @@ function renderStoryModal(){
   document.getElementById('journey-story-overlay').classList.add('show');
   document.getElementById('story-body').scrollTop = 0;
   if(!updateStoryScrollbar){
+    const storyBodyEl = document.getElementById('story-body');
     updateStoryScrollbar = setupCustomScrollbar(
-      document.getElementById('story-body'),
+      storyBodyEl,
       document.getElementById('story-scrollbar-track'),
       document.getElementById('story-scrollbar-thumb')
     );
+    wireStoryTouchScroll(storyBodyEl);
   }
   // content just changed (new stop's text/chips/slideshow), so the
   // scrollable height may have too — resync the thumb after layout settles.
@@ -441,7 +509,7 @@ export function startJourney(){
   updateInViewStats();
 
   const first = S.journeyStops[0];
-  S.map.flyTo([first.shopEntry.shop.lat, first.shopEntry.shop.lng], JOURNEY_MAX_ZOOM, {duration:0.6});
+  S.map.flyTo(journeyFlyTarget(first.shopEntry.shop), JOURNEY_MAX_ZOOM, {duration:0.6});
   setTimeout(() => {
     if(!S.journeyOn) return;
     populateStop(first.shopEntry);

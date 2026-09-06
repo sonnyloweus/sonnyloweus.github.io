@@ -148,6 +148,15 @@ export const MIN_ZOOM_CEILING = 3;    // never let it rise above the old fixed d
                                        // desktop keeps its usual bit of surrounding world context
 export const MIN_ZOOM_BUFFER = 0.4;   // a little slack past the exact fit so pins aren't flush to the edge
 
+// A phone's viewport is narrow enough that even the dynamic fit-to-data
+// minZoom above can still feel cramped — there's less width to work with
+// per zoom level, so panning to look at a pin's neighbors runs out of
+// room sooner than on desktop. Give mobile one extra zoom level of
+// headroom past the computed floor (refreshMinZoom in map.js), and back
+// the initial view off by the same amount, so "fully zoomed out" and
+// "where the map opens" both leave a bit more breathing room on a phone.
+export const MOBILE_MIN_ZOOM_EXTRA_OUT = 1;
+
 // How many zoom levels a cluster click jumps in by. Bump this up if it
 // still feels too shy, or down if it starts to feel like too much.
 export const CLUSTER_ZOOM_STEP = 3;

@@ -1,9 +1,9 @@
 /* global L, d3 */
 import { S } from './state.js';
 import { loadData, loadJourneyData, tierClass, displayRating, computeRatingBounds, saveStoredSetting, applyPalette, earliestVisit } from './data.js';
-import { RATING_PALETTES, CLUSTER_ZOOM_STEP, POP_EASE, POP_IN_BASE_WAIT, MIN_ZOOM_FLOOR, MIN_ZOOM_CEILING, MIN_ZOOM_BUFFER, CARTO_API_KEY, TOPO_COLOR_STOPS, TOPO_THRESHOLDS, TOPO_BANDWIDTH_MIN, TOPO_BANDWIDTH_MAX, TOPO_FILL_ALPHA, TOPO_OUTERMOST_ALPHA, TOPO_OUTLIER_FLOOR_FRACTION, CLOUD_RADIUS, CLOUD_BLUR, CLOUD_MAX_DARKNESS_LIGHTEN, VORONOI_FILL_ALPHA_MIN, VORONOI_FILL_ALPHA_MAX, VORONOI_STROKE_ALPHA, VORONOI_STROKE_WIDTH, VORONOI_STROKE_COLOR } from './constants.js';
+import { RATING_PALETTES, CLUSTER_ZOOM_STEP, POP_EASE, POP_IN_BASE_WAIT, MIN_ZOOM_FLOOR, MIN_ZOOM_CEILING, MIN_ZOOM_BUFFER, MOBILE_MIN_ZOOM_EXTRA_OUT, CARTO_API_KEY, TOPO_COLOR_STOPS, TOPO_THRESHOLDS, TOPO_BANDWIDTH_MIN, TOPO_BANDWIDTH_MAX, TOPO_FILL_ALPHA, TOPO_OUTERMOST_ALPHA, TOPO_OUTLIER_FLOOR_FRACTION, CLOUD_RADIUS, CLOUD_BLUR, CLOUD_MAX_DARKNESS_LIGHTEN, VORONOI_FILL_ALPHA_MIN, VORONOI_FILL_ALPHA_MAX, VORONOI_STROKE_ALPHA, VORONOI_STROKE_WIDTH, VORONOI_STROKE_COLOR } from './constants.js';
 import { renderIntroSlide } from './modal.js';
-import { showOnThisDay, updateInViewStats, showCountSpinner } from './stats.js';
+import { updateInViewStats, showCountSpinner } from './stats.js';
 import { computeClusters, renderClusters } from './clusters.js';
 import { setupFilters, passesNonDateFilters } from './filters.js';
 import { setupCompare } from './compare.js';
@@ -689,7 +689,8 @@ export function refreshMinZoom(){
   try{ fitZoom = S.map.getBoundsZoom(S.dataBounds, false, L.point(60, 60)); }
   catch(e){ fitZoom = MIN_ZOOM_CEILING; }
   if(!isFinite(fitZoom)) fitZoom = MIN_ZOOM_CEILING;
-  const newMin = Math.max(MIN_ZOOM_FLOOR, Math.min(MIN_ZOOM_CEILING, fitZoom - MIN_ZOOM_BUFFER));
+  const extraOut = S.isMobileViewport ? MOBILE_MIN_ZOOM_EXTRA_OUT : 0;
+  const newMin = Math.max(MIN_ZOOM_FLOOR, Math.min(MIN_ZOOM_CEILING, fitZoom - MIN_ZOOM_BUFFER - extraOut));
   S.map.setMinZoom(newMin);
 }
 
@@ -801,7 +802,6 @@ export async function initApp(){
   renderClusters();
   if(S.introIndex === 1) renderIntroSlide(); // refresh the "Loading the tally…" placeholder if still on that slide
 
-  showOnThisDay(data);
 
   // Kept in sync with the `@media (max-width: 640px)` breakpoint in the
   // <style> block above — used to size pin/cluster bubbles a bit bigger
@@ -849,6 +849,14 @@ export async function initApp(){
     // element), so getBoundsZoom's viewport read is accurate this early.
     refreshMinZoom();
     map.fitBounds(bounds, {padding:[60,60], maxZoom:13});
+    // fitBounds's fixed 60px padding eats a much bigger share of a narrow
+    // phone viewport than a wide desktop one, so the same fit reads as
+    // more zoomed-in on mobile even though it's technically "fit" either
+    // way. Back off one extra level on load to match the extra zoom-out
+    // headroom refreshMinZoom() just granted above.
+    if(S.isMobileViewport){
+      map.setZoom(Math.max(map.getMinZoom(), map.getZoom() - MOBILE_MIN_ZOOM_EXTRA_OUT));
+    }
   }else{
     map.setView([20, 0], 3); // whole-world fallback if there's no data yet
   }

@@ -222,8 +222,4 @@ export function wirePanelListeners(){
     e.stopPropagation();
     document.getElementById('halo-desc').classList.toggle('show');
   };
-
-  document.getElementById('onthisday-close').onclick = () => {
-    document.getElementById('onthisday-banner').style.display = 'none';
-  };
 }

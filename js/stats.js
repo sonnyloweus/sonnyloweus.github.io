@@ -238,24 +238,3 @@ export function updateInViewStats(){
   if(S.clusters) renderClusters(inView); // gray out taste-cluster dots for shops panned/filtered out of view
   S.updateStatsScrollbar();
 }
-
-// ---- On this day: surface any past visit that lands on today's month/day ----
-export function showOnThisDay(data){
-  const today = new Date();
-  const todayM = today.getMonth(), todayD = today.getDate(), todayY = today.getFullYear();
-  const matches = [];
-  data.forEach(shop => {
-    (shop.visited || []).forEach(dateStr => {
-      const d = new Date(dateStr);
-      if(isNaN(d)) return;
-      if(d.getMonth() === todayM && d.getDate() === todayD && d.getFullYear() < todayY){
-        const yearsAgo = todayY - d.getFullYear();
-        matches.push({yearsAgo, text: `${yearsAgo} year${yearsAgo === 1 ? '' : 's'} ago today: ${shop.name}`});
-      }
-    });
-  });
-  if(!matches.length) return;
-  matches.sort((a,b) => a.yearsAgo - b.yearsAgo); // most recent first, however many years back
-  document.getElementById('onthisday-text').textContent = matches.map(m => m.text).join('  ·  ');
-  document.getElementById('onthisday-banner').style.display = 'flex';
-}

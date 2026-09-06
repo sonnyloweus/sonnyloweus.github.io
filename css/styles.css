@@ -49,7 +49,21 @@
      touch-action:none so Leaflet's JS-driven pan/pinch still fully owns
      gestures that start on the map itself; scrollable panels
      (.stats-card, .filter-card, .panel, etc.) keep their own pan-y. */
-  html,body{margin:0; height:100%; overscroll-behavior:none; touch-action:pan-x pan-y;}
+  /* overflow:hidden here is deliberate, not incidental: this is a single
+     fixed-layout app (the map fills the viewport via #map's own
+     position:fixed;inset:0, and every panel/modal is position:fixed too),
+     so the html/body box itself is never meant to scroll. Without this,
+     a touch-drag that starts on a modal's own scrollable area but isn't
+     immediately recognized as belonging to that inner scroller (a real
+     mobile-Safari/Chrome ambiguity once there's any nested scrolling
+     region) can fall through to body and "scroll the page" instead —
+     which visually did nothing (nothing under a fixed layout moves) but
+     ate the gesture, so the modal's real scroll never got a chance to
+     respond and only the scrollbar thumb still worked. Locking body's
+     own scroll out entirely removes that competing target, so every
+     scroll gesture has exactly one place to go: whichever element's own
+     overflow:auto actually claims it. */
+  html,body{margin:0; height:100%; overflow:hidden; overscroll-behavior:none; touch-action:pan-x pan-y;}
   body{
     font-family:'Inter',system-ui,sans-serif;
     color:var(--ink);
@@ -194,21 +208,6 @@
     .floating-plots{ width:128px; gap:10px; }
     .floatplot-curve{ height:27px; }
   }
-
-  .onthisday-banner{
-    position:fixed; top:calc(64px + var(--safe-t)); left:50%; transform:translateX(-50%); z-index:500;
-    display:flex; align-items:center; gap:10px;
-    background:rgba(255,255,255,0.38); border:none; border-radius:20px;
-    padding:8px 10px 8px 14px; font-size:12px; color:var(--ink);
-    box-shadow:0 24px 60px rgba(21,18,16,0.32);
-    max-width:calc(100vw - 40px - var(--safe-l) - var(--safe-r));
-    -webkit-backdrop-filter:blur(16px) saturate(180%);
-    backdrop-filter:blur(16px) saturate(180%);
-  }
-  .onthisday-close{
-    color:var(--dim); cursor:pointer; font-size:15px; line-height:1; padding:2px 4px;
-  }
-  .onthisday-close:hover{ color:var(--ink); }
 
   .stats-card{
     /* Same reasoning as .toggle-group: above .scrubber (500) so this panel
@@ -1360,7 +1359,6 @@
   body.game-mode .toggle-group,
   body.game-mode .scrubber,
   body.game-mode .stats-card,
-  body.game-mode .onthisday-banner,
   body.game-mode .journey-story-overlay,
   body.game-mode .filter-card,
   body.game-mode .compare-card,
@@ -1505,7 +1503,7 @@
   .story-place{ font-size:13.5px; font-weight:600; margin:0; text-shadow:0 1px 4px rgba(0,0,0,0.3); }
 
   .story-body-wrap{ position:relative; flex:1; min-height:0; display:flex; }
-  .story-body{ flex:1; min-height:0; padding:16px 22px 0 18px; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; }
+  .story-body{ flex:1; min-height:0; padding:16px 22px 0 18px; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y; }
   .story-body::-webkit-scrollbar{ width:0; height:0; display:none; }
   .story-title{ font-family:'Fraunces', Georgia, serif; font-weight:500; font-size:18px; line-height:1.24; margin:0 0 4px; }
   .story-meta{ font-size:11px; color:var(--dim); margin:0 0 12px; }
@@ -1571,13 +1569,29 @@
   .story-pdf-open-link{ font-size:11px; font-weight:500; color:var(--story-tint, var(--accent)); text-decoration:none; flex:none; }
   .story-pdf-open-link:hover{ text-decoration:underline; }
 
-  .story-links{ display:flex; flex-direction:column; gap:6px; margin-bottom:16px; }
+  /* ---- Terminal-pour links: a small dark chip styled like a CLI prompt
+     line — monospace, a ">" prompt glyph, and a caret that only wakes up
+     (blinking) on hover, as if the command just finished typing. ---- */
+  .story-links{ display:flex; flex-direction:row; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
   .story-link-item{
-    display:flex; align-items:center; gap:7px; font-size:12.5px; font-weight:500;
-    color:var(--ink); text-decoration:none; padding:8px 10px; border-radius:9px;
-    background:rgba(var(--accent-rgb),0.045); border:1px solid var(--line);
+    display:inline-flex; align-items:center; gap:6px;
+    padding:5px 8px; border-radius:6px;
+    background:var(--coffee-dark); color:#E9DFCF;
+    font-family:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size:10.5px; font-weight:500; letter-spacing:0.01em;
+    text-decoration:none;
+    transition:background 0.18s ease;
   }
-  .story-link-item svg{ width:13px; height:13px; flex:none; color:var(--story-tint, var(--accent)); }
+  .story-link-item:hover{ background:var(--story-tint, var(--tier-7)); }
+  .story-link-item .story-link-prompt{ flex:none; color:var(--tier-2); }
+  .story-link-item .story-link-text{
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:170px;
+  }
+  .story-link-item .story-link-caret{
+    flex:none; width:4px; height:9px; background:currentColor; opacity:0;
+  }
+  .story-link-item:hover .story-link-caret{ opacity:1; animation:storyLinkBlink 1s step-end infinite; }
+  @keyframes storyLinkBlink{ 50%{ opacity:0; } }
 
   .story-footer{
     flex:none; display:flex; align-items:center; gap:6px;
@@ -1665,11 +1679,36 @@
   .story-goto-meta{ font-size:11px; color:var(--dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
   @media (max-width:640px){
-    .journey-story-card{ width:100%; }
+    /* Bottom-sheet layout: the card is capped to ~3/5 of the viewport
+       height and pinned flush to the screen's bottom/side edges (the
+       overlay's own padding, meant for the floating desktop position,
+       would otherwise leave gaps around it) so the map — and the pin the
+       journey just flew to, re-centered by journeyFlyTarget() in
+       journey.js — stays visible above it instead of the card burying
+       the whole screen.
+       vh is the *layout* viewport — on mobile Chrome/Safari that's taller
+       than what's actually on screen whenever an address bar, tab strip,
+       or nav buttons are showing, so sizing off it alone makes the sheet
+       read as oversized (and can push its bottom edge, footer included,
+       past what's really visible). svh ("small" viewport height) is
+       pinned to the worst case — the viewport size with that chrome
+       fully expanded — so 60svh is guaranteed to fit on screen no matter
+       how much browser UI is showing; vh stays first as the fallback for
+       browsers that don't know svh yet. */
+    .journey-story-overlay{
+      align-items:flex-end; justify-content:center;
+      padding:0;
+    }
+    .journey-story-card{
+      width:100%; max-width:100%;
+      max-height:calc(60vh + var(--safe-b));
+      max-height:calc(60svh + var(--safe-b));
+      border-radius:20px 20px 0 0;
+    }
     .pdf-lightbox-overlay{ padding:0; }
-    .pdf-lightbox-card{ width:100vw; height:100vh; border-radius:0; }
+    .pdf-lightbox-card{ width:100vw; height:100vh; height:100svh; border-radius:0; }
     .goto-overlay{ padding:14px; }
-    .goto-card{ max-height:min(520px, 78vh); }
+    .goto-card{ max-height:min(520px, 78vh); max-height:min(520px, 78svh); }
     /* A little extra breathing room on narrow phones, on top of the
        progress indicator already giving up space first. */
     .story-footer{ padding-left:14px; padding-right:14px; gap:4px; }
