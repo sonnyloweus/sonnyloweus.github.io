@@ -36,7 +36,7 @@
       "majorMinor": "Math / Computer Science",
       "courses": [
         "PHY506",
-        "ECE396",
+        "MAT589",
         "MAT425",
         "MAT407",
         "MAT330",
@@ -46,7 +46,8 @@
         "MAT378",
         "MAT215",
         "MAT204",
-        "MAT203"
+        "MAT203",
+        "ECE396"
       ],
       "activities": [
         "COS Academic Chair",

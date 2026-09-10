@@ -1138,6 +1138,17 @@
   /* Extra breathing room around the intro modal's one-liner, between the
      title above and the Start button below. */
   .game-intro-text{ margin:6px 0 28px; }
+  /* Sonny's Journey intro modal — same shell/copy pattern as
+     .game-intro-text above, plus a small monospace "stats line" (stop
+     count + date range) for a bit of the site's nerdy/math flavor. */
+  .journey-intro-text{ margin:6px 0 10px; }
+  .journey-intro-stats{
+    font-family:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size:11px; font-weight:500; color:var(--dim); letter-spacing:.02em;
+    margin:0 0 26px !important;
+  }
+  .journey-intro-stats div{ line-height:1.6; }
+
 
   /* ---- Exit-game button: fixed opposite corner from the HUD, red so it
      reads as a "leave" action; a second tap is required to actually leave

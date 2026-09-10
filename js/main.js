@@ -8,7 +8,7 @@ import { setupPanelPhotoNav, wirePanelListeners } from './panel.js';
 import { wireModalListeners, maybeShowIntroOnLoad, closeModal } from './modal.js';
 import { wireGameListeners } from './game.js';
 import { initApp } from './map.js';
-import { startJourney } from './journey.js';
+import { openJourneyIntro } from './journey.js';
 
 // Renders every <i data-lucide="..."> placeholder (toolbar icons, the stats
 // dropdown's icon, the help button) into inline SVG. All of this page's
@@ -30,7 +30,7 @@ maybeShowIntroOnLoad();
 
 // "Follow Sonny's Journey" in the welcome modal starts the same journey as
 // the footprints toggle pill (wired in journey.js, once markers exist).
-document.getElementById('modal-follow-btn').onclick = () => { closeModal(); startJourney(); };
+document.getElementById('modal-follow-btn').onclick = () => { closeModal(); openJourneyIntro(); };
 
 wireGameListeners();
 

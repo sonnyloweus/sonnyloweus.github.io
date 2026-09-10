@@ -469,6 +469,34 @@ async function goToStop(newIndex){
   renderStoryModal();
 }
 
+// ---- journey intro modal ----
+// Same pattern as the game's intro overlay (game.js's openGameIntro):
+// toggling the feature on, or clicking "Follow Sonny's Journey" in the
+// welcome modal, opens this explainer first rather than dropping straight
+// into the first stop's story card. The stats line is filled in fresh
+// each time in case journey.json's set of stops ever changes at runtime.
+function journeyIntroStatsHtml(){
+  const n = S.journeyStops.length;
+  if(!n) return '';
+  const starts = S.journeyStops.map(s => s.entry.dateStart).filter(Boolean).sort();
+  const ends = S.journeyStops.map(s => s.entry.dateEnd || s.entry.dateStart).filter(Boolean).sort();
+  const range = starts.length ? dateRangeLabel(starts[0], ends[ends.length - 1]) : '';
+  // n and the date range each get their own line rather than sharing one
+  // (see .journey-intro-stats), so this returns two <div> rows instead of
+  // a single string.
+  let html = `<div>n = ${n} stop${n === 1 ? '' : 's'}</div>`;
+  if(range) html += `<div>${escapeHtml(range)}</div>`;
+  return html;
+}
+export function openJourneyIntro(){
+  if(!S.journeyStops.length) return;
+  document.getElementById('journey-intro-stats').innerHTML = journeyIntroStatsHtml();
+  document.getElementById('journey-intro-overlay').classList.add('show');
+}
+export function closeJourneyIntro(){
+  document.getElementById('journey-intro-overlay').classList.remove('show');
+}
+
 export function startJourney(){
   if(S.journeyOn) return;
   // journey.json empty, or nothing in it matched a cafe in coffee.json —
@@ -534,8 +562,10 @@ export function stopJourney(){
 export function wireJourneyListeners(){
   document.getElementById('toggle-journey').onclick = () => {
     if(S.journeyOn) stopJourney();
-    else startJourney();
+    else openJourneyIntro();
   };
+  document.getElementById('journey-start-btn').onclick = () => { closeJourneyIntro(); startJourney(); };
+  document.getElementById('journey-intro-overlay').onclick = (e) => { if(e.target.id === 'journey-intro-overlay') closeJourneyIntro(); };
   document.getElementById('journey-exit-btn').onclick = stopJourney;
   document.getElementById('journey-back-btn').onclick = () => goToStop(S.journeyIndex - 1);
   document.getElementById('journey-next-btn').onclick = () => {
@@ -570,6 +600,7 @@ export function wireJourneyListeners(){
 
   document.addEventListener('keydown', e => {
     if(e.key === 'Escape'){
+      closeJourneyIntro();
       closePdfLightbox();
       closeGotoModal();
     }
