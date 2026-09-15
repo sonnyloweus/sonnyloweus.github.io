@@ -9,24 +9,36 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#FAFAF8">
-<!-- Google Analytics (GA4) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-E4PTS8N9QX"></script>
+<!-- Google Analytics (GA4) — skipped entirely on localhost/local dev so dev
+     traffic never reaches GA4 and no requests fire during local testing. -->
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-E4PTS8N9QX');
+  (function(){
+    var isLocalDev = ['localhost', '127.0.0.1', ''].includes(window.location.hostname)
+      || window.location.protocol === 'file:';
+    if (isLocalDev) return;
+
+    var gaScript = document.createElement('script');
+    gaScript.async = true;
+    gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-E4PTS8N9QX';
+    document.head.appendChild(gaScript);
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', 'G-E4PTS8N9QX');
+  })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Sonny Lowe — Coffee Map Portfolio</title>
-<meta name="description" content="Hi, I’m Sonny Lowe. This map is a personal portfolio project tracking every coffee shop I’ve visited, scored across richness, craft, ambiance, character, and value. It’s part coffee repository, part excuse to experiment with statistics, data visualization, and clustering. Explore my experiences, discretized into coffee shops, and play a custom Coffee-Guessr puzzle.">
+<title>Sonny Lowe — A Coffee-Inspired Portfolio</title>
+<meta name="description" content="Part portfolio, part obsession: a scored map of every café I’ve been to, a chronological journey through them, and a Coffee-Guessr game to test how well you know good coffee.">
 <link rel="canonical" href="https://sonnyloweus.github.io/">
 
 <!-- Open Graph (Facebook, iMessage, Slack, Discord, Reddit link previews, etc.) -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Sonny Lowe">
-<meta property="og:title" content="Sonny Lowe — Coffee Map Portfolio">
-<meta property="og:description" content="Hi, I’m Sonny Lowe. This map is a personal portfolio project tracking every coffee shop I’ve visited, scored across richness, craft, ambiance, character, and value. It’s part coffee repository, part excuse to experiment with statistics, data visualization, and clustering. Explore my experiences, discretized into coffee shops, and play a custom Coffee-Guessr puzzle.">
+<meta property="og:title" content="Sonny Lowe — A Coffee-Inspired Portfolio">
+<meta property="og:description" content="Part portfolio, part obsession: a scored map of every café I’ve been to, a chronological journey through them, and a Coffee-Guessr game to test how well you know good coffee.">
 <meta property="og:url" content="https://sonnyloweus.github.io/">
 <meta property="og:image" content="https://sonnyloweus.github.io/images/og-image.png">
 <meta property="og:image:width" content="1200">
@@ -34,8 +46,8 @@
 
 <!-- Twitter / X card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Sonny Lowe — Coffee Map Portfolio">
-<meta name="twitter:description" content="Hi, I’m Sonny Lowe. This map is a personal portfolio project tracking every coffee shop I’ve visited, scored across richness, craft, ambiance, character, and value. It’s part coffee repository, part excuse to experiment with statistics, data visualization, and clustering. Explore my experiences, discretized into coffee shops, and play a custom Coffee-Guessr puzzle.">
+<meta name="twitter:title" content="Sonny Lowe — A Coffee-Inspired Portfolio">
+<meta name="twitter:description" content="Part portfolio, part obsession: a scored map of every café I’ve been to, a chronological journey through them, and a Coffee-Guessr game to test how well you know good coffee.">
 <meta name="twitter:image" content="https://sonnyloweus.github.io/images/og-image.png">
 
 <!-- Structured data — regenerated from coffee.json by scripts/generate_seo.py.
@@ -47,7 +59,7 @@
   "@type": "Person",
   "name": "Sonny Lowe",
   "url": "https://sonnyloweus.github.io/",
-  "description": "Hi, I’m Sonny Lowe. This map is a personal portfolio project tracking every coffee shop I’ve visited, scored across richness, craft, ambiance, character, and value. It’s part coffee repository, part excuse to experiment with statistics, data visualization, and clustering. Explore my experiences, discretized into coffee shops, and play a custom Coffee-Guessr puzzle.",
+  "description": "Part portfolio, part obsession: a scored map of every café I’ve been to, a chronological journey through them, and a Coffee-Guessr game to test how well you know good coffee.",
   "sameAs": [
     "https://github.com/sonnyloweus",
     "https://www.linkedin.com/in/lowesonny/"
@@ -2217,7 +2229,7 @@
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-<h1 class="visually-hidden">Sonny Lowe — Coffee Map Portfolio: an interactive map of coffee shops I've reviewed, with ratings, tasting notes, and stats</h1>
+<h1 class="visually-hidden">Sonny Lowe — A Coffee-Inspired Portfolio: an interactive map of coffee shops I've reviewed, with ratings, tasting notes, and stats</h1>
 
 <div class="brand" id="brand"><svg class="brand-mark" viewBox="0 0 120 120" width="22" height="22" aria-hidden="true"><g transform="translate(63,61) scale(1.05) translate(-64.5,-54.5)" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="7"><path d="M60,20 L60,10"/><path d="M45,24 L39,16"/><path d="M75,24 L81,16"/><path d="M34,35 L25,30"/><path d="M86,35 L95,30"/><circle cx="60" cy="50" r="17"/><path d="M45,58 C50,55 54,61 58,58 C62,55 64,60 68,58 C71,56 74,59 76,57" stroke-width="5"/><path d="M33,58 C31,73 33,89 42,96 L78,96 C87,89 89,73 87,58 Z"/><ellipse cx="60" cy="58" rx="28" ry="9.5"/><path d="M87,66 C101,63 104,83 91,88 C85,90 80,88 79,84"/></g></svg><span class="brand-title">Caffinated Sonny</span><span class="brand-gap"><span class="brand-dot">&middot;</span></span><span id="count"><span class="count-spinner" aria-hidden="true"></span></span><span class="brand-gap"><span class="brand-dot">&middot;</span></span><span class="brand-icons"><span class="brand-sigma" title="Stats">
     <i data-lucide="square-function"></i>

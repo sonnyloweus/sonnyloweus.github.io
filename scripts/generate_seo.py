@@ -16,12 +16,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SITE_URL = "https://sonnyloweus.github.io/"
 BIO = (
-    "Hi, I’m Sonny Lowe. This map is a personal portfolio project tracking "
-    "every coffee shop I’ve visited, scored across richness, craft, ambiance, "
-    "character, and value. It’s part coffee repository, part excuse to "
-    "experiment with statistics, data visualization, and clustering. Explore my "
-    "experiences, discretized into coffee shops, and play a custom Coffee-Guessr "
-    "puzzle."
+    "Part portfolio, part obsession: a scored map of every caf\u00e9 I’ve "
+    "been to, a chronological journey through them, and a Coffee-Guessr game to "
+    "test how well you know good coffee."
 )
 
 def build_jsonld(shops):

@@ -1,7 +1,7 @@
 {
-  "name": "Sonny Lowe — Coffee Map Portfolio",
+  "name": "Sonny Lowe — A Coffee-Inspired Portfolio",
   "short_name": "Coffee Map",
-  "description": "A personal coffee map portfolio tracking every coffee shop Sonny Lowe has visited, scored across richness, craft, ambiance, character, and value.",
+  "description": "A scored map of every coffee shop Sonny Lowe has visited, plus a chronological journey through them and a Coffee-Guessr game.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FAFAF8",
